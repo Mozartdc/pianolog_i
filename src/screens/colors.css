@@ -1,0 +1,16 @@
+/* src/colors.css */
+:root {
+  /* Figma 디자인 팬톤 컬러 시스템 */
+  --TURQUOISE: rgb(69, 181, 170);
+  --PASTEL_TURQUOISE: rgb(199, 230, 223);
+  --VERY_PERI: rgb(102, 103, 171);
+  
+  /* 추가 컬러 */
+  --WHITE: rgb(255, 255, 255);
+  --LIGHT_GRAY: rgb(248, 248, 248);
+  --DARK_GRAY: rgb(102, 102, 102);
+  --BLACK: rgb(0, 0, 0);
+  
+  /* 그라데이션 */
+  --TURQUOISE_GRADIENT: linear-gradient(135deg, var(--TURQUOISE), var(--PASTEL_TURQUOISE));
+}
