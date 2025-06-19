@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { getTodayCheer } from "../utils/cheers";
 import Icon from "../components/Icon";
+import ProfileUploader from "../components/ProfileUploader";
 import "../colors.css";
 
 function getToday() {
@@ -87,6 +88,12 @@ function HomeScreen() {
     }, 1000);
   };
 
+  // 프로필 사진 변경 핸들러
+  const handleAvatarChange = (newAvatar: string) => {
+    setAvatar(newAvatar);
+    localStorage.setItem('avatar', newAvatar);
+  };
+
   return (
     <div className="app-container" style={{ padding: '20px' }}>
       {/* 상단 헤더 */}
@@ -122,22 +129,11 @@ function HomeScreen() {
         gap: '16px',
         marginBottom: '24px'
       }}>
-        <div style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          backgroundColor: 'var(--PASTEL_TURQUOISE)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '24px'
-        }}>
-          {avatar ? (
-            <img src={avatar} alt="프로필" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
-          ) : (
-            <Icon name="keyboard" size={32} color="var(--TURQUOISE)" />
-          )}
-        </div>
+        <ProfileUploader
+          currentAvatar={avatar}
+          onAvatarChange={handleAvatarChange}
+          size={60}
+        />
         <div style={{ flex: 1 }}>
           <h2 style={{ 
             fontSize: '20px', 
