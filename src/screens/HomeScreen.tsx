@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { getTodayCheer } from "../utils/cheers";
+import Icon from "../components/Icon";
 import "../colors.css";
 
 function getToday() {
@@ -134,7 +135,7 @@ function HomeScreen() {
           {avatar ? (
             <img src={avatar} alt="프로필" style={{ width: '100%', height: '100%', borderRadius: '50%' }} />
           ) : (
-            '🎹'
+            <Icon name="keyboard" size={32} color="var(--TURQUOISE)" />
           )}
         </div>
         <div style={{ flex: 1 }}>
@@ -168,19 +169,28 @@ function HomeScreen() {
         textAlign: 'center',
         marginBottom: '16px'
       }}>
-        <h2 style={{ 
-          fontSize: '28px', 
-          fontWeight: 'bold',
-          margin: '0 0 8px 0'
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          gap: '12px',
+          marginBottom: '8px'
         }}>
-          {getStreak()}일 째 피출
-        </h2>
+          <Icon name="flame" size={32} color="var(--WHITE)" />
+          <h2 style={{ 
+            fontSize: '28px', 
+            fontWeight: 'bold',
+            margin: 0
+          }}>
+            {getStreak()}일 째 피출
+          </h2>
+        </div>
         <p style={{ 
           fontSize: '16px',
           opacity: 0.9,
           margin: 0
         }}>
-          연속 연습 달성! 🔥
+          연속 연습 달성!
         </p>
       </div>
 
@@ -191,14 +201,24 @@ function HomeScreen() {
         gap: '12px',
         marginBottom: '16px'
       }}>
+        {/* 오늘의 피출 기록 */}
         <div className="card card-light" style={{ textAlign: 'center' }}>
-          <p style={{ 
-            fontSize: '14px', 
-            color: 'var(--DARK_GRAY)',
-            margin: '0 0 8px 0'
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            gap: '8px',
+            marginBottom: '8px'
           }}>
-            오늘의 피출 기록
-          </p>
+            <Icon name="keyboard" size={20} color="var(--VERY_PERI)" />
+            <p style={{ 
+              fontSize: '14px', 
+              color: 'var(--DARK_GRAY)',
+              margin: 0
+            }}>
+              오늘의 피출 기록
+            </p>
+          </div>
           <div style={{ 
             fontSize: '24px', 
             fontWeight: 'bold',
@@ -207,14 +227,25 @@ function HomeScreen() {
             24시간
           </div>
         </div>
+
+        {/* 오늘 연습한 곡 */}
         <div className="card card-light" style={{ textAlign: 'center' }}>
-          <p style={{ 
-            fontSize: '14px', 
-            color: 'var(--DARK_GRAY)',
-            margin: '0 0 8px 0'
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            gap: '8px',
+            marginBottom: '8px'
           }}>
-            오늘 연습한 곡
-          </p>
+            <Icon name="staff" size={20} color="var(--VERY_PERI)" />
+            <p style={{ 
+              fontSize: '14px', 
+              color: 'var(--DARK_GRAY)',
+              margin: 0
+            }}>
+              오늘 연습한 곡
+            </p>
+          </div>
           <div style={{ 
             fontSize: '24px', 
             fontWeight: 'bold',
@@ -225,14 +256,24 @@ function HomeScreen() {
         </div>
       </div>
 
+      {/* 총 연습 시간 */}
       <div className="card card-light" style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <p style={{ 
-          fontSize: '14px', 
-          color: 'var(--DARK_GRAY)',
-          margin: '0 0 8px 0'
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          gap: '8px',
+          marginBottom: '8px'
         }}>
-          총 연습 시간
-        </p>
+          <Icon name="trophy" size={24} color="var(--VERY_PERI)" />
+          <p style={{ 
+            fontSize: '14px', 
+            color: 'var(--DARK_GRAY)',
+            margin: 0
+          }}>
+            총 연습 시간
+          </p>
+        </div>
         <div style={{ 
           fontSize: '28px', 
           fontWeight: 'bold',
@@ -301,7 +342,11 @@ function HomeScreen() {
           fontSize: '18px',
           fontWeight: 'bold',
           cursor: 'pointer',
-          transition: 'all 0.2s ease'
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px'
         }}
         onMouseOver={(e) => {
           e.currentTarget.style.backgroundColor = 'rgb(59, 171, 160)';
@@ -310,6 +355,7 @@ function HomeScreen() {
           e.currentTarget.style.backgroundColor = 'var(--TURQUOISE)';
         }}
       >
+        <Icon name="play" size={20} color="var(--WHITE)" />
         드가자
       </button>
     </div>
