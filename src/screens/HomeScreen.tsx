@@ -95,65 +95,77 @@ function HomeScreen() {
   };
 
   return (
-    <div className="app-container" style={{ padding: '20px' }}>
+    <div style={{ 
+      maxWidth: '390px',
+      margin: '0 auto',
+      minHeight: '100vh',
+      backgroundColor: 'var(--WHITE)',
+      padding: '24px 20px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+    }}>
       {/* 상단 헤더 */}
       <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '24px'
+        marginBottom: '32px'
       }}>
-        <div>
-          <h1 style={{ 
-            fontSize: '24px', 
-            fontWeight: 'bold',
-            color: 'var(--BLACK)',
-            margin: 0
-          }}>
-            digital piano gallery 피출앱
-          </h1>
-          <p style={{ 
-            fontSize: '16px', 
-            color: 'var(--DARK_GRAY)',
-            margin: '4px 0 0 0'
-          }}>
-            {today.format('YYYY. MM. DD ddd').toUpperCase()}
-          </p>
-        </div>
+        <h1 style={{ 
+          fontSize: '20px', 
+          fontWeight: '700',
+          color: 'var(--BLACK)',
+          margin: '0 0 4px 0',
+          lineHeight: '1.2'
+        }}>
+          digital piano gallery 피출앱
+        </h1>
+        <p style={{ 
+          fontSize: '14px', 
+          color: 'var(--DARK_GRAY)',
+          margin: 0,
+          fontWeight: '400'
+        }}>
+          {today.format('YYYY. MM. DD ddd').toUpperCase()}
+        </p>
       </div>
 
       {/* 프로필 섹션 */}
-      <div className="card" style={{ 
+      <div style={{ 
+        backgroundColor: 'var(--WHITE)',
+        borderRadius: '20px',
+        padding: '24px',
+        marginBottom: '20px',
+        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+        border: '1px solid rgba(0, 0, 0, 0.04)',
         display: 'flex', 
         alignItems: 'center',
-        gap: '16px',
-        marginBottom: '24px'
+        gap: '20px'
       }}>
         <ProfileUploader
           currentAvatar={avatar}
           onAvatarChange={handleAvatarChange}
-          size={60}
+          size={64}
         />
         <div style={{ flex: 1 }}>
           <h2 style={{ 
-            fontSize: '20px', 
-            fontWeight: 'bold',
-            margin: '0 0 4px 0',
+            fontSize: '18px', 
+            fontWeight: '600',
+            margin: '0 0 8px 0',
             color: 'var(--BLACK)'
           }}>
             {nickname}
           </h2>
           <div style={{ 
-            fontSize: '32px', 
-            fontWeight: 'bold',
-            color: 'var(--TURQUOISE)'
+            fontSize: '28px', 
+            fontWeight: '700',
+            color: 'var(--TURQUOISE)',
+            lineHeight: '1.1',
+            marginBottom: '4px'
           }}>
             {Math.floor(totalTodayMinutes / 60)}시간 {totalTodayMinutes % 60}분
           </div>
           <p style={{ 
-            fontSize: '14px', 
+            fontSize: '12px', 
             color: 'var(--DARK_GRAY)',
-            margin: '4px 0 0 0'
+            margin: 0,
+            fontWeight: '400'
           }}>
             digital piano gallery
           </p>
@@ -161,9 +173,13 @@ function HomeScreen() {
       </div>
 
       {/* 메인 성취 카드 - 222일째 피출 */}
-      <div className="card card-turquoise" style={{ 
+      <div style={{ 
+        background: 'var(--TURQUOISE_GRADIENT)',
+        borderRadius: '20px',
+        padding: '28px 24px',
+        marginBottom: '20px',
         textAlign: 'center',
-        marginBottom: '16px'
+        boxShadow: '0 4px 16px rgba(69, 181, 170, 0.25)'
       }}>
         <div style={{ 
           display: 'flex', 
@@ -172,19 +188,22 @@ function HomeScreen() {
           gap: '12px',
           marginBottom: '8px'
         }}>
-          <Icon name="flame" size={32} color="var(--WHITE)" />
+          <Icon name="flame" size={28} color="var(--WHITE)" />
           <h2 style={{ 
-            fontSize: '28px', 
-            fontWeight: 'bold',
-            margin: 0
+            fontSize: '24px', 
+            fontWeight: '700',
+            margin: 0,
+            color: 'var(--WHITE)'
           }}>
             {getStreak()}일 째 피출
           </h2>
         </div>
         <p style={{ 
-          fontSize: '16px',
+          fontSize: '14px',
           opacity: 0.9,
-          margin: 0
+          margin: 0,
+          color: 'var(--WHITE)',
+          fontWeight: '400'
         }}>
           연속 연습 달성!
         </p>
@@ -194,58 +213,74 @@ function HomeScreen() {
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: '1fr 1fr', 
-        gap: '12px',
-        marginBottom: '16px'
+        gap: '16px',
+        marginBottom: '20px'
       }}>
         {/* 오늘의 피출 기록 */}
-        <div className="card card-light" style={{ textAlign: 'center' }}>
+        <div style={{ 
+          backgroundColor: 'var(--PASTEL_TURQUOISE)',
+          borderRadius: '16px',
+          padding: '20px 16px',
+          textAlign: 'center',
+          border: '1px solid rgba(69, 181, 170, 0.1)'
+        }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
-            gap: '8px',
-            marginBottom: '8px'
+            gap: '6px',
+            marginBottom: '12px'
           }}>
-            <Icon name="keyboard" size={20} color="var(--VERY_PERI)" />
+            <Icon name="keyboard" size={16} color="var(--VERY_PERI)" />
             <p style={{ 
-              fontSize: '14px', 
+              fontSize: '12px', 
               color: 'var(--DARK_GRAY)',
-              margin: 0
+              margin: 0,
+              fontWeight: '500'
             }}>
               오늘의 피출 기록
             </p>
           </div>
           <div style={{ 
-            fontSize: '24px', 
-            fontWeight: 'bold',
-            color: 'var(--VERY_PERI)'
+            fontSize: '20px', 
+            fontWeight: '700',
+            color: 'var(--VERY_PERI)',
+            lineHeight: '1.1'
           }}>
             24시간
           </div>
         </div>
 
         {/* 오늘 연습한 곡 */}
-        <div className="card card-light" style={{ textAlign: 'center' }}>
+        <div style={{ 
+          backgroundColor: 'var(--PASTEL_TURQUOISE)',
+          borderRadius: '16px',
+          padding: '20px 16px',
+          textAlign: 'center',
+          border: '1px solid rgba(69, 181, 170, 0.1)'
+        }}>
           <div style={{ 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
-            gap: '8px',
-            marginBottom: '8px'
+            gap: '6px',
+            marginBottom: '12px'
           }}>
-            <Icon name="staff" size={20} color="var(--VERY_PERI)" />
+            <Icon name="staff" size={16} color="var(--VERY_PERI)" />
             <p style={{ 
-              fontSize: '14px', 
+              fontSize: '12px', 
               color: 'var(--DARK_GRAY)',
-              margin: 0
+              margin: 0,
+              fontWeight: '500'
             }}>
               오늘 연습한 곡
             </p>
           </div>
           <div style={{ 
-            fontSize: '24px', 
-            fontWeight: 'bold',
-            color: 'var(--VERY_PERI)'
+            fontSize: '20px', 
+            fontWeight: '700',
+            color: 'var(--VERY_PERI)',
+            lineHeight: '1.1'
           }}>
             {todayCheckedCount}곡
           </div>
@@ -253,38 +288,54 @@ function HomeScreen() {
       </div>
 
       {/* 총 연습 시간 */}
-      <div className="card card-light" style={{ textAlign: 'center', marginBottom: '24px' }}>
+      <div style={{ 
+        backgroundColor: 'var(--PASTEL_TURQUOISE)',
+        borderRadius: '16px',
+        padding: '20px 24px',
+        textAlign: 'center',
+        marginBottom: '24px',
+        border: '1px solid rgba(69, 181, 170, 0.1)'
+      }}>
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center',
           gap: '8px',
-          marginBottom: '8px'
+          marginBottom: '12px'
         }}>
-          <Icon name="trophy" size={24} color="var(--VERY_PERI)" />
+          <Icon name="trophy" size={20} color="var(--VERY_PERI)" />
           <p style={{ 
-            fontSize: '14px', 
+            fontSize: '12px', 
             color: 'var(--DARK_GRAY)',
-            margin: 0
+            margin: 0,
+            fontWeight: '500'
           }}>
             총 연습 시간
           </p>
         </div>
         <div style={{ 
-          fontSize: '28px', 
-          fontWeight: 'bold',
-          color: 'var(--VERY_PERI)'
+          fontSize: '24px', 
+          fontWeight: '700',
+          color: 'var(--VERY_PERI)',
+          lineHeight: '1.1'
         }}>
           {totalHours}시간
         </div>
       </div>
 
       {/* 주간 캘린더 위젯 */}
-      <div className="card" style={{ marginBottom: '24px' }}>
+      <div style={{ 
+        backgroundColor: 'var(--WHITE)',
+        borderRadius: '20px',
+        padding: '24px',
+        marginBottom: '32px',
+        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+        border: '1px solid rgba(0, 0, 0, 0.04)'
+      }}>
         <h3 style={{ 
-          fontSize: '18px', 
-          fontWeight: 'bold',
-          margin: '0 0 16px 0',
+          fontSize: '16px', 
+          fontWeight: '600',
+          margin: '0 0 20px 0',
           color: 'var(--BLACK)'
         }}>
           이번 주 연습 기록
@@ -303,8 +354,8 @@ function HomeScreen() {
               <div
                 key={dateStr}
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '50%',
                   backgroundColor: practiced ? 'var(--TURQUOISE)' : 'var(--LIGHT_GRAY)',
                   color: practiced ? 'var(--WHITE)' : 'var(--DARK_GRAY)',
@@ -312,13 +363,14 @@ function HomeScreen() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '12px',
-                  fontWeight: 'bold',
-                  border: isToday ? '2px solid var(--VERY_PERI)' : 'none'
+                  fontSize: '10px',
+                  fontWeight: '600',
+                  border: isToday ? '2px solid var(--VERY_PERI)' : 'none',
+                  boxSizing: 'border-box'
                 }}
               >
-                <div>{date.format("dd")}</div>
-                <div>{date.format("D")}</div>
+                <div style={{ lineHeight: '1' }}>{date.format("dd")}</div>
+                <div style={{ lineHeight: '1', marginTop: '1px' }}>{date.format("D")}</div>
               </div>
             );
           })}
@@ -330,28 +382,31 @@ function HomeScreen() {
         onClick={handleTimerStart}
         style={{
           width: '100%',
-          padding: '16px',
+          padding: '18px',
           backgroundColor: 'var(--TURQUOISE)',
           color: 'var(--WHITE)',
           border: 'none',
-          borderRadius: '12px',
-          fontSize: '18px',
-          fontWeight: 'bold',
+          borderRadius: '16px',
+          fontSize: '16px',
+          fontWeight: '600',
           cursor: 'pointer',
           transition: 'all 0.2s ease',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '8px'
+          gap: '8px',
+          boxShadow: '0 4px 16px rgba(69, 181, 170, 0.3)'
         }}
         onMouseOver={(e) => {
           e.currentTarget.style.backgroundColor = 'rgb(59, 171, 160)';
+          e.currentTarget.style.transform = 'translateY(-1px)';
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.backgroundColor = 'var(--TURQUOISE)';
+          e.currentTarget.style.transform = 'translateY(0)';
         }}
       >
-        <Icon name="play" size={20} color="var(--WHITE)" />
+        <Icon name="play" size={18} color="var(--WHITE)" />
         드가자
       </button>
     </div>
