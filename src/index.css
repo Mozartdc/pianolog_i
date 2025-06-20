@@ -1,45 +1,16 @@
-/* src/index.css */
+/* 글로벌 리셋만 유지, 중복 제거 */
 @import './colors.css';
 
-* {
+body {
   margin: 0;
   padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  background-color: var(--WHITE);
-  color: var(--BLACK);
-  line-height: 1.6;
-}
-
-/* 전체 앱 컨테이너 */
-.app-container {
-  max-width: 480px;
-  margin: 0 auto;
-  min-height: 100vh;
-  background-color: var(--WHITE);
-}
-
-/* 카드 기본 스타일 */
-.card {
-  background: var(--WHITE);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-/* 메인 컬러 카드 */
-.card-turquoise {
-  background: var(--TURQUOISE_GRADIENT);
-  color: var(--WHITE);
-}
-
-/* 연한 배경 카드 */
-.card-light {
-  background: var(--PASTEL_TURQUOISE);
-  color: var(--DARK_GRAY);
-}
+/* colors.css의 시스템을 메인으로 사용 */

@@ -124,20 +124,18 @@ function HomeScreen() {
 
   return (
     <div className="app-container">
-      {/* 상단 헤더 */}
-      <header className="mb-xl">
-        <h1 className="text-large mb-xs">digital piano gallery 피출앱</h1>
-        <p className="text-tiny text-gray">
+      {/* 상단 헤더 - 원본 SVG 디자인 기준 */}
+      <header className="mb-lg">
+        <h1 className="text-large text-turquoise mb-xs">digital piano gallery 피출앱</h1>
+        <p className="text-tiny text-gray mb-md">
           {today.format('YYYY. MM. DD ddd').toUpperCase()}
         </p>
-      </header>
-
-      {/* 프로필 섹션 (읽기 전용) */}
-      <div className="card-base mb-lg">
-        <div className="flex flex-gap-md">
+        
+        {/* 프로필 섹션 - 상단 통합 (원본 디자인 기준) */}
+        <div className="flex flex-gap-md mb-md">
           <div style={{
-            width: '64px',
-            height: '64px',
+            width: '48px',
+            height: '48px',
             borderRadius: 'var(--RADIUS_CIRCLE)',
             backgroundColor: 'var(--PASTEL_TURQUOISE)',
             display: 'flex',
@@ -152,23 +150,20 @@ function HomeScreen() {
                 objectFit: 'cover'
               }} />
             ) : (
-              <Icon name="keyboard" size={32} color="var(--TURQUOISE)" />
+              <Icon name="keyboard" size={24} color="var(--TURQUOISE)" />
             )}
           </div>
           <div style={{ flex: 1 }}>
             <h2 className="text-medium mb-xs">{nickname}</h2>
-            <div className="text-large text-turquoise mb-xs">
-              {Math.floor(totalTodayMinutes / 60)}시간 {totalTodayMinutes % 60}분
-            </div>
             <p className="text-tiny text-gray">digital piano gallery</p>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* 메인 성취 카드 */}
+      {/* 메인 성취 카드 - 원본 SVG 디자인: 전체 폭 */}
       <div className="card-turquoise mb-lg">
         <div className="flex-center flex-gap-sm mb-sm">
-          <Icon name="flame" size={28} color="var(--WHITE)" />
+          <span style={{ fontSize: '24px' }}>🔥</span>
           <h2 className="text-large">{getStreak()}일 째 피출</h2>
         </div>
         <p className="text-small" style={{ opacity: 0.9, textAlign: 'center' }}>
@@ -176,43 +171,43 @@ function HomeScreen() {
         </p>
       </div>
 
-      {/* 통계 카드 그리드 */}
-      <div className="grid-2x1 mb-lg">
-        <div className="card-light">
-          <div className="flex-center flex-gap-sm mb-sm">
-            <Icon name="keyboard" size={16} color="var(--VERY_PERI)" />
-            <p className="text-tiny text-gray">오늘의 피출 기록</p>
+      {/* 통계 카드들 - 원본 SVG 디자인: 세로 배치 */}
+      <div className="card-light mb-lg">
+        <div className="flex-between mb-sm">
+          <div className="flex flex-gap-sm">
+            <span style={{ fontSize: '18px' }}>🎹</span>
+            <p className="text-small text-gray">오늘의 피출 기록</p>
           </div>
-          <div className="text-large text-peri" style={{ textAlign: 'center' }}>
-            {Math.floor(totalTodayMinutes / 60)}시간
-          </div>
+          <Icon name="export" size={16} color="var(--DARK_GRAY)" />
         </div>
-        <div className="card-light">
-          <div className="flex-center flex-gap-sm mb-sm">
-            <Icon name="staff" size={16} color="var(--VERY_PERI)" />
-            <p className="text-tiny text-gray">오늘 연습한 곡</p>
-          </div>
-          <div className="text-large text-peri" style={{ textAlign: 'center' }}>
-            {todayCheckedCount}곡
-          </div>
+        <div className="text-large text-peri">
+          {Math.floor(totalTodayMinutes / 60)}시간 {totalTodayMinutes % 60}분
         </div>
       </div>
 
-      {/* 총 연습 시간 카드 */}
       <div className="card-light mb-lg">
-        <div className="flex-center flex-gap-sm mb-sm">
-          <Icon name="trophy" size={20} color="var(--VERY_PERI)" />
-          <p className="text-tiny text-gray">총 연습 시간</p>
+        <div className="flex flex-gap-sm mb-sm">
+          <span style={{ fontSize: '18px' }}>🎵</span>
+          <p className="text-small text-gray">오늘 연습한 곡</p>
         </div>
-        <div className="text-large text-peri" style={{ textAlign: 'center' }}>
+        <div className="text-large text-peri">
+          {todayCheckedCount}/4 곡
+        </div>
+      </div>
+
+      <div className="card-light mb-lg">
+        <div className="flex flex-gap-sm mb-sm">
+          <span style={{ fontSize: '18px' }}>🏆</span>
+          <p className="text-small text-gray">총 연습 시간</p>
+        </div>
+        <div className="text-large text-peri">
           {totalHours}시간
         </div>
       </div>
 
-      {/* 주간 캘린더 위젯 */}
-      <div className="card-base mb-xl">
-        <h3 className="text-medium mb-lg">이번 주 연습 기록</h3>
-        <div className="flex-between">
+      {/* 주간 캘린더 위젯 - 원본 SVG 디자인 기준 */}
+      <div className="card-base mb-lg">
+        <div className="flex-between mb-md">
           {weekDays.map((date) => {
             const dateStr = date.format("YYYY-MM-DD");
             const practiced = isPracticed(dateStr);
@@ -222,8 +217,8 @@ function HomeScreen() {
               <div
                 key={dateStr}
                 style={{
-                  width: '36px',
-                  height: '36px',
+                  width: '40px',
+                  height: '40px',
                   borderRadius: 'var(--RADIUS_CIRCLE)',
                   backgroundColor: practiced ? 'var(--TURQUOISE)' : 'var(--LIGHT_GRAY)',
                   color: practiced ? 'var(--WHITE)' : 'var(--DARK_GRAY)',
@@ -245,13 +240,18 @@ function HomeScreen() {
         </div>
       </div>
 
-      {/* 하단 타이머 시작 버튼 */}
+      {/* 하단 타이머 시작 버튼 - 원본 SVG 디자인 기준 */}
       <button className="btn-primary" onClick={handleTimerStart}>
-        <Icon name="play" size={18} color="var(--WHITE)" />
+        <span style={{ fontSize: '18px', marginRight: '8px' }}>▶️</span>
         드가자
       </button>
 
-      {/* 시간 설정 모달 */}
+      {/* 응원 메시지 추가 */}
+      <div className="text-tiny text-gray" style={{ textAlign: 'center', marginTop: '16px', opacity: 0.7 }}>
+        {getTodayCheer()}
+      </div>
+
+      {/* 모달들 - 기존 기능 유지 */}
       {showTimeModal && (
         <div className="modal-overlay fade-in" onClick={() => setShowTimeModal(false)}>
           <div className="modal-container slide-up" onClick={e => e.stopPropagation()}>
@@ -277,7 +277,6 @@ function HomeScreen() {
         </div>
       )}
 
-      {/* 타이머 실행 모달 */}
       {showTimerModal && (
         <div className="modal-overlay fade-in">
           <div className="modal-container slide-up">
@@ -298,7 +297,6 @@ function HomeScreen() {
         </div>
       )}
 
-      {/* 연습 완료 모달 */}
       {showCompleteModal && (
         <div className="modal-overlay fade-in" onClick={() => setShowCompleteModal(false)}>
           <div className="modal-container slide-up" onClick={e => e.stopPropagation()}>
@@ -327,7 +325,6 @@ function HomeScreen() {
         </div>
       )}
 
-      {/* 공유 모달 */}
       {showShareModal && (
         <div className="modal-overlay fade-in" onClick={() => setShowShareModal(false)}>
           <div className="modal-container slide-up" onClick={e => e.stopPropagation()}>
