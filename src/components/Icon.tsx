@@ -18,14 +18,31 @@ const Icon: React.FC<IconProps> = ({ name, size = 24, color = 'currentColor', cl
   };
 
   return (
-    <img 
-      src={iconPaths[name]}
-      alt={name}
-      width={size}
-      height={size}
+    <div 
       className={className}
-      style={{ color }}
-    />
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0
+      }}
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{
+          color: color,
+          display: 'block'
+        }}
+      >
+        <use href={`${iconPaths[name]}#icon`} />
+      </svg>
+    </div>
   );
 };
 

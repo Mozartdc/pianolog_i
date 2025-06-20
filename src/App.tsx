@@ -17,9 +17,9 @@ function BottomTab() {
 
   const tabs = [
     { label: "홈", path: "/" },
-    { label: "트랙", path: "/track" },
+    { label: "투데이", path: "/track" },
+    { label: "타이머", path: "/timer" },
     { label: "통계", path: "/stats" },
-    { label: "전자사과", path: "/repeat" },
     { label: "설정", path: "/settings" },
   ];
 
@@ -46,9 +46,10 @@ function BottomTab() {
             background: "none",
             border: "none",
             fontWeight: location.pathname === tab.path ? "bold" : "normal",
-            color: location.pathname === tab.path ? "#4b72c2" : "#333",
-            fontSize: "1em",
+            color: location.pathname === tab.path ? "#45b5aa" : "#333",
+            fontSize: "12px",
             cursor: "pointer",
+            padding: "4px 8px",
           }}
         >
           {tab.label}
@@ -58,65 +59,13 @@ function BottomTab() {
   );
 }
 
-// 하단 푸터 컴포넌트 추가
-function FooterWithLogo() {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 72,
-        zIndex: 0,
-        pointerEvents: "none",
-        userSelect: "none",
-        textAlign: "center",
-      }}
-    >
-      <img
-        src="/src/utils/img/logo.png"
-        alt="digital piano gallery"
-        style={{
-          height: 150,
-          maxWidth: 1000,
-          width: "auto",
-          objectFit: "contain",
-          margin: 0,
-          padding: 0,
-          display: "block",
-        }}
-      />
-      <span
-        style={{
-          color: "#bbb",
-          fontSize: 16,
-          letterSpacing: 1,
-          fontWeight: 500,
-          background: "rgba(255,255,255,0.8)",
-          padding: "0 8px",
-          borderRadius: 6,
-          display: "inline-block",
-          marginTop: "-30px",
-          lineHeight: "1",
-          verticalAlign: "top",
-        }}
-      >
-        digital piano gallery
-      </span>
-    </div>
-  );
-}
-
 function AppRoutes() {
   return (
     <>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
         <Route path="/track" element={<TrackScreen />} />
-        <Route path="/repeat" element={<RepeatCountScreen />} />
+        <Route path="/timer" element={<RepeatCountScreen />} />
         <Route path="/calendar" element={<TrackDetailCalendarScreen />} />
         <Route path="/practice" element={<PracticeSessionScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
@@ -124,41 +73,14 @@ function AppRoutes() {
         <Route path="/stats/:date" element={<StatsDayDetailScreen />} />
       </Routes>
       <BottomTab />
-      <FooterWithLogo />
     </>
-  );
-}
-
-function AppHeader() {
-  return (
-    <header
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 56,
-        background: "#fff",
-        borderBottom: "1px solid #eee",
-        zIndex: 100,
-        textAlign: "center",
-        fontWeight: "bold",
-        fontSize: 20,
-        letterSpacing: 2,
-        lineHeight: "56px",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.02)",
-      }}
-    >
-      디피갤 피출앱
-    </header>
   );
 }
 
 function App() {
   return (
     <BrowserRouter>
-      <div style={{ paddingTop: 56, paddingBottom: 80, minHeight: "100vh" }}>
-        <AppHeader />
+      <div style={{ paddingBottom: 80, minHeight: "100vh" }}>
         <AppRoutes />
       </div>
     </BrowserRouter>
