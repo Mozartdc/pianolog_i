@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { getTodayCheer } from "../utils/cheers";
 import Icon from "../components/Icon";
-import ProfileUploader from "../components/ProfileUploader";
 import "../colors.css";
 
 function getToday() {
@@ -34,6 +33,12 @@ function HomeScreen() {
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
   const timerRef = useRef<number | null>(null);
+
+  // 모달 상태
+  const [showTimeModal, setShowTimeModal] = useState(false);
+  const [showTimerModal, setShowTimerModal] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // 주간 캘린더 데이터
   const today = dayjs();
@@ -80,271 +85,134 @@ function HomeScreen() {
     setAvatar(localStorage.getItem("avatar") || "");
   }, []);
 
-  // 타이머 시작/정지
+  // 타이머 시작 핸들러
   const handleTimerStart = () => {
+    setShowTimeModal(true);
+  };
+
+  // 타이머 시작 확인
+  const startTimer = () => {
+    setShowTimeModal(false);
+    setShowTimerModal(true);
     setTimerRunning(true);
     timerRef.current = window.setInterval(() => {
       setTimerSeconds(sec => sec + 1);
     }, 1000);
   };
 
-  // 프로필 사진 변경 핸들러
-  const handleAvatarChange = (newAvatar: string) => {
-    setAvatar(newAvatar);
-    localStorage.setItem('avatar', newAvatar);
+  // 타이머 정지
+  const stopTimer = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimerRunning(false);
+    setShowTimerModal(false);
+    setShowCompleteModal(true);
+    
+    // 연습 기록 저장
+    const addMinutes = Math.floor(timerSeconds / 60);
+    if (addMinutes > 0) {
+      const newRecords = practiceRecords.filter(r => r.date !== todayStr);
+      const prev = todayRecords.length > 0 ? todayRecords[0].practiceTime || 0 : 0;
+      newRecords.push({ date: todayStr, practiceTime: Number(prev) + addMinutes });
+      setPracticeRecords(newRecords);
+      localStorage.setItem("practiceRecords", JSON.stringify(newRecords));
+    }
+    setTimerSeconds(0);
   };
 
+  // 타이머 시간 표시
+  const timerDisplay = `${String(Math.floor(timerSeconds / 60)).padStart(2, "0")}:${String(timerSeconds % 60).padStart(2, "0")}`;
+
   return (
-    <div style={{ 
-      maxWidth: '390px',
-      margin: '0 auto',
-      minHeight: '100vh',
-      backgroundColor: 'var(--WHITE)',
-      padding: '24px 20px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
+    <div className="app-container">
       {/* 상단 헤더 */}
-      <div style={{ 
-        marginBottom: '32px'
-      }}>
-        <h1 style={{ 
-          fontSize: '20px', 
-          fontWeight: '700',
-          color: 'var(--BLACK)',
-          margin: '0 0 4px 0',
-          lineHeight: '1.2'
-        }}>
-          digital piano gallery 피출앱
-        </h1>
-        <p style={{ 
-          fontSize: '14px', 
-          color: 'var(--DARK_GRAY)',
-          margin: 0,
-          fontWeight: '400'
-        }}>
+      <header className="mb-xl">
+        <h1 className="text-large mb-xs">digital piano gallery 피출앱</h1>
+        <p className="text-tiny text-gray">
           {today.format('YYYY. MM. DD ddd').toUpperCase()}
         </p>
-      </div>
+      </header>
 
-      {/* 프로필 섹션 */}
-      <div style={{ 
-        backgroundColor: 'var(--WHITE)',
-        borderRadius: '20px',
-        padding: '24px',
-        marginBottom: '20px',
-        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
-        border: '1px solid rgba(0, 0, 0, 0.04)',
-        display: 'flex', 
-        alignItems: 'center',
-        gap: '20px'
-      }}>
-        <ProfileUploader
-          currentAvatar={avatar}
-          onAvatarChange={handleAvatarChange}
-          size={64}
-        />
-        <div style={{ flex: 1 }}>
-          <h2 style={{ 
-            fontSize: '18px', 
-            fontWeight: '600',
-            margin: '0 0 8px 0',
-            color: 'var(--BLACK)'
+      {/* 프로필 섹션 (읽기 전용) */}
+      <div className="card-base mb-lg">
+        <div className="flex flex-gap-md">
+          <div style={{
+            width: '64px',
+            height: '64px',
+            borderRadius: 'var(--RADIUS_CIRCLE)',
+            backgroundColor: 'var(--PASTEL_TURQUOISE)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
           }}>
-            {nickname}
-          </h2>
-          <div style={{ 
-            fontSize: '28px', 
-            fontWeight: '700',
-            color: 'var(--TURQUOISE)',
-            lineHeight: '1.1',
-            marginBottom: '4px'
-          }}>
-            {Math.floor(totalTodayMinutes / 60)}시간 {totalTodayMinutes % 60}분
+            {avatar ? (
+              <img src={avatar} alt="프로필" style={{ 
+                width: '100%', 
+                height: '100%', 
+                borderRadius: 'var(--RADIUS_CIRCLE)',
+                objectFit: 'cover'
+              }} />
+            ) : (
+              <Icon name="keyboard" size={32} color="var(--TURQUOISE)" />
+            )}
           </div>
-          <p style={{ 
-            fontSize: '12px', 
-            color: 'var(--DARK_GRAY)',
-            margin: 0,
-            fontWeight: '400'
-          }}>
-            digital piano gallery
-          </p>
+          <div style={{ flex: 1 }}>
+            <h2 className="text-medium mb-xs">{nickname}</h2>
+            <div className="text-large text-turquoise mb-xs">
+              {Math.floor(totalTodayMinutes / 60)}시간 {totalTodayMinutes % 60}분
+            </div>
+            <p className="text-tiny text-gray">digital piano gallery</p>
+          </div>
         </div>
       </div>
 
-      {/* 메인 성취 카드 - 222일째 피출 */}
-      <div style={{ 
-        background: 'var(--TURQUOISE_GRADIENT)',
-        borderRadius: '20px',
-        padding: '28px 24px',
-        marginBottom: '20px',
-        textAlign: 'center',
-        boxShadow: '0 4px 16px rgba(69, 181, 170, 0.25)'
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          gap: '12px',
-          marginBottom: '8px'
-        }}>
+      {/* 메인 성취 카드 */}
+      <div className="card-turquoise mb-lg">
+        <div className="flex-center flex-gap-sm mb-sm">
           <Icon name="flame" size={28} color="var(--WHITE)" />
-          <h2 style={{ 
-            fontSize: '24px', 
-            fontWeight: '700',
-            margin: 0,
-            color: 'var(--WHITE)'
-          }}>
-            {getStreak()}일 째 피출
-          </h2>
+          <h2 className="text-large">{getStreak()}일 째 피출</h2>
         </div>
-        <p style={{ 
-          fontSize: '14px',
-          opacity: 0.9,
-          margin: 0,
-          color: 'var(--WHITE)',
-          fontWeight: '400'
-        }}>
+        <p className="text-small" style={{ opacity: 0.9, textAlign: 'center' }}>
           연속 연습 달성!
         </p>
       </div>
 
-      {/* 통계 카드들 */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: '1fr 1fr', 
-        gap: '16px',
-        marginBottom: '20px'
-      }}>
-        {/* 오늘의 피출 기록 */}
-        <div style={{ 
-          backgroundColor: 'var(--PASTEL_TURQUOISE)',
-          borderRadius: '16px',
-          padding: '20px 16px',
-          textAlign: 'center',
-          border: '1px solid rgba(69, 181, 170, 0.1)'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: '6px',
-            marginBottom: '12px'
-          }}>
+      {/* 통계 카드 그리드 */}
+      <div className="grid-2x1 mb-lg">
+        <div className="card-light">
+          <div className="flex-center flex-gap-sm mb-sm">
             <Icon name="keyboard" size={16} color="var(--VERY_PERI)" />
-            <p style={{ 
-              fontSize: '12px', 
-              color: 'var(--DARK_GRAY)',
-              margin: 0,
-              fontWeight: '500'
-            }}>
-              오늘의 피출 기록
-            </p>
+            <p className="text-tiny text-gray">오늘의 피출 기록</p>
           </div>
-          <div style={{ 
-            fontSize: '20px', 
-            fontWeight: '700',
-            color: 'var(--VERY_PERI)',
-            lineHeight: '1.1'
-          }}>
-            24시간
+          <div className="text-large text-peri" style={{ textAlign: 'center' }}>
+            {Math.floor(totalTodayMinutes / 60)}시간
           </div>
         </div>
-
-        {/* 오늘 연습한 곡 */}
-        <div style={{ 
-          backgroundColor: 'var(--PASTEL_TURQUOISE)',
-          borderRadius: '16px',
-          padding: '20px 16px',
-          textAlign: 'center',
-          border: '1px solid rgba(69, 181, 170, 0.1)'
-        }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            gap: '6px',
-            marginBottom: '12px'
-          }}>
+        <div className="card-light">
+          <div className="flex-center flex-gap-sm mb-sm">
             <Icon name="staff" size={16} color="var(--VERY_PERI)" />
-            <p style={{ 
-              fontSize: '12px', 
-              color: 'var(--DARK_GRAY)',
-              margin: 0,
-              fontWeight: '500'
-            }}>
-              오늘 연습한 곡
-            </p>
+            <p className="text-tiny text-gray">오늘 연습한 곡</p>
           </div>
-          <div style={{ 
-            fontSize: '20px', 
-            fontWeight: '700',
-            color: 'var(--VERY_PERI)',
-            lineHeight: '1.1'
-          }}>
+          <div className="text-large text-peri" style={{ textAlign: 'center' }}>
             {todayCheckedCount}곡
           </div>
         </div>
       </div>
 
-      {/* 총 연습 시간 */}
-      <div style={{ 
-        backgroundColor: 'var(--PASTEL_TURQUOISE)',
-        borderRadius: '16px',
-        padding: '20px 24px',
-        textAlign: 'center',
-        marginBottom: '24px',
-        border: '1px solid rgba(69, 181, 170, 0.1)'
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          gap: '8px',
-          marginBottom: '12px'
-        }}>
+      {/* 총 연습 시간 카드 */}
+      <div className="card-light mb-lg">
+        <div className="flex-center flex-gap-sm mb-sm">
           <Icon name="trophy" size={20} color="var(--VERY_PERI)" />
-          <p style={{ 
-            fontSize: '12px', 
-            color: 'var(--DARK_GRAY)',
-            margin: 0,
-            fontWeight: '500'
-          }}>
-            총 연습 시간
-          </p>
+          <p className="text-tiny text-gray">총 연습 시간</p>
         </div>
-        <div style={{ 
-          fontSize: '24px', 
-          fontWeight: '700',
-          color: 'var(--VERY_PERI)',
-          lineHeight: '1.1'
-        }}>
+        <div className="text-large text-peri" style={{ textAlign: 'center' }}>
           {totalHours}시간
         </div>
       </div>
 
       {/* 주간 캘린더 위젯 */}
-      <div style={{ 
-        backgroundColor: 'var(--WHITE)',
-        borderRadius: '20px',
-        padding: '24px',
-        marginBottom: '32px',
-        boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
-        border: '1px solid rgba(0, 0, 0, 0.04)'
-      }}>
-        <h3 style={{ 
-          fontSize: '16px', 
-          fontWeight: '600',
-          margin: '0 0 20px 0',
-          color: 'var(--BLACK)'
-        }}>
-          이번 주 연습 기록
-        </h3>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between',
-          gap: '8px'
-        }}>
+      <div className="card-base mb-xl">
+        <h3 className="text-medium mb-lg">이번 주 연습 기록</h3>
+        <div className="flex-between">
           {weekDays.map((date) => {
             const dateStr = date.format("YYYY-MM-DD");
             const practiced = isPracticed(dateStr);
@@ -356,7 +224,7 @@ function HomeScreen() {
                 style={{
                   width: '36px',
                   height: '36px',
-                  borderRadius: '50%',
+                  borderRadius: 'var(--RADIUS_CIRCLE)',
                   backgroundColor: practiced ? 'var(--TURQUOISE)' : 'var(--LIGHT_GRAY)',
                   color: practiced ? 'var(--WHITE)' : 'var(--DARK_GRAY)',
                   display: 'flex',
@@ -378,37 +246,108 @@ function HomeScreen() {
       </div>
 
       {/* 하단 타이머 시작 버튼 */}
-      <button
-        onClick={handleTimerStart}
-        style={{
-          width: '100%',
-          padding: '18px',
-          backgroundColor: 'var(--TURQUOISE)',
-          color: 'var(--WHITE)',
-          border: 'none',
-          borderRadius: '16px',
-          fontSize: '16px',
-          fontWeight: '600',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          boxShadow: '0 4px 16px rgba(69, 181, 170, 0.3)'
-        }}
-        onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = 'rgb(59, 171, 160)';
-          e.currentTarget.style.transform = 'translateY(-1px)';
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--TURQUOISE)';
-          e.currentTarget.style.transform = 'translateY(0)';
-        }}
-      >
+      <button className="btn-primary" onClick={handleTimerStart}>
         <Icon name="play" size={18} color="var(--WHITE)" />
         드가자
       </button>
+
+      {/* 시간 설정 모달 */}
+      {showTimeModal && (
+        <div className="modal-overlay fade-in" onClick={() => setShowTimeModal(false)}>
+          <div className="modal-container slide-up" onClick={e => e.stopPropagation()}>
+            <h3 className="text-medium mb-lg" style={{ textAlign: 'center' }}>
+              연습 시간 설정
+            </h3>
+            <p className="text-small text-gray mb-lg" style={{ textAlign: 'center' }}>
+              오늘 연습할 시간을 설정해주세요
+            </p>
+            <div className="flex flex-gap-sm">
+              <button className="btn-primary" onClick={startTimer}>
+                시작하기
+              </button>
+              <button 
+                className="btn-primary" 
+                style={{ background: 'var(--MEDIUM_GRAY)' }}
+                onClick={() => setShowTimeModal(false)}
+              >
+                취소
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 타이머 실행 모달 */}
+      {showTimerModal && (
+        <div className="modal-overlay fade-in">
+          <div className="modal-container slide-up">
+            <h3 className="text-medium mb-lg" style={{ textAlign: 'center' }}>
+              연습 중
+            </h3>
+            <div className="text-large mb-lg" style={{ 
+              textAlign: 'center', 
+              fontSize: '48px',
+              color: 'var(--TURQUOISE)'
+            }}>
+              {timerDisplay}
+            </div>
+            <button className="btn-primary" onClick={stopTimer}>
+              연습 완료
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 연습 완료 모달 */}
+      {showCompleteModal && (
+        <div className="modal-overlay fade-in" onClick={() => setShowCompleteModal(false)}>
+          <div className="modal-container slide-up" onClick={e => e.stopPropagation()}>
+            <h3 className="text-medium mb-lg" style={{ textAlign: 'center' }}>
+              연습 완료! 🎉
+            </h3>
+            <p className="text-small text-gray mb-lg" style={{ textAlign: 'center' }}>
+              {Math.floor(timerSeconds / 60)}분간 연습하셨습니다
+            </p>
+            <div className="flex flex-gap-sm">
+              <button className="btn-primary" onClick={() => {
+                setShowCompleteModal(false);
+                setShowShareModal(true);
+              }}>
+                공유하기
+              </button>
+              <button 
+                className="btn-primary" 
+                style={{ background: 'var(--MEDIUM_GRAY)' }}
+                onClick={() => setShowCompleteModal(false)}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 공유 모달 */}
+      {showShareModal && (
+        <div className="modal-overlay fade-in" onClick={() => setShowShareModal(false)}>
+          <div className="modal-container slide-up" onClick={e => e.stopPropagation()}>
+            <h3 className="text-medium mb-lg" style={{ textAlign: 'center' }}>
+              피출 인증
+            </h3>
+            <div className="card-turquoise mb-lg">
+              <div className="text-large mb-sm" style={{ textAlign: 'center' }}>
+                피퇴!
+              </div>
+              <p className="text-small" style={{ textAlign: 'center', opacity: 0.9 }}>
+                {Math.floor(totalTodayMinutes / 60)}시간 {totalTodayMinutes % 60}분
+              </p>
+            </div>
+            <button className="btn-primary" onClick={() => setShowShareModal(false)}>
+              완료
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
