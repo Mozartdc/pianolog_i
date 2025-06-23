@@ -1,24 +1,14 @@
 import { useNavigate } from "react-router-dom";
-
-// SVG를 일반 이미지 URL로 import
-import HomeIcon from "../assets/icons/home.svg";
-import TodayIcon from "../assets/icons/today.svg";
-import AppleIcon from "../assets/icons/apple.svg";
-import StatisticIcon from "../assets/icons/statistic.svg";
-import SettingIcon from "../assets/icons/setting.svg";
+import HomeIcon from "../assets/icons/home.svg?react";
+import TodayIcon from "../assets/icons/today.svg?react";
+import AppleIcon from "../assets/icons/apple.svg?react";
+import StatisticIcon from "../assets/icons/statistic.svg?react";
+import SettingIcon from "../assets/icons/setting.svg?react";
 
 interface BottomTabBarProps {
   activeTab: "home" | "today" | "apple" | "statistic" | "setting";
   onTabChange: (tab: BottomTabBarProps["activeTab"]) => void;
 }
-
-const icons = {
-  home: HomeIcon,
-  today: TodayIcon,
-  apple: AppleIcon,
-  statistic: StatisticIcon,
-  setting: SettingIcon,
-};
 
 const labels = {
   home: "홈",
@@ -26,6 +16,15 @@ const labels = {
   apple: "전자사과",
   statistic: "통계",
   setting: "설정",
+};
+
+// 검색 결과[1][2][3]에서 확인한 PDF 파일의 정확한 색상
+const activeColors = {
+  home: "#45B5AA",     // Turquoise (home.pdf에서 확인)
+  today: "#6667AB",    // Very Peri (이미지에서 확인)
+  apple: "#2D2D2A",    // Jet Black (home-start-timer.pdf에서 확인)
+  statistic: "#F0C05A", // 미모사 (통계)
+  setting: "#BB2649"   // Viva Magenta (home-start-timer.pdf에서 확인)
 };
 
 const tabOrder: BottomTabBarProps["activeTab"][] = [
@@ -36,13 +35,20 @@ const tabOrder: BottomTabBarProps["activeTab"][] = [
   "setting",
 ];
 
-// 탭과 경로 매핑
 const tabToPath = {
   home: "/",
-  today: "/track", 
+  today: "/track",
   apple: "/timer",
   statistic: "/stats",
   setting: "/settings",
+};
+
+const iconComponents = {
+  home: HomeIcon,
+  today: TodayIcon,
+  apple: AppleIcon,
+  statistic: StatisticIcon,
+  setting: SettingIcon,
 };
 
 export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
@@ -69,8 +75,10 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
       }}
     >
       {tabOrder.map((tab) => {
-        const iconSrc = icons[tab];
+        const Icon = iconComponents[tab];
         const isActive = activeTab === tab;
+        const color = isActive ? activeColors[tab] : "#9E9C98";
+        
         return (
           <button
             key={tab}
@@ -87,20 +95,16 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
               cursor: "pointer",
               padding: 0,
               transition: "all 0.2s",
-              color: isActive ? "#45B5AA" : "#9E9C98", // CSS color로 SVG 색상 제어
+              color: color,
             }}
             aria-current={isActive ? "page" : undefined}
             aria-label={labels[tab]}
           >
-            <img
-              src={iconSrc}
-              alt={labels[tab]}
-              width={24}
-              height={24}
-              style={{
-                // CSS filter 완전 제거, color 속성으로 제어
-                transition: "color 0.2s",
-              }}
+            <Icon 
+              width={24} 
+              height={24} 
+              fill={color}
+              style={{ color: color }}
             />
           </button>
         );

@@ -1,6 +1,5 @@
-import React from "react";
 import './chart-setup';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import HomeScreen from "./screens/HomeScreen";
 import TrackScreen from "./screens/TrackScreen";
 import RepeatCountScreen from "./screens/RepeatCountScreen";
@@ -11,52 +10,30 @@ import StatsScreen from './screens/StatsScreen';
 import StatsDayDetailScreen from './screens/StatsDayDetailScreen';
 import "./App.css";
 
-function BottomTab() {
-  const navigate = useNavigate();
+// 외부 BottomTabBar 컴포넌트 import
+import BottomTabBar from "./components/BottomTabBar";
+
+// URL을 activeTab으로 변환하는 함수
+function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "statistic" | "setting" {
+  switch (pathname) {
+    case "/": return "home";
+    case "/track": return "today";
+    case "/timer": return "apple";
+    case "/stats": return "statistic";
+    case "/settings": return "setting";
+    default: return "home";
+  }
+}
+
+function NavigationBar() {
   const location = useLocation();
+  const activeTab = getActiveTabFromPath(location.pathname);
 
-  const tabs = [
-    { label: "홈", path: "/" },
-    { label: "투데이", path: "/track" },
-    { label: "타이머", path: "/timer" },
-    { label: "통계", path: "/stats" },
-    { label: "설정", path: "/settings" },
-  ];
+  const handleTabChange = () => {
+    // React Router가 네비게이션을 처리하므로 빈 함수
+  };
 
-  return (
-    <nav
-      style={{
-        display: "flex",
-        justifyContent: "space-around",
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "#fafbfc",
-        borderTop: "1px solid #ddd",
-        padding: "8px 0",
-        zIndex: 10,
-      }}
-    >
-      {tabs.map((tab) => (
-        <button
-          key={tab.path}
-          onClick={() => navigate(tab.path)}
-          style={{
-            background: "none",
-            border: "none",
-            fontWeight: location.pathname === tab.path ? "bold" : "normal",
-            color: location.pathname === tab.path ? "#45b5aa" : "#333",
-            fontSize: "12px",
-            cursor: "pointer",
-            padding: "4px 8px",
-          }}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </nav>
-  );
+  return <BottomTabBar activeTab={activeTab} onTabChange={handleTabChange} />;
 }
 
 function AppRoutes() {
@@ -72,7 +49,7 @@ function AppRoutes() {
         <Route path="/stats" element={<StatsScreen />} />
         <Route path="/stats/:date" element={<StatsDayDetailScreen />} />
       </Routes>
-      <BottomTab />
+      <NavigationBar />
     </>
   );
 }
