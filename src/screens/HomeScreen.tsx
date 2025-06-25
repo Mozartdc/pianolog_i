@@ -1,8 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
-import { getTodayCheer } from "../utils/cheers"; // 기존 cheers.ts 파일 import
+import { getTodayCheer } from "../utils/cheers";
+import { HomeStartTimerModal } from "./HomeStartTimerModal";
+import { TimePickModal } from "./TimePickModal";
+import { HomeStopModal } from "./HomeStopModal";
+import { ExportCardModal } from "./ExportCardModal";
 
-// 실제 SVG 파일들 import
+// 실제 SVG/이미지 파일들 import
 import KeyboardIcon from "../assets/icons/keyboard.svg";
 import StaffIcon from "../assets/icons/staff.svg";
 import TrophyIcon from "../assets/icons/trophy.svg";
@@ -30,17 +34,32 @@ interface CheerData {
   date?: string;
 }
 
-// 특별 치어스 (필요시 추가)
-const specialCheers: CheerData[] = [
-  // 예시:
-  // {
-  //   type: 'image',
-  //   imageUrl: '/assets/special/gwangbok.png',
-  //   imageAlt: '광복절 기념',
-  //   date: '2025-08-15'
-  // }
-];
+// 한국 공휴일 계산 함수
+const getKoreanHolidays = (year: number): string[] => {
+  const holidays = [
+    `${year}-01-01`, // 신정
+    `${year}-03-01`, // 삼일절
+    `${year}-05-05`, // 어린이날
+    `${year}-06-06`, // 현충일
+    `${year}-08-15`, // 광복절
+    `${year}-10-03`, // 개천절
+    `${year}-10-09`, // 한글날
+    `${year}-12-25`, // 크리스마스
+  ];
+  if (year === 2025) {
+    holidays.push(
+      '2025-01-28', '2025-01-29', '2025-01-30', // 설날
+      '2025-05-13', // 부처님오신날
+      '2025-09-06', '2025-09-07', '2025-09-08'  // 추석
+    );
+  }
+  return holidays;
+};
 
+// 특별 치어스
+const specialCheers: CheerData[] = [];
+
+// 치어스 데이터 가져오기
 function getTodayCheerData(): CheerData {
   const today = new Date().toISOString().slice(0, 10);
   
@@ -60,25 +79,49 @@ function getTodayCheerData(): CheerData {
   const specialCheer = specialCheers.find(cheer => cheer.date === today);
   if (specialCheer) return specialCheer;
   
-  // 기본 동적 치어스 (기존 cheers.ts 파일 사용)
-  return {
-    type: 'text',
-    message: getTodayCheer() // 기존 함수 사용
-  };
+  // src/utils/cheers.ts에서 메시지 가져오기
+  try {
+    const cheerMessage = getTodayCheer();
+    if (typeof cheerMessage === 'string' && cheerMessage.trim()) {
+      return { type: 'text', message: cheerMessage };
+    }
+  } catch (e) {
+    console.error('getTodayCheer error:', e);
+  }
+  
+  // 대체 메시지
+  const fallbackMessages = [
+    "오늘도 화이팅!",
+    "꾸준히 연습하는 당신이 멋져요",
+    "음악과 함께하는 하루",
+    "피아노 소리가 아름다워요",
+    "연습이 완벽을 만듭니다",
+    "드가자!",
+    "오늘의 연습도 파이팅!",
+    "멋진 연주를 위해!",
+    "한 음 한 음 정성스럽게"
+  ];
+  const now = new Date();
+  const seed = now.getHours() + now.getMinutes() + now.getSeconds();
+  const messageIndex = seed % fallbackMessages.length;
+  return { type: 'text', message: fallbackMessages[messageIndex] };
 }
 
 function HomeScreen() {
-  const [nickname] = useState(localStorage.getItem("nickname") || "디붕이");
-  const [avatar] = useState(localStorage.getItem("avatar") || "");
+  const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
+  const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
   const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>([]);
   const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>({});
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
+  const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   
   // 타이머 상태
+  const [timerActive, setTimerActive] = useState(false);
+  const [timerRunning, setTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(0);
-  const [showTimeModal, setShowTimeModal] = useState(false);
-  const [showTimerModal, setShowTimerModal] = useState(false);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [showTimePickModal, setShowTimePickModal] = useState(false);
+  const [showHomeStopModal, setShowHomeStopModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   // 실제 데이터 로딩
@@ -87,22 +130,77 @@ function HomeScreen() {
     const savedChecks = localStorage.getItem("practiceChecks");
     if (savedRecords) setPracticeRecords(JSON.parse(savedRecords) as PracticeRecord[]);
     if (savedChecks) setPracticeChecks(JSON.parse(savedChecks) as PracticeChecks);
-    
-    // 치어스 데이터 업데이트
     setCheerData(getTodayCheerData());
   }, []);
 
-  // 실제 계산된 값들
+  // 치어스 롤링 (30초마다)
+  useEffect(() => {
+    const cheerInterval = setInterval(() => {
+      setCheerData(getTodayCheerData());
+    }, 30000);
+    return () => clearInterval(cheerInterval);
+  }, []);
+
+  // localStorage 변경 감지
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const newAvatar = localStorage.getItem("avatar") || "";
+      const newNickname = localStorage.getItem("nickname") || "디붕이";
+      setAvatar(newAvatar);
+      setNickname(newNickname);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    const interval = setInterval(() => {
+      const currentAvatar = localStorage.getItem("avatar") || "";
+      const currentNickname = localStorage.getItem("nickname") || "디붕이";
+      if (currentAvatar !== avatar) {
+        setAvatar(currentAvatar);
+      }
+      if (currentNickname !== nickname) {
+        setNickname(currentNickname);
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [avatar, nickname]);
+
+  // 키보드 이벤트 처리
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowTimePickModal(false);
+        setShowHomeStopModal(false);
+        setShowExportModal(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+  // 계산된 값들
   const today = dayjs();
+  const displayDate = dayjs(selectedDate);
   const todayStr = today.format("YYYY-MM-DD");
-  const weekStart = today.subtract(today.day() === 0 ? 6 : today.day() - 1, "day");
+  const selectedDateStr = selectedDate;
+  const weekStart = displayDate.subtract(displayDate.day() === 0 ? 6 : displayDate.day() - 1, "day");
   const weekDays = Array.from({ length: 7 }).map((_, i) => weekStart.add(i, "day"));
   
-  const todayRecords = practiceRecords.filter((r: PracticeRecord) => r.date === todayStr);
-  const totalTodayMinutes = todayRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0);
-  const todayCheckedCount = practiceChecks[todayStr] 
-    ? Object.values(practiceChecks[todayStr]).filter(Boolean).length 
+  const selectedDateRecords = practiceRecords.filter((r: PracticeRecord) => r.date === selectedDateStr);
+  const selectedDateMinutes = selectedDateRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0);
+  const selectedDateCheckedCount = practiceChecks[selectedDateStr] 
+    ? Object.values(practiceChecks[selectedDateStr]).filter(Boolean).length 
     : 0;
+  
+  const todayRecords = practiceRecords.filter((r: PracticeRecord) => r.date === todayStr);
   const totalMinutes = practiceRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0);
   const totalHours = Math.floor(totalMinutes / 60);
 
@@ -110,14 +208,36 @@ function HomeScreen() {
   const getStreak = (): number => {
     let streak = 0;
     let day = dayjs();
-    while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
-      streak++;
+    
+    const todayPracticed = practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"));
+    
+    if (todayPracticed) {
+      while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
+        streak++;
+        day = day.subtract(1, "day");
+      }
+    } else {
       day = day.subtract(1, "day");
+      while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
+        streak++;
+        day = day.subtract(1, "day");
+      }
     }
+    
     return streak;
   };
 
-  // 치어스 렌더링 함수
+  // 날짜 클릭 핸들러
+  const handleDateClick = (dateStr: string) => {
+    setSelectedDate(dateStr);
+  };
+
+  // 익스포트 핸들러 - 모달 열기로 변경
+  const handleExport = () => {
+    setShowExportModal(true);
+  };
+
+  // 치어스 렌더링
   const renderCheerContent = () => {
     const baseStyle = {
       position: "absolute" as const,
@@ -127,7 +247,7 @@ function HomeScreen() {
       height: 80,
       fontSize: 11,
       color: "#9e9c98",
-      fontFamily: "Pretendard Variable",
+      fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
       lineHeight: "20px",
       textAlign: "left" as const,
       display: "flex",
@@ -185,18 +305,53 @@ function HomeScreen() {
 
   // 타이머 기능들
   const startTimer = () => {
-    setShowTimeModal(false);
-    setShowTimerModal(true);
+    setTimerActive(true);
+    setTimerRunning(true);
     timerRef.current = window.setInterval(() => {
-      setTimerSeconds(sec => sec + 1);
+      setTimerSeconds((sec: number) => sec + 1);
     }, 1000);
   };
 
-  const stopTimer = () => {
+  const pauseTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    setShowTimerModal(false);
-    setShowCompleteModal(true);
+    setTimerRunning(false);
+  };
+
+  const resumeTimer = () => {
+    setTimerRunning(true);
+    timerRef.current = window.setInterval(() => {
+      setTimerSeconds((sec: number) => sec + 1);
+    }, 1000);
+  };
+
+  const completeTimer = () => {
+    setShowHomeStopModal(true);
+  };
+
+  const editTimer = () => {
+    setShowTimePickModal(true);
+  };
+
+  const handleTimeSave = (startTime: string, endTime: string) => {
+    const today = dayjs();
+    const start = dayjs(`${today.format('YYYY-MM-DD')} ${startTime}`);
+    const end = dayjs(`${today.format('YYYY-MM-DD')} ${endTime}`);
+    const newDuration = end.diff(start, 'second');
     
+    setTimerSeconds(newDuration);
+    setShowTimePickModal(false);
+    
+    const newMinutes = Math.floor(newDuration / 60);
+    if (newMinutes > 0) {
+      const newRecords = practiceRecords.filter((r: PracticeRecord) => r.date !== todayStr);
+      const newRecord: PracticeRecord = { date: todayStr, practiceTime: newMinutes };
+      newRecords.push(newRecord);
+      setPracticeRecords(newRecords);
+      localStorage.setItem("practiceRecords", JSON.stringify(newRecords));
+    }
+  };
+
+  const handlePracticeComplete = () => {
     const addMinutes = Math.floor(timerSeconds / 60);
     if (addMinutes > 0) {
       const newRecords = practiceRecords.filter((r: PracticeRecord) => r.date !== todayStr);
@@ -206,10 +361,23 @@ function HomeScreen() {
       setPracticeRecords(newRecords);
       localStorage.setItem("practiceRecords", JSON.stringify(newRecords));
     }
+    
+    setTimerActive(false);
+    setTimerRunning(false);
     setTimerSeconds(0);
+    setShowHomeStopModal(false);
   };
 
-  const timerDisplay = `${String(Math.floor(timerSeconds / 60)).padStart(2, "0")}:${String(timerSeconds % 60).padStart(2, "0")}`;
+  const handleEditTimeFromStop = () => {
+    setShowHomeStopModal(false);
+    setShowTimePickModal(true);
+  };
+
+  const commonFontStyle = {
+    fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
+    WebkitFontSmoothing: "antialiased" as const,
+    MozOsxFontSmoothing: "grayscale" as const
+  };
 
   return (
     <div style={{
@@ -217,8 +385,8 @@ function HomeScreen() {
       width: "375px",
       height: "812px", 
       background: "#ffffff",
-      fontFamily: "Pretendard Variable, sans-serif",
-      overflow: "hidden"
+      overflow: "hidden",
+      ...commonFontStyle
     }}>
       
       {/* Header */}
@@ -237,10 +405,9 @@ function HomeScreen() {
         <span style={{
           fontSize: 17,
           color: "#45b5aa",
-          fontFamily: "Pretendard Variable",
-          fontWeight: 400,
           lineHeight: "140%",
-          textAlign: "center"
+          textAlign: "center",
+          ...commonFontStyle
         }}>
           digital piano gallery 피출앱
         </span>
@@ -255,25 +422,30 @@ function HomeScreen() {
         height: 20,
         fontSize: 14,
         color: "#2d2d2a",
-        fontFamily: "Pretendard Variable",
         textAlign: "center",
-        lineHeight: "20px"
+        lineHeight: "20px",
+        ...commonFontStyle
       }}>
-        {today.format("YYYY. MM. DD ddd").toUpperCase()}
+        {displayDate.format("YYYY. MM. DD ddd").toUpperCase()}
       </div>
 
       {/* Profile Avatar */}
-      <div style={{
-        position: "absolute",
-        left: 16,
-        top: 139,
-        width: 80,
-        height: 80,
-        borderRadius: 24,
-        border: "none",
-        overflow: "hidden",
-        background: avatar ? "transparent" : "#f9f9f9"
-      }}>
+      <div 
+        style={{
+          position: "absolute",
+          left: 16,
+          top: 139,
+          width: 80,
+          height: 80,
+          borderRadius: 24,
+          border: "none",
+          overflow: "hidden",
+          background: avatar ? "transparent" : "#f9f9f9",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }}
+      >
         {avatar ? (
           <img 
             src={avatar} 
@@ -281,11 +453,23 @@ function HomeScreen() {
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
         ) : (
-          <div style={{ 
-            width: "100%", 
-            height: "100%", 
-            background: "#f9f9f9"
+          <div style={{
+            width: "100%",
+            height: "100%",
+            background: "#f9f9f9",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 24
           }}>
+            <span style={{ 
+              fontSize: 12, 
+              color: "#9e9c98", 
+              textAlign: "center",
+              ...commonFontStyle
+            }}>
+              프로필
+            </span>
           </div>
         )}
       </div>
@@ -299,18 +483,17 @@ function HomeScreen() {
         height: 20,
         fontSize: 16,
         color: "#2d2d2a",
-        fontFamily: "Pretendard Variable",
-        fontWeight: 400,
         lineHeight: "20px",
         textAlign: "center",
         display: "flex",
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
+        ...commonFontStyle
       }}>
         {nickname}
       </div>
 
-      {/* Cheer Content - 동적 렌더링 (기존 cheers.ts 사용) */}
+      {/* Cheer Content */}
       {renderCheerContent()}
 
       {/* Total Achievement Card */}
@@ -334,57 +517,60 @@ function HomeScreen() {
         <span style={{
           fontSize: 20,
           color: "#2d2d2a",
-          fontFamily: "Pretendard Variable",
-          fontWeight: 400,
-          lineHeight: "20px"
+          lineHeight: "20px",
+          ...commonFontStyle
         }}>
-          {getStreak()}일 째 피출
+          {getStreak()}일 째 연속 피출
         </span>
       </div>
 
-      {/* Stats Card 1 - 7px spacing */}
-      <div style={{
-        position: "absolute",
-        left: 15,
-        top: 336,
-        width: 345,
-        height: 60,
-        background: "#ffffff",
-        border: "0.5px solid #9e9c98",
-        borderRadius: 16,
-        display: "flex",
-        alignItems: "center",
-        paddingLeft: 16,
-        paddingRight: 16,
-        paddingTop: 16,
-        paddingBottom: 16,
-        gap: 12
-      }}>
+      {/* Stats Card 1 */}
+      <div 
+        onClick={handleExport}
+        style={{
+          position: "absolute",
+          left: 15,
+          top: 336,
+          width: 345,
+          height: 60,
+          background: "#ffffff",
+          border: "0.5px solid #9e9c98",
+          borderRadius: 16,
+          display: "flex",
+          alignItems: "center",
+          paddingLeft: 16,
+          paddingRight: 16,
+          paddingTop: 16,
+          paddingBottom: 16,
+          gap: 12,
+          cursor: "pointer"
+        }}
+      >
         <img src={KeyboardIcon} alt="keyboard" width="24" height="24" />
         <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
           <span style={{ 
             fontSize: 14, 
             color: "#9e9c98", 
-            fontFamily: "Pretendard Variable", 
             lineHeight: "20px",
-            textAlign: "left"
+            textAlign: "left",
+            ...commonFontStyle
           }}>
-            오늘의 피출 기록
+            {selectedDate === todayStr ? "오늘의 피출 기록" : "선택한 날의 피출 기록"}
           </span>
           <span style={{ 
             fontSize: 12, 
             color: "#2d2d2a", 
-            fontFamily: "Pretendard Variable", 
             lineHeight: "16px",
-            textAlign: "left"
+            textAlign: "left",
+            ...commonFontStyle
           }}>
-            {Math.floor(totalTodayMinutes / 60)}시간 {totalTodayMinutes % 60}분
+            {Math.floor(selectedDateMinutes / 60)}시간 {selectedDateMinutes % 60}분
           </span>
         </div>
         <img src={ExportIcon} alt="export" width="16" height="20" />
       </div>
 
-      {/* Stats Card 2 - 7px spacing */}
+      {/* Stats Card 2 */}
       <div style={{
         position: "absolute",
         left: 15,
@@ -407,25 +593,25 @@ function HomeScreen() {
           <span style={{ 
             fontSize: 14, 
             color: "#9e9c98", 
-            fontFamily: "Pretendard Variable", 
             lineHeight: "20px",
-            textAlign: "left"
+            textAlign: "left",
+            ...commonFontStyle
           }}>
-            오늘 연습한 곡
+            {selectedDate === todayStr ? "오늘 연습한 곡" : "선택한 날 연습한 곡"}
           </span>
           <span style={{ 
             fontSize: 12, 
             color: "#2d2d2a", 
-            fontFamily: "Pretendard Variable", 
             lineHeight: "16px",
-            textAlign: "left"
+            textAlign: "left",
+            ...commonFontStyle
           }}>
-            {todayCheckedCount}/4 곡
+            {selectedDateCheckedCount}/4 곡
           </span>
         </div>
       </div>
 
-      {/* Stats Card 3 - 7px spacing */}
+      {/* Stats Card 3 */}
       <div style={{
         position: "absolute",
         left: 15,
@@ -448,25 +634,25 @@ function HomeScreen() {
           <span style={{ 
             fontSize: 14, 
             color: "#9e9c98", 
-            fontFamily: "Pretendard Variable", 
             lineHeight: "20px",
-            textAlign: "left"
+            textAlign: "left",
+            ...commonFontStyle
           }}>
             총 연습 시간
           </span>
           <span style={{ 
             fontSize: 12, 
             color: "#2d2d2a", 
-            fontFamily: "Pretendard Variable", 
             lineHeight: "16px",
-            textAlign: "left"
+            textAlign: "left",
+            ...commonFontStyle
           }}>
             {totalHours}시간
           </span>
         </div>
       </div>
 
-      {/* Week Calendar - responsive */}
+      {/* Week Calendar */}
       <div style={{
         position: "absolute",
         left: 16,
@@ -480,15 +666,21 @@ function HomeScreen() {
         {weekDays.map((date, index) => {
           const dateStr = date.format("YYYY-MM-DD");
           const practiced = practiceRecords.some((r: PracticeRecord) => r.date === dateStr);
-          const isWeekend = index === 5 || index === 6;
+          const isSelected = dateStr === selectedDate;
+          const isToday = dateStr === todayStr;
+          const isSunday = date.day() === 0;
+          const isSaturday = date.day() === 6;
+          const koreanHolidays = getKoreanHolidays(date.year());
+          const isHoliday = koreanHolidays.includes(dateStr);
           
           return (
             <div
               key={index}
+              onClick={() => handleDateClick(dateStr)}
               style={{
                 width: 43,
                 height: 56,
-                background: "#ffffff",
+                background: isToday ? "#c7e6df" : isSelected ? "#f0f0f0" : "#ffffff",
                 border: practiced ? "0.5px solid #45b5aa" : "0.5px solid #9e9c98",
                 borderRadius: 16,
                 display: "flex",
@@ -498,24 +690,25 @@ function HomeScreen() {
                 paddingTop: 12,
                 paddingBottom: 12,
                 paddingLeft: 8,
-                paddingRight: 8
+                paddingRight: 8,
+                cursor: "pointer"
               }}
             >
               <span style={{
                 fontSize: 20,
-                color: practiced ? "#bb2649" : "#2d2d2a",
-                fontFamily: "Pretendard Variable",
+                color: "#2d2d2a",
                 lineHeight: "24px",
-                textAlign: "center"
+                textAlign: "center",
+                ...commonFontStyle
               }}>
                 {date.format("D")}
               </span>
               <span style={{
                 fontSize: 10,
-                color: practiced ? "#6667ab" : isWeekend ? "#bb2649" : "#9e9c98",
-                fontFamily: "Pretendard Variable",
+                color: isSunday || isHoliday ? "#bb2649" : isSaturday ? "#0066cc" : "#9e9c98",
                 lineHeight: "16px",
-                textAlign: "center"
+                textAlign: "center",
+                ...commonFontStyle
               }}>
                 {date.format("ddd").toUpperCase()}
               </span>
@@ -524,220 +717,91 @@ function HomeScreen() {
         })}
       </div>
 
-      {/* Start Button */}
-      <div style={{
-        position: "absolute",
-        left: 160,
-        top: 644,
-        width: 50,
-        height: 80,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center"
-      }}>
-        <button
-          onClick={() => setShowTimeModal(true)}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0
-          }}
-        >
-          <img src={PlayIcon} alt="play" width="50" height="50" />
-        </button>
-        
-        <span style={{
-          marginTop: 8,
-          fontSize: 14,
-          color: "#45b5aa",
-          fontFamily: "Pretendard Variable",
-          lineHeight: "32px",
-          pointerEvents: "none"
+      {/* Start Button - "드가자!" 고정 */}
+      {!timerActive && (
+        <div style={{
+          position: "absolute",
+          left: 160,
+          top: 644,
+          width: 50,
+          height: 80,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center"
         }}>
-          드가자!
-        </span>
-      </div>
-
-      {/* 타이머 모달들 */}
-      {showTimeModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000
-          }}
-          onClick={() => setShowTimeModal(false)}
-        >
-          <div
+          <button
+            onClick={startTimer}
             style={{
-              background: "#fff",
-              borderRadius: 20,
-              padding: 24,
-              width: 320,
-              maxWidth: "90%",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)"
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0
             }}
-            onClick={e => e.stopPropagation()}
           >
-            <h3 style={{ fontSize: 18, fontWeight: 600, textAlign: "center", marginBottom: 24 }}>
-              연습 시간 설정
-            </h3>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={startTimer}
-                style={{
-                  flex: 1,
-                  padding: 16,
-                  background: "#45b5aa",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 16,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: "pointer"
-                }}
-              >
-                시작하기
-              </button>
-              <button
-                onClick={() => setShowTimeModal(false)}
-                style={{
-                  flex: 1,
-                  padding: 16,
-                  background: "#9e9c98",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 16,
-                  fontSize: 16,
-                  fontWeight: 600,
-                  cursor: "pointer"
-                }}
-              >
-                취소
-              </button>
-            </div>
-          </div>
+            <img src={PlayIcon} alt="play" width="50" height="50" />
+          </button>
+          
+          <span style={{
+            marginTop: 8,
+            fontSize: 14,
+            color: "#45b5aa",
+            lineHeight: "32px",
+            pointerEvents: "none",
+            ...commonFontStyle
+          }}>
+            드가자!
+          </span>
         </div>
       )}
 
-      {/* 타이머 실행 모달 */}
-      {showTimerModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              padding: 24,
-              width: 320,
-              maxWidth: "90%",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)"
-            }}
-          >
-            <h3 style={{ fontSize: 18, fontWeight: 600, textAlign: "center", marginBottom: 24 }}>
-              연습 중
-            </h3>
-            <div style={{ textAlign: "center", fontSize: 48, color: "#45b5aa", marginBottom: 24, fontWeight: 700 }}>
-              {timerDisplay}
-            </div>
-            <button
-              onClick={stopTimer}
-              style={{
-                width: "100%",
-                padding: 16,
-                background: "#45b5aa",
-                color: "#fff",
-                border: "none",
-                borderRadius: 16,
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: "pointer"
-              }}
-            >
-              연습 완료
-            </button>
-          </div>
-        </div>
+      {/* HomeStartTimer Modal */}
+      {timerActive && (
+        <HomeStartTimerModal
+          timerSeconds={timerSeconds}
+          isRunning={timerRunning}
+          onPause={pauseTimer}
+          onResume={resumeTimer}
+          onComplete={completeTimer}
+          onEdit={editTimer}
+        />
       )}
 
-      {/* 완료 모달 */}
-      {showCompleteModal && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000
-          }}
-          onClick={() => setShowCompleteModal(false)}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              padding: 24,
-              width: 320,
-              maxWidth: "90%",
-              boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)"
-            }}
-            onClick={e => e.stopPropagation()}
-          >
-            <h3 style={{ fontSize: 18, fontWeight: 600, textAlign: "center", marginBottom: 24 }}>
-              연습 완료! 🎉
-            </h3>
-            <p style={{ fontSize: 14, color: "#9e9c98", textAlign: "center", marginBottom: 24 }}>
-              {Math.floor(timerSeconds / 60)}분간 연습하셨습니다
-            </p>
-            <button
-              onClick={() => setShowCompleteModal(false)}
-              style={{
-                width: "100%",
-                padding: 16,
-                background: "#45b5aa",
-                color: "#fff",
-                border: "none",
-                borderRadius: 16,
-                fontSize: 16,
-                fontWeight: 600,
-                cursor: "pointer"
-              }}
-            >
-              완료
-            </button>
-          </div>
-        </div>
+      {/* TimePickModal */}
+      {showTimePickModal && (
+        <TimePickModal
+          isOpen={showTimePickModal}
+          onClose={() => setShowTimePickModal(false)}
+          onSave={handleTimeSave}
+          currentDuration={timerSeconds}
+        />
+      )}
+
+      {/* HomeStopModal */}
+      {showHomeStopModal && (
+        <HomeStopModal
+          isOpen={showHomeStopModal}
+          practiceTime={`${Math.floor(timerSeconds / 3600)}시간 ${Math.floor((timerSeconds % 3600) / 60)}분`}
+          onComplete={handlePracticeComplete}
+          onEditTime={handleEditTimeFromStop}
+          onClose={() => setShowHomeStopModal(false)}
+        />
+      )}
+
+      {/* ExportCardModal */}
+      {showExportModal && (
+        <ExportCardModal
+          isOpen={showExportModal}
+          nickname={nickname}
+          date={displayDate.format("YYYY. MM. DD ddd").toUpperCase()}
+          practiceTime={`${Math.floor(selectedDateMinutes / 60)}시간 ${selectedDateMinutes % 60}분`}
+          avatar={avatar}
+          onClose={() => setShowExportModal(false)}
+        />
       )}
     </div>
   );
 }
 
-// 임시 치어스 추가 함수 (필요시 사용)
 export function addTemporaryCheer(cheerData: CheerData) {
   const savedCheers = localStorage.getItem('temporaryCheers');
   let cheers: CheerData[] = [];

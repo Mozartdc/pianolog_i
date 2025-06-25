@@ -1,16 +1,44 @@
-/* 글로벌 리셋만 유지, 중복 제거 */
+/* Pretendard 폰트 로드 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 @import './colors.css';
+
+/* 글로벌 리셋 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* 통일된 폰트 설정 */
+html, body, #root {
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern' 1;
+  text-rendering: optimizeLegibility;
+}
 
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
-* {
-  box-sizing: border-box;
+#root {
+  min-height: 100vh;
 }
 
-/* colors.css의 시스템을 메인으로 사용 */
+/* 브라우저별 폰트 렌더링 최적화 */
+@supports (-webkit-appearance: none) {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-stroke: 0.01em transparent;
+  }
+}
+
+/* Variable 폰트 지원 브라우저용 */
+@supports (font-variation-settings: normal) {
+  html, body, #root {
+    font-variation-settings: 'wght' 400;
+  }
+}

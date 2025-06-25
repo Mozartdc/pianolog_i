@@ -1,4 +1,4 @@
-/* 기본 리셋만 유지 */
+/* 앱 전체 폰트 통일성 보장 */
 * {
   box-sizing: border-box;
 }
@@ -6,10 +6,42 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Pretendard Variable', sans-serif;
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern' 1;
+  text-rendering: optimizeLegibility;
 }
 
 #root {
   min-height: 100vh;
-  font-family: 'Pretendard Variable', sans-serif;
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+/* 모든 텍스트 요소에 Pretendard 강제 적용 */
+h1, h2, h3, h4, h5, h6, p, span, div, button, input, textarea, label {
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+/* 브라우저별 폰트 렌더링 최적화 */
+@supports (-webkit-appearance: none) {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-stroke: 0.01em transparent;
+  }
+}
+
+/* Variable 폰트 지원 브라우저용 */
+@supports (font-variation-settings: normal) {
+  html, body, #root, * {
+    font-variation-settings: 'wght' 400;
+  }
+}
+
+/* Safari 전용 추가 최적화 */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  * {
+    -webkit-font-smoothing: antialiased;
+    font-smoothing: antialiased;
+  }
 }

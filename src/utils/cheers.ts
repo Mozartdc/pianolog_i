@@ -1,11 +1,13 @@
 // src/utils/cheers.ts
-const cheersList = [
+
+export function getTodayCheer() {
+  const cheers = [
   "드가자!",
   "고고혓!",
   "디피갤 피출앱과 함께 파이팅!",
   "포기하지 않는 당신이 최고!",
   "연습은 배신하지 않는다!",
-    "하루 연습을 안 하면 스스로가 알고, 이틀 연습 안 하면 비평가가 안다. 그리고 사흘 동안 연습을 안 하면 청중이 안다.-루빈슈타인",
+  "하루 연습을 안 하면 스스로가 알고, 이틀 연습 안 하면 비평가가 안다. 그리고 사흘 동안 연습을 안 하면 청중이 안다.-루빈슈타인",
   "연습할 때는 가능한 한 천천히, 그리고 가장 완벽하게 하라. 빠르게 연주하는 것은 언제든 할 수 있지만, 완벽하게 연습하지 않으면 결코 좋은 연주자가 될 수 없다.-리스트",
   "연습량이 많다고 해서 좋은 연주가 나오지는 않는다. 중요한 것은 '어떻게' 연습하느냐다.-조성진",
   "우리는 손가락으로 피아노를 치는 것이 아니라 마음으로 친다. -글렌 굴드",
@@ -24,11 +26,7 @@ const cheersList = [
   "음악을 위한 가장 중요한 것은 하모니다. -바흐",
   "왼손은 거들 뿐... -강백호",
   "디지털 피아노를 욕하는 건 참을 수 있어도, 나를 욕하는 건 참을 수 없어.-나",
-  // ...추가 가능
-];
-
-export function getTodayCheer() {
-  const today = new Date();
-  const idx = today.getDate() % cheersList.length;
-  return cheersList[idx];
+  ];
+  const randomIdx = Math.floor(Math.random() * cheers.length);
+  return cheers[randomIdx];
 }
