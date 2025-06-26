@@ -1,9 +1,9 @@
 import './chart-setup';
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import HomeScreen from "./screens/HomeScreen";
-import TrackScreen from "./screens/TrackScreen";
+import Today from "./screens/Today"; // 변경: TrackScreen → Today
 import RepeatCountScreen from "./screens/RepeatCountScreen";
-import TrackDetailCalendarScreen from "./screens/TrackDetailCalendarScreen";
+import TodayCalendar from "./screens/TodayCalendar"; // 변경: TrackDetailCalendarScreen → TodayCalendar
 import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';
@@ -17,7 +17,7 @@ import BottomTabBar from "./components/BottomTabBar";
 function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "statistic" | "setting" {
   switch (pathname) {
     case "/": return "home";
-    case "/track": return "today";
+    case "/today": return "today"; // 변경: /track → /today
     case "/timer": return "apple";
     case "/stats": return "statistic";
     case "/settings": return "setting";
@@ -41,9 +41,9 @@ function AppRoutes() {
     <>
       <Routes>
         <Route path="/" element={<HomeScreen />} />
-        <Route path="/track" element={<TrackScreen />} />
+        <Route path="/today" element={<Today />} /> {/* 수정: <today /> → <Today /> */}
         <Route path="/timer" element={<RepeatCountScreen />} />
-        <Route path="/calendar" element={<TrackDetailCalendarScreen />} />
+        <Route path="/calendar" element={<TodayCalendar />} /> {/* 변경: TrackDetailCalendarScreen → TodayCalendar */}
         <Route path="/practice" element={<PracticeSessionScreen />} />
         <Route path="/settings" element={<SettingsScreen />} />
         <Route path="/stats" element={<StatsScreen />} />

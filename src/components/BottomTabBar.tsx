@@ -18,13 +18,12 @@ const labels = {
   setting: "설정",
 };
 
-// 검색 결과[1][2][3]에서 확인한 PDF 파일의 정확한 색상
 const activeColors = {
-  home: "#45B5AA",     // Turquoise (home.pdf에서 확인)
-  today: "#6667AB",    // Very Peri (이미지에서 확인)
-  apple: "#2D2D2A",    // Jet Black (home-start-timer.pdf에서 확인)
-  statistic: "#F0C05A", // 미모사 (통계)
-  setting: "#BB2649"   // Viva Magenta (home-start-timer.pdf에서 확인)
+  home: "#45B5AA",
+  today: "#6667AB",
+  apple: "#2D2D2A",
+  statistic: "#F0C05A",
+  setting: "#BB2649"
 };
 
 const tabOrder: BottomTabBarProps["activeTab"][] = [
@@ -37,7 +36,7 @@ const tabOrder: BottomTabBarProps["activeTab"][] = [
 
 const tabToPath = {
   home: "/",
-  today: "/track",
+  today: "/today",  // ✅ 수정: /track → /today
   apple: "/timer",
   statistic: "/stats",
   setting: "/settings",
