@@ -5,6 +5,10 @@ import { HomeStartTimerModal } from "./HomeStartTimerModal";
 import { TimePickModal } from "./TimePickModal";
 import { HomeStopModal } from "./HomeStopModal";
 import { ExportCardModal } from "./ExportCardModal";
+import Header from "../components/Header";
+import ProfileSection from "../components/ProfileSection";
+import StatsCard from "../components/StatsCard";
+import WeekCalendar from "../components/WeekCalendar";
 
 // 실제 SVG/이미지 파일들 import
 import KeyboardIcon from "../assets/icons/keyboard.svg";
@@ -19,6 +23,13 @@ interface PracticeRecord {
   date: string;
   practiceTime: number;
 }
+
+type Track = {
+  id: number;
+  title: string;
+  addedDate: string;
+  completedDate?: string;
+};
 
 type PracticeChecks = {
   [date: string]: {
@@ -108,12 +119,19 @@ function getTodayCheerData(): CheerData {
 }
 
 function HomeScreen() {
+  // 상태 관리
   const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
   const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>([]);
   const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>({});
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
+  
+  // ✅ tracks 상태 추가 - 체크박스 정보 동기화를 위해
+  const [tracks, setTracks] = useState<Track[]>(() => {
+    const saved = localStorage.getItem("tracks");
+    return saved ? JSON.parse(saved) : [];
+  });
   
   // 타이머 상태
   const [timerActive, setTimerActive] = useState(false);
@@ -124,20 +142,95 @@ function HomeScreen() {
   const [showExportModal, setShowExportModal] = useState(false);
   const timerRef = useRef<number | null>(null);
 
-  // 실제 데이터 로딩
+  // 데이터 로딩
   useEffect(() => {
-    const savedRecords = localStorage.getItem("practiceRecords");
-    const savedChecks = localStorage.getItem("practiceChecks");
-    if (savedRecords) setPracticeRecords(JSON.parse(savedRecords) as PracticeRecord[]);
-    if (savedChecks) setPracticeChecks(JSON.parse(savedChecks) as PracticeChecks);
+    try {
+      const savedRecords = localStorage.getItem("practiceRecords");
+      if (savedRecords) {
+        const parsed = JSON.parse(savedRecords);
+        if (Array.isArray(parsed)) {
+          setPracticeRecords(parsed);
+        } else if (parsed && typeof parsed === 'object') {
+          setPracticeRecords([parsed]);
+        }
+      }
+
+      const savedChecks = localStorage.getItem("practiceChecks");
+      if (savedChecks) {
+        setPracticeChecks(JSON.parse(savedChecks));
+      }
+
+      // ✅ tracks 데이터 로딩
+      const savedTracks = localStorage.getItem("tracks");
+      if (savedTracks) {
+        setTracks(JSON.parse(savedTracks));
+      }
+    } catch (error) {
+      console.error("데이터 로딩 실패:", error);
+    }
+    
     setCheerData(getTodayCheerData());
   }, []);
 
-  // 치어스 롤링 (30초마다)
+  // ✅ tracks 변경 감지 및 동기화
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const savedTracks = localStorage.getItem("tracks");
+      if (savedTracks) {
+        setTracks(JSON.parse(savedTracks));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    const interval = setInterval(() => {
+      const currentTracks = localStorage.getItem("tracks");
+      if (currentTracks && currentTracks !== JSON.stringify(tracks)) {
+        setTracks(JSON.parse(currentTracks));
+      }
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [tracks]);
+
+  // ✅ 검색 결과[1]의 정확한 방법: practiceChecks 정리
+  useEffect(() => {
+    const cleanupPracticeChecks = () => {
+      const existingTrackIds = new Set(tracks.map(t => t.id.toString()));
+      let needsUpdate = false;
+      const cleanedChecks = { ...practiceChecks };
+      
+      Object.keys(cleanedChecks).forEach(date => {
+        const dayChecks = cleanedChecks[date];
+        Object.keys(dayChecks).forEach(trackId => {
+          if (!existingTrackIds.has(trackId)) {
+            delete cleanedChecks[date][trackId];
+            needsUpdate = true;
+            console.log(`삭제된 곡 ID ${trackId} 제거됨`);
+          }
+        });
+      });
+      
+      if (needsUpdate) {
+        setPracticeChecks(cleanedChecks);
+        localStorage.setItem("practiceChecks", JSON.stringify(cleanedChecks));
+        console.log("practiceChecks 정리 완료");
+      }
+    };
+    
+    if (tracks.length > 0) {
+      cleanupPracticeChecks();
+    }
+  }, [tracks]);
+
+  // 치어스 롤링
   useEffect(() => {
     const cheerInterval = setInterval(() => {
       setCheerData(getTodayCheerData());
-    }, 30000);
+    }, 86400000);
     return () => clearInterval(cheerInterval);
   }, []);
 
@@ -188,119 +281,101 @@ function HomeScreen() {
 
   // 계산된 값들
   const today = dayjs();
-  const displayDate = dayjs(selectedDate);
   const todayStr = today.format("YYYY-MM-DD");
-  const selectedDateStr = selectedDate;
-  const weekStart = displayDate.subtract(displayDate.day() === 0 ? 6 : displayDate.day() - 1, "day");
-  const weekDays = Array.from({ length: 7 }).map((_, i) => weekStart.add(i, "day"));
+  const displayDate = dayjs(selectedDate);
   
-  const selectedDateRecords = practiceRecords.filter((r: PracticeRecord) => r.date === selectedDateStr);
+  // 날짜 형식 변경
+  const selectedDateFormatted = displayDate.format("YYYY년 MM월 DD일");
+  
+  // 안전한 practiceRecords 필터링
+  const selectedDateRecords = Array.isArray(practiceRecords)
+    ? practiceRecords.filter((r: PracticeRecord) => r.date === selectedDate)
+    : [];
   const selectedDateMinutes = selectedDateRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0);
-  const selectedDateCheckedCount = practiceChecks[selectedDateStr] 
-    ? Object.values(practiceChecks[selectedDateStr]).filter(Boolean).length 
+
+  // ✅ 핵심 해결책: 분모는 현재 tracks 개수로 계산!
+  const selectedDateCheckedCount = (() => {
+    try {
+      const checks = practiceChecks[selectedDate];
+      if (!checks) return { numerator: 0, denominator: tracks.length };
+      
+      // 실제 존재하는 곡만 필터링
+      const existingTrackIds = new Set(tracks.map(t => t.id.toString()));
+      const validChecks = Object.entries(checks).filter(([trackId]) => 
+        existingTrackIds.has(trackId)
+      );
+      
+      const numerator = validChecks.filter(([, checked]) => checked).length;
+      const denominator = tracks.length; // ✅ 핵심: 현재 tracks 개수로 분모 계산!
+      
+      console.log("분모 계산 디버그 (수정됨):", {
+        selectedDate,
+        allChecks: Object.keys(checks),
+        existingTrackIds: Array.from(existingTrackIds),
+        validChecks: validChecks.map(([id]) => id),
+        numerator,
+        denominator,
+        tracksLength: tracks.length
+      });
+      
+      return { numerator, denominator };
+    } catch (error) {
+      console.error("practiceChecks 읽기 실패:", error);
+      return { numerator: 0, denominator: tracks.length };
+    }
+  })();
+
+  const todayRecords = Array.isArray(practiceRecords)
+    ? practiceRecords.filter((r: PracticeRecord) => r.date === todayStr)
+    : [];
+    
+  const totalMinutes = Array.isArray(practiceRecords)
+    ? practiceRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0)
     : 0;
-  
-  const todayRecords = practiceRecords.filter((r: PracticeRecord) => r.date === todayStr);
-  const totalMinutes = practiceRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0);
+
   const totalHours = Math.floor(totalMinutes / 60);
 
   // 연속 일수 계산
   const getStreak = (): number => {
+    if (!Array.isArray(practiceRecords)) {
+      return 0;
+    }
+    
     let streak = 0;
     let day = dayjs();
     
-    const todayPracticed = practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"));
-    
-    if (todayPracticed) {
-      while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
-        streak++;
+    try {
+      const todayPracticed = practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"));
+      
+      if (todayPracticed) {
+        while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
+          streak++;
+          day = day.subtract(1, "day");
+          if (streak > 365) break;
+        }
+      } else {
         day = day.subtract(1, "day");
+        while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
+          streak++;
+          day = day.subtract(1, "day");
+          if (streak > 365) break;
+        }
       }
-    } else {
-      day = day.subtract(1, "day");
-      while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
-        streak++;
-        day = day.subtract(1, "day");
-      }
+    } catch (error) {
+      console.error("getStreak 계산 실패:", error);
+      return 0;
     }
     
     return streak;
   };
 
-  // 날짜 클릭 핸들러
+  // 이벤트 핸들러들
   const handleDateClick = (dateStr: string) => {
     setSelectedDate(dateStr);
   };
 
-  // 익스포트 핸들러 - 모달 열기로 변경
   const handleExport = () => {
     setShowExportModal(true);
-  };
-
-  // 치어스 렌더링
-  const renderCheerContent = () => {
-    const baseStyle = {
-      position: "absolute" as const,
-      left: 102,
-      top: 139,
-      width: 250,
-      height: 80,
-      fontSize: 11,
-      color: "#9e9c98",
-      fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
-      lineHeight: "20px",
-      textAlign: "left" as const,
-      display: "flex",
-      alignItems: "center"
-    };
-
-    switch (cheerData.type) {
-      case 'image':
-        return (
-          <div style={baseStyle}>
-            <img 
-              src={cheerData.imageUrl} 
-              alt={cheerData.imageAlt || "특별 이미지"}
-              style={{ 
-                width: "100%", 
-                height: "100%", 
-                objectFit: "contain",
-                borderRadius: 8
-              }}
-            />
-          </div>
-        );
-      
-      case 'textWithImage':
-        return (
-          <div style={baseStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>
-              <img 
-                src={cheerData.imageUrl} 
-                alt={cheerData.imageAlt || "이미지"}
-                style={{ 
-                  width: 40, 
-                  height: 40, 
-                  objectFit: "contain",
-                  borderRadius: 4,
-                  flexShrink: 0
-                }}
-              />
-              <span style={{ flex: 1, fontSize: 11, lineHeight: "16px" }}>
-                {cheerData.message}
-              </span>
-            </div>
-          </div>
-        );
-      
-      case 'text':
-      default:
-        return (
-          <div style={{...baseStyle, alignItems: "flex-start"}}>
-            {cheerData.message}
-          </div>
-        );
-    }
   };
 
   // 타이머 기능들
@@ -381,127 +456,48 @@ function HomeScreen() {
 
   return (
     <div style={{
-      position: "relative",
-      width: "375px",
+      width: "100%",
+      maxWidth: 375,
       height: "812px", 
       background: "#ffffff",
       overflow: "hidden",
+      margin: "0 auto",
       ...commonFontStyle
     }}>
       
       {/* Header */}
-      <div style={{
-        position: "absolute",
-        left: 1,
-        top: 44,
-        width: 375,
-        height: 42,
-        background: "#ffffff",
-        borderBottom: "0.5px solid #9e9c98",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
-      }}>
-        <span style={{
-          fontSize: 17,
-          color: "#45b5aa",
-          lineHeight: "140%",
-          textAlign: "center",
-          ...commonFontStyle
-        }}>
-          digital piano gallery 피출앱
-        </span>
-      </div>
+      <Header 
+        title="digital piano gallery 피출앱"
+        color="#45b5aa"
+        topMargin={44}
+      />
 
       {/* Date Display */}
       <div style={{
-        position: "absolute",
-        left: 14,
-        top: 101,
-        width: 345,
+        width: "100%",
+        maxWidth: 345,
         height: 20,
         fontSize: 14,
         color: "#2d2d2a",
         textAlign: "center",
         lineHeight: "20px",
+        margin: "15px auto 0 auto",
         ...commonFontStyle
       }}>
         {displayDate.format("YYYY. MM. DD ddd").toUpperCase()}
       </div>
 
-      {/* Profile Avatar */}
-      <div 
-        style={{
-          position: "absolute",
-          left: 16,
-          top: 139,
-          width: 80,
-          height: 80,
-          borderRadius: 24,
-          border: "none",
-          overflow: "hidden",
-          background: avatar ? "transparent" : "#f9f9f9",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}
-      >
-        {avatar ? (
-          <img 
-            src={avatar} 
-            alt="프로필" 
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        ) : (
-          <div style={{
-            width: "100%",
-            height: "100%",
-            background: "#f9f9f9",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            borderRadius: 24
-          }}>
-            <span style={{ 
-              fontSize: 12, 
-              color: "#9e9c98", 
-              textAlign: "center",
-              ...commonFontStyle
-            }}>
-              프로필
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Nickname */}
-      <div style={{
-        position: "absolute",
-        left: 16,
-        top: 226,
-        width: 80,
-        height: 20,
-        fontSize: 16,
-        color: "#2d2d2a",
-        lineHeight: "20px",
-        textAlign: "center",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        ...commonFontStyle
-      }}>
-        {nickname}
-      </div>
-
-      {/* Cheer Content */}
-      {renderCheerContent()}
+      {/* Profile Section */}
+      <ProfileSection 
+        avatar={avatar}
+        nickname={nickname}
+        cheerData={cheerData}
+      />
 
       {/* Total Achievement Card */}
       <div style={{
-        position: "absolute",
-        left: 15,
-        top: 269,
-        width: 345,
+        width: "100%",
+        maxWidth: 345,
         height: 60,
         background: "#c7e6df",
         borderRadius: 16,
@@ -511,7 +507,8 @@ function HomeScreen() {
         paddingRight: 65,
         paddingTop: 16,
         paddingBottom: 16,
-        gap: 12
+        gap: 12,
+        margin: "23px auto 0 auto"
       }}>
         <img src={FlameIcon} alt="flame" width="25" height="25" />
         <span style={{
@@ -520,214 +517,58 @@ function HomeScreen() {
           lineHeight: "20px",
           ...commonFontStyle
         }}>
-          {getStreak()}일 째 연속 피출
+          {getStreak()}일 연속 피출
         </span>
       </div>
 
-      {/* Stats Card 1 */}
-      <div 
+      {/* Stats Cards */}
+      <StatsCard
+        icon={KeyboardIcon}
+        iconAlt="keyboard"
+        iconWidth={24}
+        iconHeight={24}
+        title={selectedDate === todayStr ? "오늘의 피출 기록" : `${selectedDateFormatted} 피출 기록`}
+        value={`${Math.floor(selectedDateMinutes / 60)}시간 ${selectedDateMinutes % 60}분`}
         onClick={handleExport}
-        style={{
-          position: "absolute",
-          left: 15,
-          top: 336,
-          width: 345,
-          height: 60,
-          background: "#ffffff",
-          border: "0.5px solid #9e9c98",
-          borderRadius: 16,
-          display: "flex",
-          alignItems: "center",
-          paddingLeft: 16,
-          paddingRight: 16,
-          paddingTop: 16,
-          paddingBottom: 16,
-          gap: 12,
-          cursor: "pointer"
-        }}
-      >
-        <img src={KeyboardIcon} alt="keyboard" width="24" height="24" />
-        <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-          <span style={{ 
-            fontSize: 14, 
-            color: "#9e9c98", 
-            lineHeight: "20px",
-            textAlign: "left",
-            ...commonFontStyle
-          }}>
-            {selectedDate === todayStr ? "오늘의 피출 기록" : "선택한 날의 피출 기록"}
-          </span>
-          <span style={{ 
-            fontSize: 12, 
-            color: "#2d2d2a", 
-            lineHeight: "16px",
-            textAlign: "left",
-            ...commonFontStyle
-          }}>
-            {Math.floor(selectedDateMinutes / 60)}시간 {selectedDateMinutes % 60}분
-          </span>
-        </div>
-        <img src={ExportIcon} alt="export" width="16" height="20" />
-      </div>
+        showExportIcon={true}
+        exportIcon={ExportIcon}
+      />
 
-      {/* Stats Card 2 */}
-      <div style={{
-        position: "absolute",
-        left: 15,
-        top: 403,
-        width: 345,
-        height: 60,
-        background: "#ffffff",
-        border: "0.5px solid #9e9c98",
-        borderRadius: 16,
-        display: "flex",
-        alignItems: "center",
-        paddingLeft: 16,
-        paddingRight: 16,
-        paddingTop: 16,
-        paddingBottom: 16,
-        gap: 12
-      }}>
-        <img src={StaffIcon} alt="staff" width="24" height="24" />
-        <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-          <span style={{ 
-            fontSize: 14, 
-            color: "#9e9c98", 
-            lineHeight: "20px",
-            textAlign: "left",
-            ...commonFontStyle
-          }}>
-            {selectedDate === todayStr ? "오늘 연습한 곡" : "선택한 날 연습한 곡"}
-          </span>
-          <span style={{ 
-            fontSize: 12, 
-            color: "#2d2d2a", 
-            lineHeight: "16px",
-            textAlign: "left",
-            ...commonFontStyle
-          }}>
-            {selectedDateCheckedCount}/4 곡
-          </span>
-        </div>
-      </div>
+      <StatsCard
+        icon={StaffIcon}
+        iconAlt="staff"
+        iconWidth={24}
+        iconHeight={24}
+        title={selectedDate === todayStr ? "오늘 연습한 곡" : `${selectedDateFormatted} 연습한 곡`}
+        value={`${selectedDateCheckedCount.numerator}/${selectedDateCheckedCount.denominator} 곡`}
+      />
 
-      {/* Stats Card 3 */}
-      <div style={{
-        position: "absolute",
-        left: 15,
-        top: 470,
-        width: 345,
-        height: 60,
-        background: "#ffffff",
-        border: "0.5px solid #9e9c98",
-        borderRadius: 16,
-        display: "flex",
-        alignItems: "center",
-        paddingLeft: 16,
-        paddingRight: 16,
-        paddingTop: 16,
-        paddingBottom: 16,
-        gap: 12
-      }}>
-        <img src={TrophyIcon} alt="trophy" width="21" height="21" />
-        <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-          <span style={{ 
-            fontSize: 14, 
-            color: "#9e9c98", 
-            lineHeight: "20px",
-            textAlign: "left",
-            ...commonFontStyle
-          }}>
-            총 연습 시간
-          </span>
-          <span style={{ 
-            fontSize: 12, 
-            color: "#2d2d2a", 
-            lineHeight: "16px",
-            textAlign: "left",
-            ...commonFontStyle
-          }}>
-            {totalHours}시간
-          </span>
-        </div>
-      </div>
+      <StatsCard
+        icon={TrophyIcon}
+        iconAlt="trophy"
+        iconWidth={21}
+        iconHeight={21}
+        title="총 연습 시간"
+        value={`${totalHours}시간`}
+      />
 
       {/* Week Calendar */}
-      <div style={{
-        position: "absolute",
-        left: 16,
-        top: 545,
-        width: 344,
-        height: 56,
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }}>
-        {weekDays.map((date, index) => {
-          const dateStr = date.format("YYYY-MM-DD");
-          const practiced = practiceRecords.some((r: PracticeRecord) => r.date === dateStr);
-          const isSelected = dateStr === selectedDate;
-          const isToday = dateStr === todayStr;
-          const isSunday = date.day() === 0;
-          const isSaturday = date.day() === 6;
-          const koreanHolidays = getKoreanHolidays(date.year());
-          const isHoliday = koreanHolidays.includes(dateStr);
-          
-          return (
-            <div
-              key={index}
-              onClick={() => handleDateClick(dateStr)}
-              style={{
-                width: 43,
-                height: 56,
-                background: isToday ? "#c7e6df" : isSelected ? "#f0f0f0" : "#ffffff",
-                border: practiced ? "0.5px solid #45b5aa" : "0.5px solid #9e9c98",
-                borderRadius: 16,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                paddingTop: 12,
-                paddingBottom: 12,
-                paddingLeft: 8,
-                paddingRight: 8,
-                cursor: "pointer"
-              }}
-            >
-              <span style={{
-                fontSize: 20,
-                color: "#2d2d2a",
-                lineHeight: "24px",
-                textAlign: "center",
-                ...commonFontStyle
-              }}>
-                {date.format("D")}
-              </span>
-              <span style={{
-                fontSize: 10,
-                color: isSunday || isHoliday ? "#bb2649" : isSaturday ? "#0066cc" : "#9e9c98",
-                lineHeight: "16px",
-                textAlign: "center",
-                ...commonFontStyle
-              }}>
-                {date.format("ddd").toUpperCase()}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+      <WeekCalendar
+        selectedDate={selectedDate}
+        practiceRecords={practiceRecords}
+        onDateClick={handleDateClick}
+        getKoreanHolidays={getKoreanHolidays}
+      />
 
-      {/* Start Button - "드가자!" 고정 */}
+      {/* Start Button */}
       {!timerActive && (
         <div style={{
-          position: "absolute",
-          left: 160,
-          top: 644,
           width: 50,
           height: 80,
           display: "flex",
           flexDirection: "column",
-          alignItems: "center"
+          alignItems: "center",
+          margin: "43px auto 0 auto"
         }}>
           <button
             onClick={startTimer}
@@ -754,7 +595,7 @@ function HomeScreen() {
         </div>
       )}
 
-      {/* HomeStartTimer Modal */}
+      {/* Modals */}
       {timerActive && (
         <HomeStartTimerModal
           timerSeconds={timerSeconds}
@@ -766,7 +607,6 @@ function HomeScreen() {
         />
       )}
 
-      {/* TimePickModal */}
       {showTimePickModal && (
         <TimePickModal
           isOpen={showTimePickModal}
@@ -776,7 +616,6 @@ function HomeScreen() {
         />
       )}
 
-      {/* HomeStopModal */}
       {showHomeStopModal && (
         <HomeStopModal
           isOpen={showHomeStopModal}
@@ -787,7 +626,6 @@ function HomeScreen() {
         />
       )}
 
-      {/* ExportCardModal */}
       {showExportModal && (
         <ExportCardModal
           isOpen={showExportModal}

@@ -59,8 +59,6 @@ export function HomeStopModal({
     >
       <div
         style={{
-          position: "absolute",
-          left: 15, // TimePickModal과 동일한 위치
           background: "#ffffff",
           borderRadius: 4, // PDF에서 4px 둥근 모서리
           width: 345, // PDF 사양: 345px

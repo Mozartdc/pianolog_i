@@ -1,9 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import dayjs, { Dayjs } from "dayjs";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 import "dayjs/locale/ko";
 import Header from "../components/Header";
-import DatePicker from "../components/DatePicker";
+import WeekCalendar from "../components/WeekCalendar";
+import PracticeItem from "../components/PracticeItem";
+import SongPlusIcon from "../assets/icons/songplus.svg";
 
 type Track = {
   id: number;
@@ -20,14 +23,23 @@ type PartialCounts = {
   [trackId: number]: number;
 };
 
+const getKoreanHolidays = (year: number): string[] => {
+  const holidays = [
+    `${year}-01-01`, `${year}-03-01`, `${year}-05-05`, `${year}-06-06`,
+    `${year}-08-15`, `${year}-10-03`, `${year}-10-09`, `${year}-12-25`,
+  ];
+  if (year === 2025) {
+    holidays.push(
+      '2025-01-28', '2025-01-29', '2025-01-30',
+      '2025-05-13', '2025-09-06', '2025-09-07', '2025-09-08'
+    );
+  }
+  return holidays;
+};
+
 function getToday(): string {
   const now = new Date();
   return now.toISOString().slice(0, 10);
-}
-
-function getWeekStart(date: Dayjs): Dayjs {
-  const dayOfWeek = date.day() === 0 ? 6 : date.day() - 1;
-  return date.subtract(dayOfWeek, "day").startOf("day");
 }
 
 function loadPracticeData(): any[] {
@@ -40,6 +52,8 @@ function savePracticeData( any): void {
 }
 
 export function Today() {
+  const navigate = useNavigate();
+  
   const [tracks, setTracks] = useState<Track[]>(() => {
     const saved = localStorage.getItem("tracks");
     return saved ? JSON.parse(saved) : [];
@@ -55,13 +69,8 @@ export function Today() {
     return saved ? JSON.parse(saved) : {};
   });
 
-  const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
-  const [currentWeekStart, setCurrentWeekStart] = useState<Dayjs>(getWeekStart(dayjs()));
+  const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [showSongPlusModal, setShowSongPlusModal] = useState(false);
-
-  const weekDays = Array.from({ length: 7 }).map((_, i) =>
-    currentWeekStart.add(i, "day")
-  );
 
   useEffect(() => {
     localStorage.setItem("tracks", JSON.stringify(tracks));
@@ -109,26 +118,34 @@ export function Today() {
   };
 
   const toggleCheck = (trackId: number): void => {
-    const dateStr = selectedDate.format("YYYY-MM-DD");
     setPracticeChecks((prev) => {
-      const dayChecks = prev[dateStr] ? { ...prev[dateStr] } : {};
+      const dayChecks = prev[selectedDate] ? { ...prev[selectedDate] } : {};
       const checked = !dayChecks[trackId];
       dayChecks[trackId] = checked;
-      const updated = { ...prev, [dateStr]: dayChecks };
+      const updated = { ...prev, [selectedDate]: dayChecks };
 
-      let practiceRecords = loadPracticeData();
-      const track = tracks.find(t => t.id === trackId);
-      if (checked && track) {
-        practiceRecords = [
-          ...practiceRecords,
-          { date: dateStr, track: track.title, repeatCount: 1 }
-        ];
-      } else if (!checked && track) {
-        practiceRecords = practiceRecords.filter(
-          (r: any) => !(r.date === dateStr && r.track === track.title)
-        );
+      try {
+        let practiceRecords = loadPracticeData();
+        if (!Array.isArray(practiceRecords)) {
+          practiceRecords = [];
+        }
+        
+        const track = tracks.find(t => t.id === trackId);
+        
+        if (checked && track) {
+          practiceRecords = [
+            ...practiceRecords,
+            { date: selectedDate, track: track.title, repeatCount: 1 }
+          ];
+        } else if (!checked && track) {
+          practiceRecords = practiceRecords.filter(
+            (r: any) => !(r.date === selectedDate && r.track === track.title)
+          );
+        }
+        savePracticeData(practiceRecords);
+      } catch (error) {
+        console.error("localStorage 업데이트 실패:", error);
       }
-      savePracticeData(practiceRecords);
 
       return updated;
     });
@@ -148,101 +165,152 @@ export function Today() {
     }));
   };
 
-  const moveToPrevWeek = (): void => {
-    setCurrentWeekStart(currentWeekStart.subtract(1, "week"));
+  const handleEdit = (id: number): void => {
+    alert(`수정: ${id}`);
   };
 
-  const moveToNextWeek = (): void => {
-    setCurrentWeekStart(currentWeekStart.add(1, "week"));
+  const handleDelete = (id: number): void => {
+    if (confirm("정말 삭제하시겠습니까?")) {
+      removeTrack(id);
+    }
   };
 
-  const selectedDateStr = selectedDate.format("YYYY-MM-DD");
+  const handleTitleClick = (trackId: number): void => {
+    console.log("곡별 캘린더 모달:", trackId);
+  };
+
+  const handleCountClick = (trackId: number): void => {
+    console.log("전자사과로 이동:", trackId);
+    navigate(`/timer?trackId=${trackId}`);
+  };
+
+  const handleDateClick = (dateStr: string) => {
+    setSelectedDate(dateStr);
+  };
+
   const visibleTracks = tracks.filter(
     (track) =>
-      track.addedDate <= selectedDateStr &&
-      (!track.completedDate || selectedDateStr <= track.completedDate)
+      track.addedDate <= selectedDate &&
+      (!track.completedDate || selectedDate <= track.completedDate)
   );
 
-  const isFuture = selectedDate.isAfter(dayjs(), "day");
-
   return (
-    <main className="flex overflow-hidden flex-col items-center pt-11 mx-auto w-full bg-white max-w-[480px]">
+    <main style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      paddingTop: 44,
+      margin: "0 auto",
+      width: "100%",
+      maxWidth: 375,
+      background: "white",
+      overflow: "hidden",
+      minHeight: "100vh",
+      paddingBottom: 120
+    }}>
       <Header 
         title="Today"
+        color="#6667AB"
         showBackButton={false}
       />
 
-      <DatePicker 
-        weekDays={weekDays}
-        selectedDate={selectedDate}
-        onDateSelect={setSelectedDate}
-        onPrevWeek={moveToPrevWeek}
-        onNextWeek={moveToNextWeek}
-      />
+      <div style={{
+        width: "100%",
+        maxWidth: 343,
+        margin: "15px auto 0 auto"
+      }}>
+        <WeekCalendar
+          selectedDate={selectedDate}
+          practiceRecords={loadPracticeData()}
+          onDateClick={handleDateClick}
+          getKoreanHolidays={getKoreanHolidays}
+        />
+      </div>
 
-      <section className="w-full max-w-[343px] mt-9" aria-label="Practice items">
+      <div style={{ 
+        width: "100%", 
+        marginTop: 27,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4
+      }}>
         {visibleTracks.map((track) => {
-          const isChecked = !!(practiceChecks[selectedDateStr] && practiceChecks[selectedDateStr][track.id]);
+          const isChecked = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
           const partialCount = partialCounts[track.id] || 0;
           const daysSince = dayjs().diff(dayjs(track.addedDate), 'day') + 1;
 
           return (
-            <article key={track.id} className="flex gap-3 items-center py-2 pr-4 pl-3 mt-4 w-full rounded-xl border-solid border-[0.5px] border-[color:var(--Very-Peri,#6667AB)] max-w-[343px] min-h-16">
-              <input
-                type="checkbox"
-                checked={isChecked}
-                onChange={() => toggleCheck(track.id)}
-                disabled={isFuture}
-                className="w-4 h-4"
-              />
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets/744167cc4dee418e98e1340f850526a7/ebf6ed31025f0b6e3474d9dfa3beb31e46224e85?placeholderIfAbsent=true"
-                alt="Piano piece"
-                className="object-contain shrink-0 self-stretch my-auto w-6 aspect-square"
-              />
-              <div className="flex flex-col justify-center self-stretch my-auto w-[179px]">
-                <h3 className="text-base text-ellipsis text-zinc-800">{track.title}</h3>
-                <p className="gap-1.5 self-start text-sm leading-loose text-ellipsis text-stone-400">
-                  오늘로 {daysSince}일째
-                </p>
-              </div>
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets/744167cc4dee418e98e1340f850526a7/9af3dad32d38097f711ef3a0f7730e5ce0b329b5?placeholderIfAbsent=true"
-                alt="Practice streak"
-                className="object-contain shrink-0 self-stretch my-auto w-4 aspect-square"
-              />
-              <button onClick={() => decPartial(track.id)} className="px-1 py-1 text-sm bg-gray-200 rounded">-</button>
-              <span className="self-stretch my-auto text-sm leading-loose text-slate-500 mx-1">
-                {partialCount}
-              </span>
-              <button onClick={() => incPartial(track.id)} className="px-1 py-1 text-sm bg-gray-200 rounded">+</button>
-              <img
-                src="https://cdn.builder.io/api/v1/image/assets/744167cc4dee418e98e1340f850526a7/be3a1b3cfe9bc167c3ce1337bf002dae535a4bd8?placeholderIfAbsent=true"
-                alt="More options"
-                className="object-contain shrink-0 self-stretch my-auto w-4 aspect-square cursor-pointer"
-                onClick={() => removeTrack(track.id)}
-              />
-            </article>
+            <PracticeItem
+              key={track.id}
+              title={track.title}
+              subtitle={`오늘로 ${daysSince}일째`}
+              checked={isChecked}
+              count={partialCount}
+              onCheck={() => toggleCheck(track.id)}
+              onInc={() => incPartial(track.id)}
+              onDec={() => decPartial(track.id)}
+              onEdit={() => handleEdit(track.id)}
+              onDelete={() => handleDelete(track.id)}
+              onTitleClick={() => handleTitleClick(track.id)}
+              onCountClick={() => handleCountClick(track.id)}
+            />
           );
         })}
-      </section>
+      </div>
 
       <button
-        onClick={() => setShowSongPlusModal(true)}
-        className="object-contain mt-16 aspect-square w-[50px] rounded-full bg-blue-500 flex items-center justify-center hover:bg-blue-600 transition-colors"
-        aria-label="Add new practice song"
+        onClick={() => {
+          console.log("송 플러스 버튼 클릭!");
+          setShowSongPlusModal(true);
+        }}
+        style={{
+          position: "fixed",
+          bottom: "103px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "45px",
+          height: "45px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+          zIndex: 999
+        }}
       >
-        <span className="text-white text-2xl font-bold">+</span>
+        <img src={SongPlusIcon} alt="add song" width="45" height="45" />
       </button>
 
       {showSongPlusModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-sm w-full mx-4">
-            <h2 className="text-lg font-bold mb-4">연습 곡 추가</h2>
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "white",
+            padding: 24,
+            borderRadius: 8,
+            maxWidth: 320,
+            width: "100%",
+            margin: "0 16px"
+          }}>
+            <h2 style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16 }}>연습 곡 추가</h2>
             <input
               type="text"
               placeholder="곡명을 입력하세요"
-              className="w-full p-2 border rounded mb-4"
+              style={{
+                width: "100%",
+                padding: 8,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+                marginBottom: 16,
+                fontSize: 16
+              }}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   addTrack((e.target as HTMLInputElement).value);
@@ -251,10 +319,17 @@ export function Today() {
                 }
               }}
             />
-            <div className="flex gap-2">
+            <div style={{ display: "flex", gap: 8 }}>
               <button 
                 onClick={() => setShowSongPlusModal(false)}
-                className="flex-1 p-2 border rounded"
+                style={{
+                  flex: 1,
+                  padding: 8,
+                  border: "1px solid #ccc",
+                  borderRadius: 4,
+                  background: "white",
+                  cursor: "pointer"
+                }}
               >
                 취소
               </button>
@@ -267,7 +342,15 @@ export function Today() {
                     input.value = '';
                   }
                 }}
-                className="flex-1 p-2 bg-blue-500 text-white rounded"
+                style={{
+                  flex: 1,
+                  padding: 8,
+                  background: "#6667AB",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 4,
+                  cursor: "pointer"
+                }}
               >
                 추가
               </button>

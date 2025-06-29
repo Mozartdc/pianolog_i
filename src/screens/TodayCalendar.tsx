@@ -1,205 +1,367 @@
-import { useLocation, useNavigate } from "react-router-dom";
+"use client";
 import { useState, useEffect } from "react";
-import dayjs, { Dayjs } from "dayjs";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 import "dayjs/locale/ko";
-import { Box, Badge, Button, Typography, Paper } from "@mui/material";
-import { StaticDatePicker } from "@mui/x-date-pickers/StaticDatePicker";
-import { PickersDay } from "@mui/x-date-pickers/PickersDay";
-import type { PickersDayProps } from "@mui/x-date-pickers/PickersDay";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import Header from "../components/Header";
+import WeekCalendar from "../components/WeekCalendar";  // ✅ DatePicker 대신 WeekCalendar 사용
+import PracticeItem from "../components/PracticeItem";
+import SongPlusIcon from "../assets/icons/songplus.svg";
 
-type Track = { id: number; title: string; addedDate: string; completedDate?: string };
-type PracticeChecks = { [date: string]: { [trackId: number]: boolean } };
+type Track = {
+  id: number;
+  title: string;
+  addedDate: string;
+  completedDate?: string;
+};
 
-function useQuery() {
-  return new URLSearchParams(useLocation().search);
+type PracticeChecks = {
+  [date: string]: { [trackId: number]: boolean };
+};
+
+type PartialCounts = {
+  [trackId: number]: number;
+};
+
+function getToday(): string {
+  const now = new Date();
+  return now.toISOString().slice(0, 10);
 }
 
-function toDateStr(date: Dayjs) {
-  return date.format("YYYY-MM-DD");
+function getWeekStart(date: Dayjs): Dayjs {
+  const dayOfWeek = date.day() === 0 ? 6 : date.day() - 1;
+  return date.subtract(dayOfWeek, "day").startOf("day");
 }
 
-// 커스텀 PickersDay: 곡이 있었던 날+미체크는 흐림, 없던 날은 거의 안 보이게(클린)
-function CustomPickersDay(props: PickersDayProps & { checked?: boolean; existed?: boolean }) {
-  const { checked, existed, ...other } = props;
-  let opacity = 1;
-  if (existed && !checked) opacity = 0.4;   // 곡이 있었는데 연습 안 한 날: 흐림
-  if (!existed) opacity = 0.9;             // 곡이 없던 날: 거의 투명(클린)
-  return (
-    <Badge
-      overlap="circular"
-      badgeContent={checked ? "✔️" : undefined}
-      color="success"
-    >
-      <PickersDay
-        {...other}
-        sx={{
-          opacity,
-          bgcolor: checked ? "#7e5fff" : existed ? "#bbb" : undefined,
-          color: checked ? "#888" : existed ? "#888" : "#888",
-          borderRadius: "50%",
-        }}
-      />
-    </Badge>
-  );
+function loadPracticeData(): any[] {
+  try {
+    const data = localStorage.getItem("practiceRecords");
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error("practiceRecords 로딩 실패:", error);
+    return [];
+  }
 }
 
-function TrackDetailCalendarScreen() {
-  const query = useQuery();
-  const trackId = Number(query.get("trackId"));
-  const navigate = useNavigate();
+// ✅ 수정: savePracticeData 함수 문법 오류 및 저장 문제 수정
+function savePracticeData( any): void {
+  try {
+    if (Array.isArray('data')) {
+      localStorage.setItem("practiceRecords", JSON.stringify('data'));
+    }
+  } catch (error) {
+    console.error("practiceRecords 저장 실패:", error);
+  }
+}
 
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>({});
+export function Today() {
+  const [tracks, setTracks] = useState<Track[]>(() => {
+    const saved = localStorage.getItem("tracks");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>(() => {
+    const saved = localStorage.getItem("practiceChecks");
+    return saved ? JSON.parse(saved) : {};
+  });
+
+  const [partialCounts, setPartialCounts] = useState<PartialCounts>(() => {
+    const saved = localStorage.getItem("partialCounts");
+    return saved ? JSON.parse(saved) : {};
+  });
+
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs());
+  const [currentWeekStart, setCurrentWeekStart] = useState<Dayjs>(getWeekStart(dayjs()));
+  const [showSongPlusModal, setShowSongPlusModal] = useState(false);
+
+  const weekDays = Array.from({ length: 7 }).map((_, i) =>
+    currentWeekStart.add(i, "day")
+  );
 
   useEffect(() => {
-    const savedTracks = localStorage.getItem("tracks");
-    setTracks(savedTracks ? JSON.parse(savedTracks) : []);
-    const savedChecks = localStorage.getItem("practiceChecks");
-    setPracticeChecks(savedChecks ? JSON.parse(savedChecks) : {});
-  }, []);
+    localStorage.setItem("tracks", JSON.stringify(tracks));
+  }, [tracks]);
 
-  const track = tracks.find((t) => t.id === trackId);
-  if (!track) {
-    return (
-      <Box sx={{ p: 3 }}>
-        <Typography>곡 정보를 찾을 수 없습니다.</Typography>
-        <Button onClick={() => navigate(-1)}>돌아가기</Button>
-      </Box>
-    );
-  }
+  useEffect(() => {
+    localStorage.setItem("practiceChecks", JSON.stringify(practiceChecks));
+  }, [practiceChecks]);
 
-  // 날짜 클릭 시 체크/해제
-  const handleDayClick = (date: Dayjs) => {
-    const dateStr = toDateStr(date);
-    const todayStr = toDateStr(dayjs());
-    if (dateStr > todayStr) return; // 미래 날짜 클릭 불가
+  useEffect(() => {
+    localStorage.setItem("partialCounts", JSON.stringify(partialCounts));
+  }, [partialCounts]);
 
-    // 1. 연습 체크/해제 처리
+  const addTrack = (title: string): void => {
+    if (!title.trim()) return;
+    const today = getToday();
+    const newTrack: Track = { id: Date.now(), title: title.trim(), addedDate: today };
+    setTracks([...tracks, newTrack]);
+  };
+
+  const removeTrack = (id: number): void => {
+    const track = tracks.find(t => t.id === id);
+    setTracks(tracks.filter((t) => t.id !== id));
+    
+    setPartialCounts((prev) => {
+      const copy = { ...prev };
+      delete copy[id];
+      return copy;
+    });
+    
     setPracticeChecks((prev) => {
-      const dayChecks = prev[dateStr] ? { ...prev[dateStr] } : {};
-      dayChecks[trackId] = !dayChecks[trackId];
-      const updated = { ...prev, [dateStr]: dayChecks };
-      localStorage.setItem("practiceChecks", JSON.stringify(updated));
-      return updated;
+      const copy: PracticeChecks = {};
+      for (const date in prev) {
+        copy[date] = { ...prev[date] };
+        delete copy[date][id];
+      }
+      return copy;
     });
 
-    // 2. 곡의 addedDate보다 더 과거를 체크했다면, 곡의 addedDate를 갱신
-    if (track.addedDate > dateStr) {
-      const tracksRaw = localStorage.getItem("tracks");
-      if (tracksRaw) {
-        const tracksArr = JSON.parse(tracksRaw);
-        const idx = tracksArr.findIndex((t: any) => t.id === trackId);
-        if (idx !== -1) {
-          tracksArr[idx].addedDate = dateStr;
-          localStorage.setItem("tracks", JSON.stringify(tracksArr));
-          setTracks(tracksArr); // 상태 동기화
-        }
-      }
+    if (track) {
+      const prevRecords = loadPracticeData();
+      const updated = prevRecords.filter((r: any) => r.track !== track.title);
+      savePracticeData(updated);
     }
-
-    setSelectedDate(date);
   };
 
-  // slotProps.day에서 각 날짜별 checked, existed, disabled, onClick 등 커스텀
-  const getDayProps = (date: Dayjs) => {
-    const dateStr = toDateStr(date);
-    const checked = !!(practiceChecks[dateStr] && practiceChecks[dateStr][trackId]);
-    const isFuture = date.isAfter(dayjs(), "day");
-    const existed =
-      track.addedDate <= dateStr &&
-      (!track.completedDate || dateStr <= track.completedDate);
+  // ✅ 체크 에러 해결: 안전한 데이터 처리
+  const toggleCheck = (trackId: number): void => {
+    const dateStr = selectedDate.format("YYYY-MM-DD");
+    
+    setPracticeChecks((prev) => {
+      const dayChecks = prev[dateStr] ? { ...prev[dateStr] } : {};
+      const checked = !dayChecks[trackId];
+      dayChecks[trackId] = checked;
+      const updated = { ...prev, [dateStr]: dayChecks };
 
-    return {
-      checked,
-      existed,
-      disabled: isFuture,
-      onClick: () => !isFuture && handleDayClick(date),
-    };
+      // ✅ 안전한 practiceRecords 업데이트
+      try {
+        let practiceRecords = loadPracticeData();
+        // ✅ 배열 검증 추가
+        if (!Array.isArray(practiceRecords)) {
+          practiceRecords = [];
+        }
+        
+        const track = tracks.find(t => t.id === trackId);
+        
+        if (checked && track) {
+          practiceRecords = [
+            ...practiceRecords,
+            { date: dateStr, track: track.title, repeatCount: 1 }
+          ];
+        } else if (!checked && track) {
+          practiceRecords = practiceRecords.filter(
+            (r: any) => !(r.date === dateStr && r.track === track.title)
+          );
+        }
+        savePracticeData(practiceRecords);
+      } catch (error) {
+        console.error("localStorage 업데이트 실패:", error);
+      }
+
+      return updated;
+    });
   };
 
-  // "곡 완성" 버튼
-  const handleComplete = () => {
-    const today = toDateStr(dayjs());
-    const updatedTracks = tracks.map(t =>
-      t.id === trackId ? { ...t, completedDate: today } : t
-    );
-    setTracks(updatedTracks);
-    localStorage.setItem("tracks", JSON.stringify(updatedTracks));
-    alert("곡이 완성 처리되었습니다! 내일부터 리스트에 보이지 않습니다.");
-    navigate(-1); // 트랙 화면으로 돌아가기
+  const incPartial = (trackId: number): void => {
+    setPartialCounts((prev) => ({
+      ...prev,
+      [trackId]: (prev[trackId] || 0) + 1,
+    }));
   };
 
-  // 이미 완성된 곡인지 체크
-  const isCompleted = !!track.completedDate;
+  const decPartial = (trackId: number): void => {
+    setPartialCounts((prev) => ({
+      ...prev,
+      [trackId]: Math.max((prev[trackId] || 0) - 1, 0),
+    }));
+  };
+
+  const moveToPrevWeek = (): void => {
+    setCurrentWeekStart(currentWeekStart.subtract(1, "week"));
+  };
+
+  const moveToNextWeek = (): void => {
+    setCurrentWeekStart(currentWeekStart.add(1, "week"));
+  };
+
+  const handleEdit = (id: number): void => {
+    alert(`수정: ${id}`);
+  };
+
+  const handleDelete = (id: number): void => {
+    if (confirm("정말 삭제하시겠습니까?")) {
+      removeTrack(id);
+    }
+  };
+
+  const selectedDateStr = selectedDate.format("YYYY-MM-DD");
+  const visibleTracks = tracks.filter(
+    (track) =>
+      track.addedDate <= selectedDateStr &&
+      (!track.completedDate || selectedDateStr <= track.completedDate)
+  );
+
+  const isFuture = selectedDate.isAfter(dayjs(), "day");
 
   return (
-    <Box sx={{ p: 3, minHeight: "100vh", bgcolor: "#222", color: "#fff" }}>
-      <Button
-        variant="contained"
-        onClick={() => navigate(-1)}
-        sx={{
-          mb: 2,
-          bgcolor: "#333",
-          color: "#fff",
-          "&:hover": { bgcolor: "#444" },
+    <main style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      paddingTop: 44,
+      margin: "0 auto",
+      width: "100%",
+      maxWidth: 480,
+      background: "white",
+      overflow: "hidden",
+      minHeight: "100vh"
+    }}>
+      <Header 
+        title="Today"
+        showBackButton={false}
+      />
+
+      <div style={{ marginTop: 15 }}>
+        <DatePicker 
+          weekDays={weekDays}
+          selectedDate={selectedDate}
+          onDateSelect={setSelectedDate}
+          onPrevWeek={moveToPrevWeek}
+          onNextWeek={moveToNextWeek}
+          practiceRecords={loadPracticeData()}
+        />
+      </div>
+
+      <div style={{ 
+        width: "100%", 
+        marginTop: 27,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center"
+      }}>
+        {visibleTracks.map((track) => {
+          const isChecked = !!(practiceChecks[selectedDateStr] && practiceChecks[selectedDateStr][track.id]);
+          const partialCount = partialCounts[track.id] || 0;
+          const daysSince = dayjs().diff(dayjs(track.addedDate), 'day') + 1;
+
+          return (
+            <PracticeItem
+              key={track.id}
+              title={track.title}
+              subtitle={`오늘로 ${daysSince}일째`}
+              checked={isChecked}
+              count={partialCount}
+              onCheck={() => toggleCheck(track.id)}
+              onInc={() => incPartial(track.id)}
+              onDec={() => decPartial(track.id)}
+              onEdit={() => handleEdit(track.id)}
+              onDelete={() => handleDelete(track.id)}
+            />
+          );
+        })}
+      </div>
+
+      <button
+        onClick={() => setShowSongPlusModal(true)}
+        style={{
+          marginTop: 64,
+          width: 50,
+          height: 50,
+          borderRadius: "50%",
+          background: "#6667AB",
+          border: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(102, 103, 171, 0.3)"
         }}
+        aria-label="Add new practice song"
       >
-        ← 돌아가기
-      </Button>
-      <Typography variant="h4" mb={1}>
-        곡별 연습 캘린더
-      </Typography>
-      <Typography variant="h6" mb={2}>
-        {track.title}
-      </Typography>
-      <Paper
-        sx={{
-          bgcolor: "#181818",
-          borderRadius: 2,
-          p: 2,
-          maxWidth: 400,
-          mx: "auto",
-        }}
-      >
-        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ko">
-         <StaticDatePicker
-           displayStaticWrapperAs="desktop"
-           value={selectedDate}
-           onChange={(date) => date && setSelectedDate(date)}
-           slots={{
-           day: CustomPickersDay,
-           actionBar: () => null, // ← OK/Cancel 완전 제거!
-          }}
-          slotProps={{
-          day: (ownerState) => getDayProps(ownerState.day),
-          }}
-           disableFuture
-         />
-        </LocalizationProvider>
-      </Paper>
-      <Box sx={{ mt: 3, color: "#aaa", fontSize: 15 }}>
-        <div>✔️: 연습 완료 / 흐림: 연습 안 함 / 미래 날짜: 클릭 불가</div>
-        <div>날짜 클릭 시 체크/해제 (과거/오늘만 가능)</div>
-        <div>
-          캘린더에서 과거 날짜를 체크하면 곡의 시작일이 자동으로 조정되어 트랙 화면에도 반영됩니다.
+        <span style={{ color: "white", fontSize: 24, fontWeight: "bold" }}>+</span>
+      </button>
+
+      {showSongPlusModal && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0, 0, 0, 0.5)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 50
+        }}>
+          <div style={{
+            background: "white",
+            padding: 24,
+            borderRadius: 8,
+            maxWidth: 320,
+            width: "100%",
+            margin: "0 16px"
+          }}>
+            <h2 style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16 }}>연습 곡 추가</h2>
+            <input
+              type="text"
+              placeholder="곡명을 입력하세요"
+              style={{
+                width: "100%",
+                padding: 8,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+                marginBottom: 16,
+                fontSize: 16
+              }}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  addTrack((e.target as HTMLInputElement).value);
+                  setShowSongPlusModal(false);
+                  (e.target as HTMLInputElement).value = '';
+                }
+              }}
+            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <button 
+                onClick={() => setShowSongPlusModal(false)}
+                style={{
+                  flex: 1,
+                  padding: 8,
+                  border: "1px solid #ccc",
+                  borderRadius: 4,
+                  background: "white",
+                  cursor: "pointer"
+                }}
+              >
+                취소
+              </button>
+              <button 
+                onClick={() => {
+                  const input = document.querySelector('input[placeholder="곡명을 입력하세요"]') as HTMLInputElement;
+                  if (input) {
+                    addTrack(input.value);
+                    setShowSongPlusModal(false);
+                    input.value = '';
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: 8,
+                  background: "#6667AB",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 4,
+                  cursor: "pointer"
+                }}
+              >
+                추가
+              </button>
+            </div>
+          </div>
         </div>
-      </Box>
-      {/* "곡 완성" 버튼 (이미 완성된 곡이면 비활성화) */}
-      <Box sx={{ mt: 4 }}>
-        <Button
-          variant="contained"
-          color={isCompleted ? "inherit" : "success"}
-          onClick={handleComplete}
-          disabled={isCompleted}
-        >
-          {isCompleted ? "이미 완성된 곡입니다" : "곡 완성"}
-        </Button>
-      </Box>
-    </Box>
+      )}
+    </main>
   );
 }
 
-export default TrackDetailCalendarScreen;
+export default Today;

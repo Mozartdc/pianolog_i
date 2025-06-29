@@ -4,12 +4,16 @@ interface HeaderProps {
   title?: string;
   onBack?: () => void;
   showBackButton?: boolean;
+  color?: string;
+  topMargin?: number;
 }
 
 function Header({ 
   title = "Today", 
   onBack, 
-  showBackButton = false 
+  showBackButton = false,
+  color = "#45b5aa",
+  topMargin = 0
 }: HeaderProps) {
   const commonFontStyle = {
     fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
@@ -19,10 +23,9 @@ function Header({
 
   return (
     <div style={{
-      position: "absolute",
-      left: 1,
-      top: 44,
-      width: 375,
+      width: "100%",
+      maxWidth: 375,
+      margin: `${topMargin}px auto 0 auto`,
       height: 42,
       background: "#ffffff",
       borderBottom: "0.5px solid #9e9c98",
@@ -32,7 +35,7 @@ function Header({
     }}>
       <span style={{
         fontSize: 17,
-        color: "#45b5aa",
+        color: color,
         lineHeight: "140%",
         textAlign: "center",
         ...commonFontStyle

@@ -138,8 +138,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
     >
       <div
         style={{
-          position: "absolute",
-          left: 15, // HomeStartTimerModal과 동일한 위치
           background: "#ffffff",
           borderRadius: 20,
           padding: 24,

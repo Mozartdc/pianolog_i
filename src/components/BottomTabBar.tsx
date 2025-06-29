@@ -34,12 +34,13 @@ const tabOrder: BottomTabBarProps["activeTab"][] = [
   "setting",
 ];
 
+// ✅ Routes와 일치하도록 수정
 const tabToPath = {
   home: "/",
-  today: "/today",  // ✅ 수정: /track → /today
-  apple: "/timer",
-  statistic: "/stats",
-  setting: "/settings",
+  today: "/today",
+  apple: "/timer",        // Routes: /timer ✅
+  statistic: "/stats",    // Routes: /stats ✅
+  setting: "/settings",   // Routes: /settings ✅
 };
 
 const iconComponents = {
@@ -62,8 +63,10 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
       style={{
         position: "fixed",
         bottom: 0,
-        left: 0,
-        width: 375,
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: "100%",
+        maxWidth: 375,                    // ✅ 480 → 375 (홈스크린 너비와 동일)
         height: 78,
         background: "#fff",
         boxShadow: "0px 0px 0px rgba(0,0,0,0.1)",
@@ -71,6 +74,8 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         justifyContent: "space-between",
         alignItems: "center",
         zIndex: 100,
+        padding: "0 16px",
+        boxSizing: "border-box"
       }}
     >
       {tabOrder.map((tab) => {
@@ -83,7 +88,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
             key={tab}
             onClick={() => handleTabChange(tab)}
             style={{
-              width: 76,
+              width: 60,                  // ✅ 76 → 60 (너비 줄임)
               height: 44,
               display: "flex",
               flexDirection: "column",
@@ -100,8 +105,8 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
             aria-label={labels[tab]}
           >
             <Icon 
-              width={24} 
-              height={24} 
+              width={20}                  // ✅ 24 → 20 (아이콘 크기 줄임)
+              height={20}                 // ✅ 24 → 20 (아이콘 크기 줄임)
               fill={color}
               style={{ color: color }}
             />
