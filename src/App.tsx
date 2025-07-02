@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import HomeScreen from "./screens/HomeScreen";
 import Today from "./screens/Today";
 import RepeatCountScreen from "./screens/RepeatCountScreen";
-import TodayCalendar from "./screens/TodayCalendar";
+import TodayCalendar from "./screens/TodayCalendarModal";
 import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';

@@ -172,6 +172,47 @@ function HomeScreen() {
     setCheerData(getTodayCheerData());
   }, []);
 
+  // ✅ 타이머 상태 복원 useEffect 추가
+  useEffect(() => {
+    const restoreTimer = () => {
+      const timerState = localStorage.getItem('timerState');
+      if (timerState) {
+        try {
+          const { isRunning, startTime, pausedTime = 0, pausedAt } = JSON.parse(timerState);
+          
+          let currentTime = Date.now();
+          let totalPausedTime = pausedTime;
+          
+          // 현재 일시정지 중이라면 일시정지 시간 계산
+          if (!isRunning && pausedAt) {
+            totalPausedTime += (currentTime - pausedAt);
+          }
+          
+          // 실제 경과 시간 계산
+          const elapsedSeconds = Math.floor((currentTime - startTime - totalPausedTime) / 1000);
+          
+          setTimerSeconds(Math.max(0, elapsedSeconds));
+          setTimerActive(true);
+          setTimerRunning(isRunning);
+          
+          // 타이머가 실행 중이면 interval 시작
+          if (isRunning) {
+            timerRef.current = window.setInterval(() => {
+              setTimerSeconds((sec: number) => sec + 1);
+            }, 1000);
+          }
+          
+          console.log('타이머 복원됨:', { elapsedSeconds, isRunning });
+        } catch (error) {
+          console.error('타이머 복원 실패:', error);
+          localStorage.removeItem('timerState');
+        }
+      }
+    };
+    
+    restoreTimer();
+  }, []);
+
   // ✅ tracks 변경 감지 및 동기화
   useEffect(() => {
     const handleStorageChange = () => {
@@ -378,8 +419,18 @@ function HomeScreen() {
     setShowExportModal(true);
   };
 
-  // 타이머 기능들
+  // ✅ 타이머 기능들 (지속성 추가)
   const startTimer = () => {
+    const startTime = Date.now();
+    
+    // localStorage에 타이머 상태 저장
+    localStorage.setItem('timerState', JSON.stringify({
+      isRunning: true,
+      startTime: startTime,
+      initialSeconds: 0,
+      pausedTime: 0
+    }));
+    
     setTimerActive(true);
     setTimerRunning(true);
     timerRef.current = window.setInterval(() => {
@@ -390,9 +441,26 @@ function HomeScreen() {
   const pauseTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimerRunning(false);
+    
+    // 일시정지 시간 기록
+    const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
+    timerState.isRunning = false;
+    timerState.pausedAt = Date.now();
+    localStorage.setItem('timerState', JSON.stringify(timerState));
   };
 
   const resumeTimer = () => {
+    const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
+    
+    // 일시정지된 시간 누적
+    if (timerState.pausedAt) {
+      timerState.pausedTime = (timerState.pausedTime || 0) + (Date.now() - timerState.pausedAt);
+    }
+    
+    timerState.isRunning = true;
+    delete timerState.pausedAt;
+    localStorage.setItem('timerState', JSON.stringify(timerState));
+    
     setTimerRunning(true);
     timerRef.current = window.setInterval(() => {
       setTimerSeconds((sec: number) => sec + 1);
@@ -436,6 +504,9 @@ function HomeScreen() {
       setPracticeRecords(newRecords);
       localStorage.setItem("practiceRecords", JSON.stringify(newRecords));
     }
+    
+    // ✅ 타이머 상태 삭제
+    localStorage.removeItem('timerState');
     
     setTimerActive(false);
     setTimerRunning(false);

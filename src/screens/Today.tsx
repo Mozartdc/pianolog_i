@@ -6,6 +6,7 @@ import "dayjs/locale/ko";
 import Header from "../components/Header";
 import WeekCalendar from "../components/WeekCalendar";
 import PracticeItem from "../components/PracticeItem";
+import TodayCalendarModal from "./TodayCalendarModal";
 import SongPlusIcon from "../assets/icons/songplus.svg";
 
 type Track = {
@@ -71,6 +72,8 @@ export function Today() {
 
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [showSongPlusModal, setShowSongPlusModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
 
   useEffect(() => {
     localStorage.setItem("tracks", JSON.stringify(tracks));
@@ -176,7 +179,8 @@ export function Today() {
   };
 
   const handleTitleClick = (trackId: number): void => {
-    console.log("곡별 캘린더 모달:", trackId);
+    setSelectedTrackId(trackId);
+    setShowCalendarModal(true);
   };
 
   const handleCountClick = (trackId: number): void => {
@@ -357,6 +361,20 @@ export function Today() {
             </div>
           </div>
         </div>
+      )}
+
+      {showCalendarModal && (
+        <TodayCalendarModal
+          isOpen={showCalendarModal}
+          onClose={() => setShowCalendarModal(false)}
+          trackId={selectedTrackId || undefined}
+          onPracticeUpdate={() => {
+            const savedChecks = localStorage.getItem("practiceChecks");
+            if (savedChecks) {
+              setPracticeChecks(JSON.parse(savedChecks));
+            }
+          }}
+        />
       )}
     </main>
   );

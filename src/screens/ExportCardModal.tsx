@@ -11,197 +11,210 @@ interface ExportCardModalProps {
   onClose: () => void;
 }
 
-// 최고 화질 이미지 생성 함수
-const generateExportImage = async (
+export const generateExportImage = async (
   nickname: string,
   date: string,
   practiceTime: string,
   avatar?: string
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    
-    // 최고 해상도 설정 (3배)
-    const scale = 3;
-    const width = 360;
-    const height = 435;
-    canvas.width = width * scale; // 1080
-    canvas.height = height * scale; // 1305
-    canvas.style.width = width + 'px';
-    canvas.style.height = height + 'px';
-    
-    if (!ctx) {
-      reject(new Error('Canvas context not available'));
-      return;
-    }
-    
-    // 최고 화질 렌더링 설정
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.scale(scale, scale);
-    
-    // 배경
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, width, height);
+    try {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const scale = 3;
+      const width = 360;
+      const height = 435;
+      canvas.width = width * scale;
+      canvas.height = height * scale;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
 
-    // 별 아이콘과 텍스트
-    const starImg = new Image();
-    starImg.onload = () => {
-      if (ctx) {
-        ctx.drawImage(starImg, 30, 30, 22, 24);
-        ctx.fillStyle = '#9E9C98';
-        ctx.font = '12px Pretendard';
-        ctx.textAlign = 'left';
-        ctx.fillText('오늘 피출 기록', 57, 45);
-      }
-      drawLogoAndContent();
-    };
-    starImg.onerror = () => {
-      if (ctx) {
-        ctx.fillStyle = '#9E9C98';
-        ctx.font = '12px Pretendard';
-        ctx.textAlign = 'left';
-        ctx.fillText('오늘 피출 기록', 30, 45);
-      }
-      drawLogoAndContent();
-    };
-    starImg.src = StarIcon;
-
-    function drawLogoAndContent() {
-      const logoImg = new Image();
-      logoImg.onload = () => {
-        if (ctx) {
-          ctx.drawImage(logoImg, 30, 365, 37, 39);
-          ctx.fillStyle = '#9E9C98';
-          ctx.font = '12px Pretendard';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'top';
-          ctx.fillText('digital piano gallery', 72, 385);
-        }
-        drawProfileAndTexts();
-      };
-      logoImg.onerror = () => {
-        if (ctx) {
-          ctx.fillStyle = '#9E9C98';
-          ctx.font = '12px Pretendard';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'top';
-          ctx.fillText('digital piano gallery', 30, 385);
-        }
-        drawProfileAndTexts();
-      };
-      logoImg.src = LogoImg;
-    }
-
-    function drawProfileAndTexts() {
       if (!ctx) {
         reject(new Error('Canvas context not available'));
         return;
       }
-      
-      const profileX = 140;
-      const profileY = 130;
-      const profileSize = 80;
-      const centerX = 180;
-      
-      if (avatar) {
-        const avatarImg = new Image();
-        avatarImg.onload = () => {
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.scale(scale, scale);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, width, height);
+
+      let finished = false;
+      const safeResolve = (url: string) => {
+        if (!finished) {
+          finished = true;
+          resolve(url);
+        }
+      };
+      const safeReject = (err: any) => {
+        if (!finished) {
+          finished = true;
+          reject(err);
+        }
+      };
+
+      // 별 아이콘
+      const starImg = new window.Image();
+      starImg.onload = () => {
+        if (ctx) {
+          ctx.drawImage(starImg, 30, 30, 22, 24);
+          ctx.fillStyle = '#9E9C98';
+          ctx.font = '12px Pretendard';
+          ctx.textAlign = 'left';
+          ctx.fillText('오늘 피출 기록', 57, 45);
+        }
+        drawLogoAndContent();
+      };
+      starImg.onerror = () => {
+        if (ctx) {
+          ctx.fillStyle = '#9E9C98';
+          ctx.font = '12px Pretendard';
+          ctx.textAlign = 'left';
+          ctx.fillText('오늘 피출 기록', 30, 45);
+        }
+        drawLogoAndContent();
+      };
+      starImg.src = StarIcon as string;
+
+      function drawLogoAndContent() {
+        const logoImg = new window.Image();
+        logoImg.onload = () => {
           if (ctx) {
-            ctx.save();
+            ctx.drawImage(logoImg, 30, 365, 37, 39);
+            ctx.fillStyle = '#9E9C98';
+            ctx.font = '12px Pretendard';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText('digital piano gallery', 72, 385);
+          }
+          drawProfileAndTexts();
+        };
+        logoImg.onerror = () => {
+          if (ctx) {
+            ctx.fillStyle = '#9E9C98';
+            ctx.font = '12px Pretendard';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillText('digital piano gallery', 30, 385);
+          }
+          drawProfileAndTexts();
+        };
+        logoImg.src = LogoImg as string;
+      }
+
+      function drawProfileAndTexts() {
+        if (!ctx) {
+          safeReject(new Error('Canvas context not available'));
+          return;
+        }
+        const profileX = 140;
+        const profileY = 130;
+        const profileSize = 80;
+        const centerX = 180;
+
+        if (avatar) {
+          const avatarImg = new window.Image();
+          avatarImg.onload = () => {
+            if (ctx) {
+              ctx.save();
+              const radius = 24;
+              if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(profileX, profileY, profileSize, profileSize, radius);
+                ctx.clip();
+              }
+              ctx.drawImage(avatarImg, profileX, profileY, profileSize, profileSize);
+              ctx.restore();
+            }
+            drawTexts();
+          };
+          avatarImg.onerror = () => {
+            drawDefaultProfile();
+          };
+          avatarImg.src = avatar;
+        } else {
+          drawDefaultProfile();
+        }
+
+        function drawDefaultProfile() {
+          if (ctx) {
             const radius = 24;
-            ctx.beginPath();
-            ctx.roundRect(profileX, profileY, profileSize, profileSize, radius);
-            ctx.clip();
-            ctx.drawImage(avatarImg, profileX, profileY, profileSize, profileSize);
-            ctx.restore();
+            ctx.strokeStyle = '#E0E0E0';
+            ctx.lineWidth = 2;
+            if (ctx.roundRect) {
+              ctx.beginPath();
+              ctx.roundRect(profileX, profileY, profileSize, profileSize, radius);
+              ctx.stroke();
+            }
           }
           drawTexts();
-        };
-        avatarImg.onerror = () => {
-          drawDefaultProfile();
-        };
-        avatarImg.src = avatar;
-      } else {
-        drawDefaultProfile();
-      }
-      
-      function drawDefaultProfile() {
-        if (ctx) {
-          const radius = 24;
-          ctx.strokeStyle = '#E0E0E0';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.roundRect(profileX, profileY, profileSize, profileSize, radius);
-          ctx.stroke();
         }
-        drawTexts();
-      }
-      
-      function drawTexts() {
-        if (!ctx) return;
-        
-        ctx.textBaseline = 'alphabetic';
-        const avatarBottom = profileY + profileSize;
-        
-        // 닉네임
-        const nicknameY = avatarBottom + 24;
-        ctx.fillStyle = '#2D2D2A';
-        ctx.font = 'bold 24px Pretendard';
-        ctx.textAlign = 'center';
-        ctx.fillText(nickname, centerX, nicknameY);
 
-        // 날짜
-        const dateY = nicknameY + 22 + 16;
-        ctx.fillStyle = '#9E9C98';
-        ctx.font = '16px Pretendard';
-        ctx.fillText(date, centerX, dateY);
+        function drawTexts() {
+          if (!ctx) {
+            safeReject(new Error('Canvas context not available'));
+            return;
+          }
+          ctx.textBaseline = 'alphabetic';
+          const avatarBottom = profileY + profileSize;
+          // 닉네임
+          const nicknameY = avatarBottom + 24;
+          ctx.fillStyle = '#2D2D2A';
+          ctx.font = 'bold 24px Pretendard';
+          ctx.textAlign = 'center';
+          ctx.fillText(nickname, centerX, nicknameY);
 
-        // 시간
-        const timeY = dateY + 6 + 48;
-        const timeParts = practiceTime.match(/(\d+)시간\s*(\d+)분/);
-        
-        if (timeParts) {
-          const hourNum = timeParts[1];
-          const minNum = timeParts[2];
-          
-          ctx.font = 'bold 48px Pretendard';
-          const hourWidth = ctx.measureText(hourNum).width;
-          ctx.font = '300 48px Pretendard';
-          const hourUnitWidth = ctx.measureText('시간').width;
-          ctx.font = 'bold 48px Pretendard';
-          const minWidth = ctx.measureText(minNum).width;
-          ctx.font = '300 48px Pretendard';
-          const minUnitWidth = ctx.measureText('분').width;
-          
-          const totalWidth = hourWidth + hourUnitWidth + minWidth + minUnitWidth;
-          let x = centerX - (totalWidth / 2);
-          
-          ctx.fillStyle = '#45B5AA';
-          ctx.font = 'bold 48px Pretendard';
-          ctx.textAlign = 'left';
-          ctx.fillText(hourNum, x, timeY);
-          x += hourWidth;
-          
+          // 날짜
+          const dateY = nicknameY + 22 + 16;
           ctx.fillStyle = '#9E9C98';
-          ctx.font = '300 48px Pretendard';
-          ctx.fillText('시간', x, timeY);
-          x += hourUnitWidth;
-          
-          ctx.fillStyle = '#45B5AA';
-          ctx.font = 'bold 48px Pretendard';
-          ctx.fillText(minNum, x, timeY);
-          x += minWidth;
-          
-          ctx.fillStyle = '#9E9C98';
-          ctx.font = '300 48px Pretendard';
-          ctx.fillText('분', x, timeY);
+          ctx.font = '16px Pretendard';
+          ctx.fillText(date, centerX, dateY);
+
+          // 시간
+          const timeY = dateY + 6 + 48;
+          const timeParts = practiceTime.match(/(\d+)시간\s*(\d+)분/);
+          if (timeParts) {
+            const hourNum = timeParts[1];
+            const minNum = timeParts[2];
+            ctx.font = 'bold 48px Pretendard';
+            const hourWidth = ctx.measureText(hourNum).width;
+            ctx.font = '300 48px Pretendard';
+            const hourUnitWidth = ctx.measureText('시간').width;
+            ctx.font = 'bold 48px Pretendard';
+            const minWidth = ctx.measureText(minNum).width;
+            ctx.font = '300 48px Pretendard';
+            const minUnitWidth = ctx.measureText('분').width;
+            const totalWidth = hourWidth + hourUnitWidth + minWidth + minUnitWidth;
+            let x = centerX - (totalWidth / 2);
+
+            ctx.fillStyle = '#45B5AA';
+            ctx.font = 'bold 48px Pretendard';
+            ctx.textAlign = 'left';
+            ctx.fillText(hourNum, x, timeY);
+            x += hourWidth;
+
+            ctx.fillStyle = '#9E9C98';
+            ctx.font = '300 48px Pretendard';
+            ctx.fillText('시간', x, timeY);
+            x += hourUnitWidth;
+
+            ctx.fillStyle = '#45B5AA';
+            ctx.font = 'bold 48px Pretendard';
+            ctx.fillText(minNum, x, timeY);
+            x += minWidth;
+
+            ctx.fillStyle = '#9E9C98';
+            ctx.font = '300 48px Pretendard';
+            ctx.fillText('분', x, timeY);
+          }
+          safeResolve(canvas.toDataURL('image/png', 1.0));
         }
-        
-        // 최고 화질 PNG 변환 (품질 1.0 = 최고)
-        resolve(canvas.toDataURL('image/png', 1.0));
       }
+    } catch (err) {
+      // 예외 발생 시 항상 reject
+      reject(err);
     }
   });
 };
@@ -225,38 +238,28 @@ export function ExportCardModal({
   onClose 
 }: ExportCardModalProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const hasExecutedRef = useRef(false); // 강력한 중복 방지
+  const hasExecutedRef = useRef(false);
 
-  // 모달이 열릴 때 한 번만 실행
   useEffect(() => {
     if (isOpen && !hasExecutedRef.current) {
-      hasExecutedRef.current = true; // 즉시 플래그 설정
+      hasExecutedRef.current = true;
       generateAndDownload();
     }
-    
-    // 모달이 닫힐 때 리셋
     if (!isOpen) {
       hasExecutedRef.current = false;
     }
   }, [isOpen]);
 
   const generateAndDownload = async () => {
-    // 추가 안전장치
     if (hasExecutedRef.current !== true) return;
-    
     setIsLoading(true);
     try {
       const dataUrl = await generateExportImage(nickname, date, practiceTime, avatar);
-      
-      // 한 번만 다운로드
       const filename = `피출기록_${date.replace(/\./g, '').replace(/\s/g, '_')}_${nickname}.png`;
       downloadImage(dataUrl, filename);
-      
-      // 다운로드 완료 후 모달 닫기
       setTimeout(() => {
         onClose();
       }, 1000);
-      
     } catch (err) {
       console.error('Export failed:', err);
     } finally {

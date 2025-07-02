@@ -1,17 +1,21 @@
+"use client";
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { Box, Button, Typography } from "@mui/material";
-import ReplayIcon from "@mui/icons-material/Replay";
+
+// 아이콘 imports
+import AppleSongIcon from "../assets/icons/applesong.svg";
+import AppleResetIcon from "../assets/icons/apple reset.svg";
+import AppleMinusIcon from "../assets/icons/appleminus.svg";
 
 type Track = { id: number; title: string; addedDate: string };
-type PartialCounts = { [key: string]: number }; // key: trackId(숫자) or "Piano"
+type PartialCounts = { [key: string]: number };
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-function RepeatCountScreen() {
+function AppleScreen() {
   const query = useQuery();
   const trackIdParam = query.get("trackId");
   const trackId = trackIdParam ? Number(trackIdParam) : null;
@@ -42,7 +46,6 @@ function RepeatCountScreen() {
   // 카운트 동기화
   useEffect(() => {
     setCount(partialCounts[countKey] || 0);
-    // eslint-disable-next-line
   }, [partialCounts, countKey]);
 
   // +1 (화면 아무데나 클릭)
@@ -74,116 +77,140 @@ function RepeatCountScreen() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        bgcolor: "#fff",
-        color: "#222",
+    <div
+      className="apple-screen"
+      style={{
+        width: "100%",
+        maxWidth: 375,
+        height: "100vh",
+        background: "#FFFFFF",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "flex-start",
+        justifyContent: "center",
         position: "relative",
+        margin: "0 auto",
         touchAction: "manipulation",
+        userSelect: "none"
       }}
       onClick={handlePlus}
     >
-      {/* 상단 뒤로가기 버튼 */}
-      <Box sx={{ position: "absolute", top: 24, left: 16 }}>
-        <Button
-          variant="text"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(-1);
-          }}
-          sx={{ color: "#888", fontSize: 18 }}
-        >
-          &lt; 뒤로
-        </Button>
-      </Box>
-      {/* 중앙 곡명 + practice + 숫자 */}
-      <Box
-        sx={{
-          mt: 12,
-          mb: 6,
+      {/* 중앙 콘텐츠 */}
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center"
+      }}>
+        {/* 곡명 + 아이콘 */}
+        <div style={{
           display: "flex",
-          flexDirection: "column",
           alignItems: "center",
-          userSelect: "none",
-        }}
-      >
-        <Typography
-          variant="h5"
-          sx={{ fontWeight: 600, mb: 0.5, fontSize: 28, letterSpacing: "0.01em" }}
-        >
-          {displayTitle}
-        </Typography>
-        <Typography
-          variant="subtitle1"
-          sx={{ color: "#888", mb: 1, fontSize: 22 }}
-        >
-          practice
-        </Typography>
-        <Typography
-          variant="h1"
-          sx={{
-            fontWeight: 700,
-            fontSize: "7rem",
-            letterSpacing: "0.1em",
-            mb: 1,
+          gap: 8,
+          marginBottom: 15
+        }}>
+          <img src={AppleSongIcon} alt="apple song" width="24" height="24" />
+          <span style={{
+            fontSize: 16,
+            color: "#2D2D2A",
+            fontWeight: "normal",
+            textAlign: "center",
+            lineHeight: "24px"
+          }}>
+            {displayTitle}
+          </span>
+        </div>
+
+        {/* Practice */}
+        <div style={{
+          fontSize: 20,
+          color: "#9E9C98",
+          fontWeight: "normal",
+          textAlign: "center",
+          lineHeight: "24px",
+          marginBottom: 25
+        }}>
+          Practice
+        </div>
+
+        {/* ✅ 숫자: 클래스 적용으로 폰트 문제 해결 */}
+        <div 
+          className="apple-screen__number"
+          style={{
+            fontSize: 128,
+            color: "#2D2D2A",
+            textAlign: "center",
+            lineHeight: "128px",
+            letterSpacing: "0.1em"
           }}
         >
           {count}
-        </Typography>
-      </Box>
-      {/* 하단 버튼 */}
-      <Box
-        sx={{
-          position: "absolute",
-          bottom: 40,
-          left: 0,
-          width: "100%",
-          display: "flex",
-          justifyContent: "center",
-          gap: 2,
-        }}
-      >
-        <Button
-          variant="outlined"
-          size="small"
-          onClick={handleMinus}
-          sx={{
-            minWidth: 48,
-            fontSize: 28,
-            color: "#888",
-            borderColor: "#ccc",
-            borderRadius: 2,
-          }}
-        >
-          –
-        </Button>
-        <Button
-          variant="outlined"
-          size="small"
+        </div>
+      </div>
+
+      {/* 하단 버튼들 */}
+      <div style={{
+        position: "absolute",
+        bottom: 40,
+        display: "flex",
+        gap: 157,
+        alignItems: "center"
+      }}>
+        {/* Reset 버튼 */}
+        <button
           onClick={handleReset}
-          sx={{
-            minWidth: 48,
-            color: "#888",
-            borderColor: "#ccc",
-            borderRadius: 2,
-            fontSize: 18,
-            ml: 2,
+          style={{
+            width: 85,
+            height: 40,
+            background: "#F0EADB",
+            border: "none",
+            borderRadius: 8,
             display: "flex",
             alignItems: "center",
-            gap: 0.5,
+            justifyContent: "center",
+            gap: 8,
+            cursor: "pointer"
           }}
-          startIcon={<ReplayIcon />}
         >
-          Reset
-        </Button>
-      </Box>
-    </Box>
+          <img src={AppleResetIcon} alt="reset" width="16" height="16" />
+          <span style={{
+            fontSize: 14,
+            color: "#2D2D2A",
+            fontWeight: "normal",
+            lineHeight: "22px"
+          }}>
+            Reset
+          </span>
+        </button>
+
+        {/* minus 버튼 */}
+        <button
+          onClick={handleMinus}
+          style={{
+            width: 85,
+            height: 40,
+            background: "#F0EADB",
+            border: "none",
+            borderRadius: 8,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            cursor: "pointer"
+          }}
+        >
+          <img src={AppleMinusIcon} alt="minus" width="16" height="16" />
+          <span style={{
+            fontSize: 14,
+            color: "#2D2D2A",
+            fontWeight: "normal",
+            lineHeight: "22px"
+          }}>
+            minus
+          </span>
+        </button>
+      </div>
+    </div>
   );
 }
 
-export default RepeatCountScreen;
+export default AppleScreen;

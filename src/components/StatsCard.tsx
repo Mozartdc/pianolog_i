@@ -1,4 +1,5 @@
 import React from "react";
+import { generateExportImage } from "../screens/ExportCardModal";
 
 interface StatsCardProps {
   icon: string;
@@ -29,9 +30,40 @@ const StatsCard: React.FC<StatsCardProps> = ({
     MozOsxFontSmoothing: "grayscale" as const
   };
 
+  // 익스포트 아이콘 클릭 핸들러 (다운로드 방식)
+  const handleExportClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const nickname = localStorage.getItem("nickname") || "피출러";
+      const avatar = localStorage.getItem("avatar") || "";
+      const today = new Date();
+      const dateStr = today.toLocaleDateString("ko-KR", { 
+        year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" 
+      }).replace(/\./g, '').replace(/ /g, '.').toUpperCase();
+      const practiceRecords = JSON.parse(localStorage.getItem("practiceRecords") || "[]");
+      const todayKey = today.toISOString().slice(0, 10);
+      const totalMinutes = practiceRecords
+        .filter((r: any) => r.date === todayKey)
+        .reduce((sum: number, r: any) => sum + (r.practiceTime || 0), 0);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      const practiceTime = `${hours}시간 ${minutes}분`;
+
+      const imageDataUrl = await generateExportImage(nickname, dateStr, practiceTime, avatar);
+
+      // 다운로드 링크 생성 및 클릭
+      const link = document.createElement("a");
+      link.download = "practice-record.png";
+      link.href = imageDataUrl;
+      link.click();
+    } catch (err) {
+      console.error("다운로드 실패:", err);
+      alert("다운로드에 실패했습니다.");
+    }
+  };
+
   return (
     <div 
-      onClick={onClick}
       style={{
         width: "100%",
         maxWidth: 345,
@@ -46,7 +78,6 @@ const StatsCard: React.FC<StatsCardProps> = ({
         paddingTop: 16,
         paddingBottom: 16,
         gap: 12,
-        cursor: onClick ? "pointer" : "default",
         margin: "7px auto 0 auto"
       }}
     >
@@ -72,7 +103,14 @@ const StatsCard: React.FC<StatsCardProps> = ({
         </span>
       </div>
       {showExportIcon && exportIcon && (
-        <img src={exportIcon} alt="export" width="16" height="20" />
+        <img 
+          src={exportIcon} 
+          alt="export" 
+          width="16" 
+          height="20"
+          onClick={handleExportClick}
+          style={{ cursor: "pointer" }}
+        />
       )}
     </div>
   );
