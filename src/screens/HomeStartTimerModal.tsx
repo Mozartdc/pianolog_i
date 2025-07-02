@@ -1,3 +1,4 @@
+import React from "react";
 import MetronomIcon from "../assets/icons/metronom.svg";
 import PauseIcon from "../assets/icons/pause.svg";
 import ReplayIcon from "../assets/icons/replay.svg";

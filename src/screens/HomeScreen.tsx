@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { getTodayCheer } from "../utils/cheers";
-import { HomeStartTimerModal } from "./HomeStartTimerModal";
+import { HomeStartTimerModal} from "./HomeStartTimerModal";
 import { TimePickModal } from "./TimePickModal";
 import { HomeStopModal } from "./HomeStopModal";
 import { ExportCardModal } from "./ExportCardModal";
@@ -9,6 +9,7 @@ import Header from "../components/Header";
 import ProfileSection from "../components/ProfileSection";
 import StatsCard from "../components/StatsCard";
 import WeekCalendar from "../components/WeekCalendar";
+import './Home.css'; // ✅ 이 줄을 추가합니다.
 
 // 실제 SVG/이미지 파일들 import
 import KeyboardIcon from "../assets/icons/keyboard.svg";
@@ -136,7 +137,7 @@ function HomeScreen() {
   // 타이머 상태
   const [timerActive, setTimerActive] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerSeconds, setTimerSeconds] = useState(0); 
   const [showTimePickModal, setShowTimePickModal] = useState(false);
   const [showHomeStopModal, setShowHomeStopModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -529,10 +530,12 @@ function HomeScreen() {
     <div style={{
       width: "100%",
       maxWidth: 375,
-      height: "812px", 
+      minHeight: "100vh", 
       background: "#ffffff",
-      overflow: "hidden",
+      overflowY: "auto", 
       margin: "0 auto",
+      padding: "0 clamp(16px, 4vw, 20px)", 
+      boxSizing: "border-box", 
       ...commonFontStyle
     }}>
       
@@ -545,14 +548,13 @@ function HomeScreen() {
 
       {/* Date Display */}
       <div style={{
-        width: "100%",
-        maxWidth: 345,
+        width: "100%", 
         height: 20,
         fontSize: 14,
         color: "#2d2d2a",
         textAlign: "center",
         lineHeight: "20px",
-        margin: "15px auto 0 auto",
+        marginTop: "15px", 
         ...commonFontStyle
       }}>
         {displayDate.format("YYYY. MM. DD ddd").toUpperCase()}
@@ -567,8 +569,7 @@ function HomeScreen() {
 
       {/* Total Achievement Card */}
       <div style={{
-        width: "100%",
-        maxWidth: 345,
+        width: "100%", 
         height: 60,
         background: "#c7e6df",
         borderRadius: 16,
@@ -579,7 +580,8 @@ function HomeScreen() {
         paddingTop: 16,
         paddingBottom: 16,
         gap: 12,
-        margin: "23px auto 0 auto"
+        marginTop: "23px", 
+        boxSizing: "border-box" 
       }}>
         <img src={FlameIcon} alt="flame" width="25" height="25" />
         <span style={{
@@ -632,14 +634,14 @@ function HomeScreen() {
       />
 
       {/* Start Button */}
-      {!timerActive && (
+{!timerActive && (
         <div style={{
           width: 50,
-          height: 80,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          margin: "43px auto 0 auto"
+          // ✅ 이 부분을 다시 원래대로 변경했습니다.
+          margin: "43px auto 0 auto", 
         }}>
           <button
             onClick={startTimer}

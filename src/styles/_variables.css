@@ -1,0 +1,42 @@
+/* src/styles/_variables.css */
+
+/* 라이트 테마 (기본값) */
+:root {
+  --WHITE: #ffffff;
+  --BLACK: #2d2d2a;
+  --TURQUOISE: #45b5aa;
+  --PASTEL_TURQUOISE: #e5f6f5;
+  --VERY_PERI: #6b778d;
+  --DARK_GRAY: #9e9c98;
+  --TURQUOISE_GRADIENT: linear-gradient(to right, #45b5aa, #5ad8cb);
+
+  /* 추가적으로 의미 있는 색상 변수를 정의할 수 있습니다. */
+  --text-primary: var(--BLACK);
+  --text-secondary: var(--DARK_GRAY);
+  --bg-primary: var(--WHITE);
+  --bg-secondary: var(--PASTEL_TURQUOISE);
+  --button-primary-bg: var(--TURQUOISE);
+  --button-primary-text: var(--WHITE);
+  --error-color: #bb2649;
+  --info-bg: #f9f9f9;
+}
+
+/* 다크 테마 (body에 'dark-mode' 클래스가 있을 때 적용) */
+body.dark-mode {
+  --WHITE: #1A1A1A; /* 다크 모드에서의 '흰색' (어두운 배경) */
+  --BLACK: #E0E0E0; /* 다크 모드에서의 '검은색' (밝은 텍스트) */
+  --TURQUOISE: #308077; /* 다크 모드에 맞춰 조정 */
+  --PASTEL_TURQUOISE: #3A4B4A;
+  --VERY_PERI: #909BB0;
+  --DARK_GRAY: #777777;
+  --TURQUOISE_GRADIENT: linear-gradient(to right, #308077, #40A097);
+
+  --text-primary: var(--BLACK); /* 오버라이드된 BLACK 사용 */
+  --text-secondary: var(--DARK_GRAY);
+  --bg-primary: var(--WHITE); /* 오버라이드된 WHITE 사용 */
+  --bg-secondary: #2C2C2C;
+  --button-primary-bg: var(--TURQUOISE);
+  --button-primary-text: var(--WHITE);
+  --error-color: #DD5577;
+  --info-bg: #444444;
+}

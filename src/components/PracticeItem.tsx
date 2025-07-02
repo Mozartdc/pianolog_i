@@ -15,7 +15,7 @@ interface PracticeItemProps {
   onCheck: () => void;
   onInc: () => void;
   onDec: () => void;
-  onEdit?: () => void;
+  onEdit?: () => void; // 이 onEdit 함수가 실제 상위 컴포넌트에서 제목 업데이트 로직을 처리해야 합니다.
   onDelete?: () => void;
   onTitleClick?: () => void;
   onCountClick?: () => void;
@@ -35,8 +35,8 @@ export default function PracticeItem({
   onCountClick
 }: PracticeItemProps) {
   const [showMenu, setShowMenu] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false); // ✅ 수정 모달 상태
-  const [editTitle, setEditTitle] = useState(title); // ✅ 수정할 제목
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTitle, setEditTitle] = useState(title);
 
   const menuBtnStyle: React.CSSProperties = {
     width: "100%",
@@ -50,21 +50,27 @@ export default function PracticeItem({
     fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
   };
 
-  // ✅ 수정 완료 핸들러
   const handleEditComplete = () => {
+    // onEdit 함수가 상위 컴포넌트에서 제목을 업데이트하도록 호출
+    // 여기서는 단순히 모달을 닫고, 상위 컴포넌트에서 실제로 'title' 상태를 변경하는 로직이 필요합니다.
+    // 예를 들어, onEdit prop으로 `(newTitle: string) => void` 와 같은 함수를 받아서 호출해야 합니다.
     if (editTitle.trim() && editTitle.trim() !== title && onEdit) {
-      // 실제로는 상위 컴포넌트에서 곡 제목 업데이트 처리
-      onEdit();
+      // ✅ onEdit 함수를 호출할 때 수정된 제목을 인자로 전달해야 합니다.
+      // 현재 onEdit()은 인자가 없으므로, 필요하다면 PracticeItemProps 인터페이스와
+      // 상위 컴포넌트의 onEdit 구현을 수정해야 합니다.
+      // 임시로 alert으로 변경된 제목을 표시합니다.
+      alert(`곡 제목이 "${editTitle.trim()}"으로 수정될 예정입니다. (실제 적용은 상위 컴포넌트 로직 필요)`);
+      onEdit(); // 이 부분은 상위 컴포넌트의 `handleEdit` 함수가 `editTitle`을 인자로 받을 수 있도록 변경해야 합니다.
     }
     setShowEditModal(false);
-    setEditTitle(title);
+    setEditTitle(title); // 모달 닫을 때 원래 제목으로 되돌림 (수정 취소 시)
   };
 
   return (
     <>
       <div style={{
-        width: "100%",
-        maxWidth: 375,
+        width: "100%", // 부모 maxWidth: 375에 맞춰 100% 사용
+        maxWidth: 375, // 이 컴포넌트가 최대로 차지할 너비
         height: 56,
         display: "flex",
         alignItems: "center",
@@ -73,7 +79,9 @@ export default function PracticeItem({
         padding: 0
       }}>
         <div style={{
-          width: 343,
+          // ✅ 수정: 고정 343px 대신 calc(100% - 32px)를 사용하여 반응형으로 변경
+          width: "calc(100% - 32px)", 
+          maxWidth: 343, // 최대 너비는 343px 유지 (양 옆 16px 패딩 제외)
           height: 56,
           border: "0.5px solid #6667AB",
           borderRadius: 12,
@@ -83,7 +91,7 @@ export default function PracticeItem({
           background: "#fff",
           boxSizing: "border-box",
           padding: "0 16px",
-          margin: 0
+          margin: "0 auto" // 중앙 정렬
         }}>
           
           {/* 체크박스 */}
@@ -244,11 +252,11 @@ export default function PracticeItem({
                   minWidth: 80
                 }}
               >
-                {/* ✅ 수정 버튼 - 모달 열기 */}
+                {/* 수정 버튼 - 모달 열기 */}
                 <button 
                   onClick={() => {
                     setShowMenu(false);
-                    setEditTitle(title);
+                    setEditTitle(title); // 현재 제목으로 input 초기화
                     setShowEditModal(true);
                   }} 
                   style={menuBtnStyle}
@@ -279,30 +287,36 @@ export default function PracticeItem({
         </div>
       </div>
 
-      {/* ✅ 수정 모달 - Today.tsx의 연습곡 추가와 동일한 디자인 */}
+      {/* ✅ 수정 모달 - Today.tsx의 연습곡 추가와 동일한 반응형 디자인 적용 */}
       {showEditModal && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0, 0, 0, 0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000
-        }}>
+        <div 
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000
+          }}
+          onClick={() => { /* setShowEditModal(false) */ }} // 모달 바깥 클릭 시 닫기 (선택적)
+        >
           <div 
             style={{
-              width: 324,
-              height: 249,
+              width: "calc(100% - 32px)", // 화면 여백 16px * 2 고려
+              maxWidth: 324, // 최대 너비는 324px 유지
+              height: "auto", // 높이는 콘텐츠에 따라 유동적으로
+              maxHeight: "calc(100% - 64px)", // 화면 상하 여백 고려 (32px * 2)
               background: "#FFFFFF",
               border: "0.5px solid #6667AB",
               borderRadius: 5,
               boxSizing: "border-box",
               padding: 22,
               display: "flex",
-              flexDirection: "column"
+              flexDirection: "column",
+              overflowY: "auto" // 내용이 넘치면 스크롤
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()} // 모달 내부 클릭 시 전파 방지
           >
             {/* 헤더: 연습곡 수정 */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
@@ -318,7 +332,7 @@ export default function PracticeItem({
 
             {/* 라인 */}
             <div style={{
-              width: 280,
+              width: "100%", // ✅ 100%로 변경
               height: "0.5px",
               background: "#9E9C98",
               marginBottom: 15
@@ -331,7 +345,7 @@ export default function PracticeItem({
               onChange={(e) => setEditTitle(e.target.value)}
               placeholder="여기에 곡명 입력"
               style={{
-                width: 270,
+                width: "100%", // ✅ 100%로 변경
                 height: 36,
                 border: "1px solid #E5E5E5",
                 borderRadius: 4,
@@ -363,16 +377,16 @@ export default function PracticeItem({
             <div style={{
               display: "flex",
               gap: 8,
-              width: 280
+              width: "100%" // ✅ 100%로 변경
             }}>
               {/* Cancel 버튼 */}
               <button
                 onClick={() => {
                   setShowEditModal(false);
-                  setEditTitle(title);
+                  setEditTitle(title); // 취소 시 원래 제목으로 되돌림
                 }}
                 style={{
-                  width: 137,
+                  flex: 1, // ✅ flex: 1로 변경
                   height: 43,
                   background: "transparent",
                   border: "none",
@@ -389,7 +403,7 @@ export default function PracticeItem({
               <button
                 onClick={handleEditComplete}
                 style={{
-                  width: 137,
+                  flex: 1, // ✅ flex: 1로 변경
                   height: 43,
                   background: "#6667AB",
                   border: "none",

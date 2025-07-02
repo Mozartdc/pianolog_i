@@ -44,17 +44,30 @@ function getToday(): string {
 }
 
 function loadPracticeData(): any[] {
-  const data = localStorage.getItem("practiceRecords");
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem("practiceRecords");
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error("practiceRecords 로딩 실패:", error);
+    return [];
+  }
 }
 
-function savePracticeData( any): void {
-  localStorage.setItem("practiceRecords", JSON.stringify('data'));
+// ✅ savePracticeData 함수 수정: 'data' 파라미터를 올바르게 받고 저장하도록 변경
+function savePracticeData(data: any): void {
+  try {
+    if (Array.isArray(data)) {
+      localStorage.setItem("practiceRecords", JSON.stringify(data));
+    }
+  } catch (error) {
+    console.error("practiceRecords 저장 실패:", error);
+  }
 }
 
 export function Today() {
   const navigate = useNavigate();
-  
   const [tracks, setTracks] = useState<Track[]>(() => {
     const saved = localStorage.getItem("tracks");
     return saved ? JSON.parse(saved) : [];
@@ -97,13 +110,11 @@ export function Today() {
   const removeTrack = (id: number): void => {
     const track = tracks.find(t => t.id === id);
     setTracks(tracks.filter((t) => t.id !== id));
-    
     setPartialCounts((prev) => {
       const copy = { ...prev };
       delete copy[id];
       return copy;
     });
-    
     setPracticeChecks((prev) => {
       const copy: PracticeChecks = {};
       for (const date in prev) {
@@ -132,9 +143,7 @@ export function Today() {
         if (!Array.isArray(practiceRecords)) {
           practiceRecords = [];
         }
-        
         const track = tracks.find(t => t.id === trackId);
-        
         if (checked && track) {
           practiceRecords = [
             ...practiceRecords,
@@ -212,7 +221,7 @@ export function Today() {
       minHeight: "100vh",
       paddingBottom: 120
     }}>
-      <Header 
+      <Header
         title="Today"
         color="#6667AB"
         showBackButton={false}
@@ -231,8 +240,8 @@ export function Today() {
         />
       </div>
 
-      <div style={{ 
-        width: "100%", 
+      <div style={{
+        width: "100%",
         marginTop: 27,
         display: "flex",
         flexDirection: "column",
@@ -300,7 +309,7 @@ export function Today() {
             padding: 24,
             borderRadius: 8,
             maxWidth: 320,
-            width: "100%",
+            width: "calc(100% - 32px)", /* 반응형 */
             margin: "0 16px"
           }}>
             <h2 style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16 }}>연습 곡 추가</h2>
@@ -324,7 +333,7 @@ export function Today() {
               }}
             />
             <div style={{ display: "flex", gap: 8 }}>
-              <button 
+              <button
                 onClick={() => setShowSongPlusModal(false)}
                 style={{
                   flex: 1,
@@ -337,7 +346,7 @@ export function Today() {
               >
                 취소
               </button>
-              <button 
+              <button
                 onClick={() => {
                   const input = document.querySelector('input[placeholder="곡명을 입력하세요"]') as HTMLInputElement;
                   if (input) {

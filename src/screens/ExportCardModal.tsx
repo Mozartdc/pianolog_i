@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import StarIcon from "../assets/icons/star.svg";
-import LogoImg from "../utils/img/logo.png";
+import LogoImg from "../utils/img/logo.png"; // 이 경로가 올바른지 확인해주세요.
 
 interface ExportCardModalProps {
   isOpen: boolean;
@@ -59,7 +59,7 @@ export const generateExportImage = async (
       const starImg = new window.Image();
       starImg.onload = () => {
         if (ctx) {
-          ctx.drawImage(starImg, 30, 30, 22, 24);
+          ctx.drawImage(starImg, 30, 30, 24, 24);
           ctx.fillStyle = '#9E9C98';
           ctx.font = '12px Pretendard';
           ctx.textAlign = 'left';

@@ -1,44 +1,12 @@
+/* src/index.css */
+
 /* Pretendard 폰트 로드 */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-@import './colors.css';
 
-/* 글로벌 리셋 */
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+/* 새로운 스타일 모듈 임포트 */
+@import './styles/_variables.css'; /* 색상 및 테마 변수 */
+@import './styles/_base.css';     /* 글로벌 리셋, 기본 폰트 설정 등 */
+@import './styles/_layout.css';   /* 앱 전반적인 레이아웃 */
+/* @import './colors.css'; 가 더 이상 필요 없습니다. */
 
-/* 통일된 폰트 설정 */
-html, body, #root {
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'kern' 1;
-  text-rendering: optimizeLegibility;
-}
-
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-}
-
-#root {
-  min-height: 100vh;
-}
-
-/* 브라우저별 폰트 렌더링 최적화 */
-@supports (-webkit-appearance: none) {
-  * {
-    -webkit-font-smoothing: antialiased;
-    -webkit-text-stroke: 0.01em transparent;
-  }
-}
-
-/* Variable 폰트 지원 브라우저용 */
-@supports (font-variation-settings: normal) {
-  html, body, #root {
-    font-variation-settings: 'wght' 400;
-  }
-}
+/* 더 이상 전역 스타일을 직접 정의하지 않습니다. */

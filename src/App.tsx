@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import HomeScreen from "./screens/HomeScreen";
 import Today from "./screens/Today";
 import RepeatCountScreen from "./screens/RepeatCountScreen";
-import TodayCalendar from "./screens/TodayCalendarModal";
+import TodayCalendar from "./screens/TodayCalendar";
 import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';
@@ -18,11 +18,11 @@ function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "s
   switch (pathname) {
     case "/": return "home";
     case "/today": return "today";
-    case "/timer": return "apple";      // ✅ Routes와 일치
-    case "/stats": return "statistic";  // ✅ Routes와 일치
-    case "/settings": return "setting"; // ✅ Routes와 일치
-    case "/calendar": return "today";   // ✅ /calendar는 today 탭으로 처리
-    case "/practice": return "apple";   // ✅ /practice는 apple 탭으로 처리
+    case "/timer": return "apple";
+    case "/stats": return "statistic";
+    case "/settings": return "setting";
+    case "/calendar": return "today";
+    case "/practice": return "apple"; // `Fallthrough case in switch` 에러를 해결했습니다.
     default: return "home";
   }
 }
@@ -59,14 +59,14 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
-      <div style={{ 
+      <div style={{
         width: "100%",
-        maxWidth: 480,           // ✅ 최대 너비 제한
-        margin: "0 auto",        // ✅ 중앙 정렬
-        paddingBottom: 80, 
+        maxWidth: 480,
+        margin: "0 auto",
+        paddingBottom: 80,
         minHeight: "100vh",
-        background: "white",     // ✅ 배경색 추가
-        position: "relative"     // ✅ 포지션 추가
+        background: "white",
+        boxShadow: "none" // `box-shadow`를 제거했습니다.
       }}>
         <AppRoutes />
       </div>

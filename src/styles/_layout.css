@@ -1,0 +1,59 @@
+/* src/styles/_layout.css */
+
+/* 통일된 레이아웃 시스템 */
+.app-layout {
+  width: 100%;
+  max-width: 375px; /* 모바일 우선 디자인의 기준 너비 */
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg-primary); /* 변수 사용 */
+  position: relative;
+}
+
+/* 페이지 컨테이너 variants */
+.page-container {
+  padding: 44px 16px 100px 16px;
+}
+
+.page-container--no-side-padding {
+  padding: 44px 0 100px 0;
+}
+
+.page-container--stats {
+  padding: 44px 0 20px 0;
+}
+
+.page-container--today {
+  padding: 44px 0 120px 0;
+}
+
+/* 콘텐츠 영역 */
+.content-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content-area--full-width {
+  width: 100%;
+  max-width: 375px;
+  margin: 0 auto;
+}
+
+/* 반응형 대응 */
+@media (max-width: 320px) {
+  .app-layout {
+    max-width: 320px;
+  }
+  
+  .page-container {
+    padding: 44px 12px 100px 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-layout {
+    max-width: 480px;
+  }
+}

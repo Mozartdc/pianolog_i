@@ -141,7 +141,8 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
           background: "#ffffff",
           borderRadius: 20,
           padding: 24,
-          width: 345, // HomeStartTimerModal과 동일한 너비
+          width: "90%", // ✅ 수정: 화면 너비에 따라 유동적으로 90%를 차지
+          maxWidth: 345, // ✅ 수정: 최대 너비를 345px로 제한
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
           maxHeight: "80vh", // 화면 높이의 80%를 넘지 않음
           overflow: "auto", // 내용이 많으면 스크롤

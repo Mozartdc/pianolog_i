@@ -39,9 +39,11 @@ function loadPracticeData(): any[] {
   }
 }
 
-function savePracticeData( any): void {
+// ✅ savePracticeData 함수 수정: 'data' 파라미터를 올바르게 받아서 저장하도록 변경
+function savePracticeData(data: any): void {
   try {
-    if (Array.isArray('data')) {
+    // Array.isArray(data) 체크는 'data'가 배열인지 확인하는 것이므로 유지
+    if (Array.isArray(data)) {
       localStorage.setItem("practiceRecords", JSON.stringify(data));
     }
   } catch (error) {
@@ -179,6 +181,7 @@ export function TodayCalendar() {
         onBack={() => navigate(-1)}
       />
 
+      {/* WeekCalendar에 필요한 모든 props가 이미 잘 전달되고 있습니다. */}
       <WeekCalendar
         selectedDate={selectedDate}
         practiceRecords={loadPracticeData()}
