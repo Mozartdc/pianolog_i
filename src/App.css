@@ -1,26 +1,76 @@
-/* 앱 전체 폰트 통일성 보장 */
+/* Pretendard 폰트 로드 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+/* 글로벌 리셋 */
 * {
   box-sizing: border-box;
-}
-
-body {
   margin: 0;
   padding: 0;
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+/* ✅ Pretendard 폰트만 사용 */
+html, body, #root {
+  font-family: 'Pretendard Variable', 'Pretendard';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'kern' 1;
   text-rendering: optimizeLegibility;
 }
 
-#root {
+body {
+  margin: 0;
+  padding: 0;
   min-height: 100vh;
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 }
 
-/* 모든 텍스트 요소에 Pretendard 강제 적용 */
-h1, h2, h3, h4, h5, h6, p, span, div, button, input, textarea, label {
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+#root {
+  min-height: 100vh;
+}
+
+/* ✅ 모든 요소에 Pretendard 강제 적용 */
+* {
+  font-family: 'Pretendard Variable', 'Pretendard' !important;
+}
+
+/* ✅ 통일된 레이아웃 시스템 */
+.app-layout {
+  width: 100%;
+  max-width: 375px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: #ffffff;
+  position: relative;
+}
+
+/* 페이지 컨테이너 variants */
+.page-container {
+  padding: 44px 16px 100px 16px;
+}
+
+.page-container--no-side-padding {
+  padding: 44px 0 100px 0;
+}
+
+.page-container--stats {
+  padding: 44px 0 20px 0;
+}
+
+.page-container--today {
+  padding: 44px 0 120px 0;
+}
+
+/* 콘텐츠 영역 */
+.content-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.content-area--full-width {
+  width: 100%;
+  max-width: 375px;
+  margin: 0 auto;
 }
 
 /* 브라우저별 폰트 렌더링 최적화 */
@@ -43,5 +93,22 @@ h1, h2, h3, h4, h5, h6, p, span, div, button, input, textarea, label {
   * {
     -webkit-font-smoothing: antialiased;
     font-smoothing: antialiased;
+  }
+}
+
+/* 반응형 대응 */
+@media (max-width: 320px) {
+  .app-layout {
+    max-width: 320px;
+  }
+  
+  .page-container {
+    padding: 44px 12px 100px 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .app-layout {
+    max-width: 480px;
   }
 }

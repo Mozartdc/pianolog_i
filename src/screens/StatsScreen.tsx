@@ -104,14 +104,12 @@ function StatsScreen() {
       const minutes = record.practiceTime % 60;
       const duration = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
       
-      // ✅ 실제 시간이 있으면 사용, 없으면 임시
       let timeRange = "시간 정보 없음";
       if (record.startTime && record.endTime) {
         const start = dayjs(record.startTime).format("HH:mm");
         const end = dayjs(record.endTime).format("HH:mm");
         timeRange = `${start}~${end}`;
       } else {
-        // 임시 시간 범위 (실제 데이터가 없을 때)
         const startHour = 9 + index * 2;
         const endHour = startHour + hours + (minutes > 30 ? 1 : 0);
         timeRange = `${startHour.toString().padStart(2, '0')}:${(index * 10).toString().padStart(2, '0')}~${endHour.toString().padStart(2, '0')}:${((index * 10) + minutes).toString().padStart(2, '0')}`;
@@ -129,13 +127,13 @@ function StatsScreen() {
   // 선택된 날짜 기준 주간 데이터 계산
   const getWeekData = (selectedDate: string) => {
     const date = dayjs(selectedDate);
-    const startOfWeek = date.startOf('week').add(1, 'day'); // 월요일 시작
+    const startOfWeek = date.startOf('week').add(1, 'day');
     const weekDates = Array.from({length: 7}, (_, i) => startOfWeek.add(i, 'day'));
     
     const timeData = weekDates.map(d => {
       const dateStr = d.format("YYYY-MM-DD");
       const dayRecords = practiceRecords.filter(r => r.date === dateStr);
-      return dayRecords.reduce((sum, r) => sum + (r.practiceTime || 0), 0) / 60; // 시간 단위
+      return dayRecords.reduce((sum, r) => sum + (r.practiceTime || 0), 0) / 60;
     });
 
     const songData = weekDates.map(d => {
@@ -159,7 +157,7 @@ function StatsScreen() {
     
     if (value === 0) return MIN_HEIGHT;
     
-    const maxValue = type === 'time' ? 5 : 5; // 5시간/5곡 기준
+    const maxValue = type === 'time' ? 5 : 5;
     const ratio = value / maxValue;
     return Math.max(MIN_HEIGHT + 3, Math.min(ratio * MAX_HEIGHT, MAX_HEIGHT));
   };
@@ -168,7 +166,7 @@ function StatsScreen() {
   const generateCalendarDays = () => {
     const startOfMonth = currentMonth.startOf('month');
     const endOfMonth = currentMonth.endOf('month');
-    const startOfWeek = startOfMonth.startOf('week').add(1, 'day'); // 월요일 시작
+    const startOfWeek = startOfMonth.startOf('week').add(1, 'day');
     const endOfWeek = endOfMonth.endOf('week').add(1, 'day');
     
     const days = [];
@@ -194,10 +192,13 @@ function StatsScreen() {
   return (
     <div style={{
       width: "100%",
-      maxWidth: 375,
+      maxWidth: 375, // 최대 너비는 유지
       margin: "0 auto",
       background: "#ffffff",
       minHeight: "100vh",
+      // 모바일에서도 최소 16px의 좌우 패딩을 보장
+      padding: "0 clamp(16px, 4vw, 20px)",
+      boxSizing: "border-box", // 패딩이 너비에 포함되도록 설정
       ...commonFontStyle
     }}>
       {/* Header */}
@@ -210,19 +211,21 @@ function StatsScreen() {
 
       {/* 총 연습 시간 */}
       <div style={{
-        width: 277,
+        width: "100%", // 부모 너비에 맞춰 유동적
         height: 24,
-        margin: "25px auto 0 auto",
+        margin: "25px auto 0 auto", // 중앙 정렬 유지
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between"
+        justifyContent: "space-between",
+        boxSizing: "border-box" 
       }}>
         <img src={LaurelLeftIcon} alt="laurel left" width="13" height="20" />
         <div style={{
           fontSize: 16,
           color: "#2D2D2A",
           textAlign: "center",
-          lineHeight: "24px"
+          lineHeight: "24px",
+          flex: 1 // 텍스트가 남은 공간을 채우도록
         }}>
           지금까지 총 <span style={{ fontWeight: 700, color: "#F0C05A" }}>{totalHours}</span>시간 피출
         </div>
@@ -231,19 +234,21 @@ function StatsScreen() {
 
       {/* 캘린더 */}
       <div style={{
-        width: 324,
-        margin: "25px auto 0 auto",
-        padding: 16,
+        width: "100%", // 부모 너비에 맞춰 유동적
+        margin: "25px auto 0 auto", // 중앙 정렬 유지
+        padding: "16px 0", // 수평 패딩 제거, 수직 패딩만 유지 (부모의 clamp 패딩에 의존)
         border: "0.5px solid #9E9C98",
         borderRadius: 5,
-        background: "#ffffff"
+        background: "#ffffff",
+        boxSizing: "border-box" // 패딩이 너비에 포함되도록 설정
       }}>
         {/* 캘린더 헤더 */}
         <div style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: 16
+          marginBottom: 16,
+          padding: "0 16px" // 캘린더 헤더는 자체적으로 좌우 패딩을 가짐
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{
@@ -275,8 +280,9 @@ function StatsScreen() {
         <div style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 8,
-          marginBottom: 8
+          gap: "min(6px, 1.5vw)", // 유동적인 갭 유지
+          marginBottom: 8,
+          padding: "0 16px" // 요일 헤더도 자체 좌우 패딩을 가짐
         }}>
           {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
             <div
@@ -300,8 +306,9 @@ function StatsScreen() {
             style={{
               display: "grid",
               gridTemplateColumns: "repeat(7, 1fr)",
-              gap: 8,
-              marginBottom: 8
+              gap: "min(6px, 1.5vw)", // 유동적인 갭 유지
+              marginBottom: 8,
+              padding: "0 16px" // 캘린더 그리드도 자체 좌우 패딩을 가짐
             }}
           >
             {week.map((date, dayIndex) => {
@@ -313,7 +320,6 @@ function StatsScreen() {
               const isHoliday = koreanHolidays.includes(dateStr);
               const isFuture = date.isAfter(dayjs(), 'day');
               
-              // 연습 여부 확인
               const practiced = practiceRecords.some(r => r.date === dateStr) || 
                               (practiceChecks[dateStr] && Object.values(practiceChecks[dateStr]).some(Boolean));
 
@@ -322,42 +328,48 @@ function StatsScreen() {
                   key={dayIndex}
                   onClick={() => setSelectedDate(dateStr)}
                   style={{
-                    width: 32,
-                    height: 32,
+                    aspectRatio: "1", // 정사각형 유지
+                    minWidth: 0,      // flex 축소 허용
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
                     position: "relative",
                     cursor: "pointer",
-                    opacity: isCurrentMonth ? 1 : 0.3
+                    opacity: isCurrentMonth ? 1 : 0.3,
+                    boxSizing: "border-box" // 여기에 boxSizing 추가 (아이콘/원 정렬)
                   }}
                 >
                   {practiced && isCurrentMonth && (
                     <img
                       src={DoIcon}
                       alt="practiced"
-                      width="32"
-                      height="32"
                       style={{
+                        width: "100%",     // 부모 너비에 맞춰 유동적
+                        height: "100%",    // 부모 높이에 맞춰 유동적
+                        maxWidth: 32,      // 최대 크기 제한
+                        maxHeight: 32,
                         position: "absolute",
-                        top: 0,
-                        left: 0,
+                        top: '50%',        // ✅ 중앙 정렬을 위해 50%로 변경
+                        left: '50%',       // ✅ 중앙 정렬을 위해 50%로 변경
+                        transform: 'translate(-50%, -50%)', // ✅ 중앙 정렬을 위해 추가
                         zIndex: 1
                       }}
                     />
                   )}
                   
                   <span style={{
-                    fontSize: 16,
+                    fontSize: "clamp(12px, 4vw, 16px)", // 반응형 폰트
                     color: dayIndex === 6 || isHoliday ? "#BB2649" : "#2D2D2A",
                     textDecoration: !practiced && isCurrentMonth && !isFuture ? "line-through" : "none",
                     zIndex: 2,
                     position: "relative",
                     border: isSelected ? "1px solid #BB2649" : "none",
-                    borderRadius: isSelected ? "50px" : "0",
-                    width: isSelected ? "32px" : "auto",
-                    height: isSelected ? "32px" : "auto",
+                    borderRadius: isSelected ? "50%" : "0", // 50px에서 50%로 변경 (정원)
+                    width: isSelected ? "100%" : "auto",  // 부모 너비에 맞춰 유동적
+                    height: isSelected ? "100%" : "auto", // 부모 높이에 맞춰 유동적
+                    maxWidth: isSelected ? 32 : "auto",   // 최대 크기 제한
+                    maxHeight: isSelected ? 32 : "auto",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -373,27 +385,30 @@ function StatsScreen() {
 
         {/* 세션 카드들 */}
         {selectedSessions.length > 0 && (
-          <div style={{ marginTop: 16 }}>
+          <div style={{ marginTop: 16, padding: "0 16px" }}> {/* 세션 카드 컨테이너도 자체 좌우 패딩을 가짐 */}
             {selectedSessions.map((session, index) => (
               <div
                 key={index}
                 style={{
-                  width: 294,
+                  width: "100%", // 부모 너비에 맞춰 유동적
                   height: 32,
-                  margin: index === 0 ? "0 auto" : "10px auto 0 auto",
+                  margin: index === 0 ? "0 auto" : "10px auto 0 auto", // 중앙 정렬 유지
                   padding: "6px 10px",
                   border: "0.5px solid #F0EAD6",
                   borderRadius: 5,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: "#ffffff"
+                  background: "#ffffff",
+                  boxSizing: "border-box" // 패딩이 너비에 포함되도록 설정
                 }}
               >
                 <img src={HistoryIcon} alt="history" width="16" height="16" />
                 <div style={{
                   fontSize: 14,
                   color: "#2D2D2A",
+                  flex: 1, // 텍스트가 남은 공간 채우도록
+                  overflow: "hidden",
                   ...commonFontStyle
                 }}>
                   <span style={{ fontSize: 12, color: "#9E9C98" }}>
@@ -407,23 +422,26 @@ function StatsScreen() {
         )}
       </div>
 
-      {/* 주간 차트 */}
+      {/* 주간 차트 - 레이아웃 핵심 수정 */}
       <div style={{
         display: "flex",
-        gap: 8,
-        margin: "10px auto 0 auto",
-        width: 324,
-        justifyContent: "center",
+        gap: "min(12px, 3vw)", // 부모의 유동적인 갭 유지
+        margin: "10px auto 0 auto", // 중앙 정렬 유지
+        width: "100%", // 부모 너비는 100%
+        boxSizing: "border-box", 
+        justifyContent: "space-between", // 아이템들을 양 끝으로 벌림
         alignItems: "flex-start"
       }}>
         {/* 주간 피출 시간 */}
         <div style={{
-          width: 157,
+          flex: 1, // 남은 공간을 균등하게 채움
+          minWidth: "calc(50% - min(12px, 3vw) / 2)", // 각 박스의 최소 너비 설정 (유동적인 갭 반영)
           height: 161,
           padding: 10,
           border: "0.5px solid #9E9C98",
           borderRadius: 5,
-          background: "#ffffff"
+          background: "#ffffff",
+          boxSizing: "border-box"
         }}>
           <div style={{
             fontSize: 12,
@@ -442,7 +460,6 @@ function StatsScreen() {
             {weekData.dateRange}
           </div>
           
-          {/* ✅ 사이드 눈금 + 그래프 영역 */}
           <div style={{
             display: "flex",
             height: 70,
@@ -453,16 +470,18 @@ function StatsScreen() {
               width: 20,
               height: 70,
               position: "relative",
-              marginRight: 5
+              marginRight: 5,
+              flexShrink: 0
             }}>
               {[5, 4, 3, 2, 1, 0].map((hour, index) => (
                 <div key={hour} style={{
                   position: "absolute",
                   top: index * 14,
                   right: 0,
-                  fontSize: 8,
+                  fontSize: 10,
                   color: "#9E9C98",
                   lineHeight: "8px",
+                  fontWeight: "normal",
                   ...commonFontStyle
                 }}>
                   {hour}h
@@ -470,12 +489,13 @@ function StatsScreen() {
               ))}
             </div>
             
-            {/* ✅ 그래프 막대들 - 정확한 정렬 */}
+            {/* 그래프 막대들 */}
             <div style={{
               display: "flex",
               alignItems: "end",
               height: 70,
-              width: "calc(100% - 25px)"
+              flex: 1, // 남은 공간을 채우도록
+              minWidth: 0 // 축소 허용
             }}>
               {weekData.timeData.map((value, index) => {
                 const isToday = weekData.dates[index].format("YYYY-MM-DD") === today;
@@ -489,7 +509,8 @@ function StatsScreen() {
                       height: height,
                       backgroundColor: isToday ? "#F0C05A" : "#F0EAD6",
                       borderRadius: 2,
-                      marginRight: index < 6 ? 2 : 0
+                      marginRight: index < 6 ? 2 : 0,
+                      minWidth: 0 // 축소 허용
                     }}
                   />
                 );
@@ -497,19 +518,17 @@ function StatsScreen() {
             </div>
           </div>
           
-          {/* ✅ 요일 라벨 - 그래프와 동일한 레이아웃 */}
+          {/* 요일 라벨 */}
           <div style={{
             display: "flex",
             fontSize: 12,
             ...commonFontStyle
           }}>
-            {/* 눈금 공간 */}
-            <div style={{ width: 25 }} />
-            
-            {/* 요일들 */}
+            <div style={{ width: 25, flexShrink: 0 }} />
             <div style={{
               display: "flex",
-              width: "calc(100% - 25px)"
+              flex: 1,
+              minWidth: 0 // 축소 허용
             }}>
               {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
                 <div
@@ -518,7 +537,8 @@ function StatsScreen() {
                     flex: "1 1 0",
                     textAlign: "center",
                     color: index === 5 ? "#6667AB" : index === 6 ? "#BB2649" : "#9E9C98",
-                    marginRight: index < 6 ? 2 : 0
+                    marginRight: index < 6 ? 2 : 0,
+                    minWidth: 0 // 축소 허용
                   }}
                 >
                   {day}
@@ -530,12 +550,14 @@ function StatsScreen() {
 
         {/* 주간 연습 곡 */}
         <div style={{
-          width: 157,
+          flex: 1, // 남은 공간을 균등하게 채움
+          minWidth: "calc(50% - min(12px, 3vw) / 2)", // 각 박스의 최소 너비 설정
           height: 161,
           padding: 10,
           border: "0.5px solid #9E9C98",
           borderRadius: 5,
-          background: "#ffffff"
+          background: "#ffffff",
+          boxSizing: "border-box"
         }}>
           <div style={{
             fontSize: 12,
@@ -554,7 +576,6 @@ function StatsScreen() {
             {weekData.dateRange}
           </div>
           
-          {/* ✅ 사이드 눈금 + 그래프 영역 */}
           <div style={{
             display: "flex",
             height: 70,
@@ -565,16 +586,18 @@ function StatsScreen() {
               width: 20,
               height: 70,
               position: "relative",
-              marginRight: 5
+              marginRight: 5,
+              flexShrink: 0
             }}>
               {[5, 4, 3, 2, 1, 0].map((songs, index) => (
                 <div key={songs} style={{
                   position: "absolute",
                   top: index * 14,
                   right: 0,
-                  fontSize: 8,
+                  fontSize: 10,
                   color: "#9E9C98",
                   lineHeight: "8px",
+                  fontWeight: "normal",
                   ...commonFontStyle
                 }}>
                   {songs}
@@ -582,12 +605,13 @@ function StatsScreen() {
               ))}
             </div>
             
-            {/* ✅ 그래프 막대들 - 정확한 정렬 */}
+            {/* 그래프 막대들 */}
             <div style={{
               display: "flex",
               alignItems: "end",
               height: 70,
-              width: "calc(100% - 25px)"
+              flex: 1, // 남은 공간을 채우도록
+              minWidth: 0 // 축소 허용
             }}>
               {weekData.songData.map((value, index) => {
                 const isToday = weekData.dates[index].format("YYYY-MM-DD") === today;
@@ -601,7 +625,8 @@ function StatsScreen() {
                       height: height,
                       backgroundColor: isToday ? "#F0C05A" : "#F0EAD6",
                       borderRadius: 2,
-                      marginRight: index < 6 ? 2 : 0
+                      marginRight: index < 6 ? 2 : 0,
+                      minWidth: 0 // 축소 허용
                     }}
                   />
                 );
@@ -609,19 +634,17 @@ function StatsScreen() {
             </div>
           </div>
           
-          {/* ✅ 요일 라벨 - 그래프와 동일한 레이아웃 */}
+          {/* 요일 라벨 */}
           <div style={{
             display: "flex",
             fontSize: 12,
             ...commonFontStyle
           }}>
-            {/* 눈금 공간 */}
-            <div style={{ width: 25 }} />
-            
-            {/* 요일들 */}
+            <div style={{ width: 25, flexShrink: 0 }} />
             <div style={{
               display: "flex",
-              width: "calc(100% - 25px)"
+              flex: 1,
+              minWidth: 0 // 축소 허용
             }}>
               {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
                 <div
@@ -630,7 +653,8 @@ function StatsScreen() {
                     flex: "1 1 0",
                     textAlign: "center",
                     color: index === 5 ? "#6667AB" : index === 6 ? "#BB2649" : "#9E9C98",
-                    marginRight: index < 6 ? 2 : 0
+                    marginRight: index < 6 ? 2 : 0,
+                    minWidth: 0 // 축소 허용
                   }}
                 >
                   {day}
