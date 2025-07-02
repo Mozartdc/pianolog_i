@@ -1,215 +1,646 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Paper, List, ListItem, ListItemText } from "@mui/material";
-import Calendar from "react-calendar";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
-import "react-calendar/dist/Calendar.css";
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-} from "recharts";
+import "dayjs/locale/ko";
+import Header from "../components/Header";
 
-// 데이터 불러오기
-function loadPracticeData() {
-  const data = localStorage.getItem("practiceRecords");
-  return data ? JSON.parse(data) : [];
+// 아이콘 imports
+import LaurelLeftIcon from "../assets/icons/laurel_L.svg";
+import LaurelRightIcon from "../assets/icons/laurel_R.svg";
+import DoIcon from "../assets/icons/do.svg";
+import HistoryIcon from "../assets/icons/History.svg";
+import CalLeftIcon from "../assets/icons/cal_left.svg";
+import CalRightIcon from "../assets/icons/cal_right.svg";
+import CalDownIcon from "../assets/icons/cal_down.svg";
+
+// 타입 정의
+type Track = {
+  id: number;
+  title: string;
+  addedDate: string;
+  completedDate?: string;
+};
+
+type PracticeRecord = {
+  date: string;
+  practiceTime: number;
+  track?: string;
+  startTime?: number;
+  endTime?: number;
+};
+
+type PracticeChecks = {
+  [date: string]: { [trackId: number]: boolean };
+};
+
+interface SessionData {
+  sessionNumber: number;
+  duration: string;
+  timeRange: string;
+  minutes: number;
 }
 
-function loadPracticeChecks() {
-  const data = localStorage.getItem("practiceChecks");
-  return data ? JSON.parse(data) : {};
-}
-
-// 날짜별 연습 여부
-function isPracticed(dateStr: string, practiceRecords: any[], practiceChecks: any) {
-  if (practiceChecks[dateStr]) {
-    for (const key in practiceChecks[dateStr]) {
-      if (practiceChecks[dateStr][key]) return true;
-    }
+// 한국 공휴일 계산 함수
+const getKoreanHolidays = (year: number): string[] => {
+  const holidays = [
+    `${year}-01-01`, `${year}-03-01`, `${year}-05-05`, `${year}-06-06`,
+    `${year}-08-15`, `${year}-10-03`, `${year}-10-09`, `${year}-12-25`,
+  ];
+  if (year === 2025) {
+    holidays.push(
+      '2025-01-28', '2025-01-29', '2025-01-30',
+      '2025-05-13', '2025-09-06', '2025-09-07', '2025-09-08'
+    );
   }
-  if (practiceRecords.some(r => r.date === dateStr)) return true;
-  return false;
-}
-
-// 주간 날짜 배열 (월~일)
-function getWeekDates() {
-  const today = dayjs();
-  const weekStart = today.startOf("week"); // 일요일 시작
-  return Array.from({ length: 7 }).map((_, i) =>
-    weekStart.add(i, "day").format("YYYY-MM-DD")
-  );
-}
+  return holidays;
+};
 
 function StatsScreen() {
-  const [practiceRecords, setPracticeRecords] = useState<any[]>([]);
-  const [practiceChecks, setPracticeChecks] = useState<any>({});
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
+  const [currentMonth, setCurrentMonth] = useState<dayjs.Dayjs>(dayjs());
+  const [tracks, setTracks] = useState<Track[]>([]);
+  const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>([]);
+  const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>({});
 
+  const commonFontStyle = {
+    fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
+    WebkitFontSmoothing: "antialiased" as const,
+    MozOsxFontSmoothing: "grayscale" as const
+  };
+
+  // 데이터 로딩
   useEffect(() => {
-    setPracticeRecords(loadPracticeData());
-    setPracticeChecks(loadPracticeChecks());
+    try {
+      const savedTracks = localStorage.getItem("tracks");
+      if (savedTracks) {
+        setTracks(JSON.parse(savedTracks));
+      }
+
+      const savedRecords = localStorage.getItem("practiceRecords");
+      if (savedRecords) {
+        const parsed = JSON.parse(savedRecords);
+        setPracticeRecords(Array.isArray(parsed) ? parsed : []);
+      }
+
+      const savedChecks = localStorage.getItem("practiceChecks");
+      if (savedChecks) {
+        setPracticeChecks(JSON.parse(savedChecks));
+      }
+    } catch (error) {
+      console.error("데이터 로딩 실패:", error);
+    }
   }, []);
 
-  // 달력에서 연습한 날만 강조
-  const tileContent = ({ date, view }: { date: Date; view: string }) => {
-    if (view === "month") {
-      const dateStr = dayjs(date).format("YYYY-MM-DD");
-      if (isPracticed(dateStr, practiceRecords, practiceChecks)) {
-        return (
-          <span
-            style={{
-              display: "block",
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: "#ff9800",
-              margin: "3px auto 0 auto",
-            }}
-          ></span>
-        );
+  // 총 연습 시간 계산
+  const totalMinutes = practiceRecords.reduce((sum, record) => sum + (record.practiceTime || 0), 0);
+  const totalHours = Math.floor(totalMinutes / 60);
+
+  // 선택된 날짜의 세션 데이터 생성
+  const getSessionsForDate = (date: string): SessionData[] => {
+    const dayRecords = practiceRecords.filter(r => r.date === date);
+    return dayRecords.map((record, index) => {
+      const hours = Math.floor(record.practiceTime / 60);
+      const minutes = record.practiceTime % 60;
+      const duration = hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
+      
+      // ✅ 실제 시간이 있으면 사용, 없으면 임시
+      let timeRange = "시간 정보 없음";
+      if (record.startTime && record.endTime) {
+        const start = dayjs(record.startTime).format("HH:mm");
+        const end = dayjs(record.endTime).format("HH:mm");
+        timeRange = `${start}~${end}`;
+      } else {
+        // 임시 시간 범위 (실제 데이터가 없을 때)
+        const startHour = 9 + index * 2;
+        const endHour = startHour + hours + (minutes > 30 ? 1 : 0);
+        timeRange = `${startHour.toString().padStart(2, '0')}:${(index * 10).toString().padStart(2, '0')}~${endHour.toString().padStart(2, '0')}:${((index * 10) + minutes).toString().padStart(2, '0')}`;
       }
-    }
-    return null;
+      
+      return {
+        sessionNumber: index + 1,
+        duration,
+        timeRange,
+        minutes: record.practiceTime
+      };
+    });
   };
 
-  // 날짜 클릭 시 상세로 이동 (또는 그래프처럼 리스트 표시)
-  const handleDateClick = (date: Date) => {
-    const dateStr = dayjs(date).format("YYYY-MM-DD");
-    if (isPracticed(dateStr, practiceRecords, practiceChecks)) {
-      setSelectedDate(dateStr);
-      // navigate(`/stats/${dateStr}`); // 기존 상세페이지 이동은 주석처리
-    }
-  };
+  // 선택된 날짜 기준 주간 데이터 계산
+  const getWeekData = (selectedDate: string) => {
+    const date = dayjs(selectedDate);
+    const startOfWeek = date.startOf('week').add(1, 'day'); // 월요일 시작
+    const weekDates = Array.from({length: 7}, (_, i) => startOfWeek.add(i, 'day'));
+    
+    const timeData = weekDates.map(d => {
+      const dateStr = d.format("YYYY-MM-DD");
+      const dayRecords = practiceRecords.filter(r => r.date === dateStr);
+      return dayRecords.reduce((sum, r) => sum + (r.practiceTime || 0), 0) / 60; // 시간 단위
+    });
 
-  // 주간 데이터 집계
-  const weekDates = getWeekDates();
-  const weekData = weekDates.map(dateStr => {
-    // 연습 기록
-    const records = practiceRecords.filter((r: any) => r.date === dateStr);
-    // 체크 기록(곡별 체크도 포함)
-    const checks = practiceChecks[dateStr] ? Object.values(practiceChecks[dateStr]) : [];
-    // 총 연습 시간(분)
-    const totalTime = records.reduce((sum: number, r: any) => sum + Number(r.practiceTime || 0), 0);
-    // 곡수: 체크된 곡 + 기록된 곡(중복제거)
-    const checkedTracks = Object.keys(practiceChecks[dateStr] || {});
-    const recordTracks = records.flatMap((r: any) => r.tracks || []);
-    const allTracks = Array.from(new Set([...checkedTracks, ...recordTracks]));
-    const trackCount = allTracks.length;
+    const songData = weekDates.map(d => {
+      const dateStr = d.format("YYYY-MM-DD");
+      const checks = practiceChecks[dateStr];
+      return checks ? Object.values(checks).filter(Boolean).length : 0;
+    });
 
     return {
-      date: dateStr.slice(5), // MM-DD
-      dateFull: dateStr,
-      totalTime, // 분
-      trackCount,
+      dates: weekDates,
+      timeData,
+      songData,
+      dateRange: `${startOfWeek.format("MMM DD")} - ${startOfWeek.add(6, 'day').format("MMM DD")}`
     };
-  });
+  };
 
-  // Y축 최대값 플렉서블 계산
-  const maxTime = Math.max(...weekData.map(d => d.totalTime), 180); // 3시간(180분) 이상이면 자동 확장
-  const maxTracks = Math.max(...weekData.map(d => d.trackCount), 5); // 5곡 이상이면 자동 확장
+  // 그래프 높이 계산
+  const calculateBarHeight = (value: number, type: 'time' | 'songs') => {
+    const MAX_HEIGHT = 70;
+    const MIN_HEIGHT = 2;
+    
+    if (value === 0) return MIN_HEIGHT;
+    
+    const maxValue = type === 'time' ? 5 : 5; // 5시간/5곡 기준
+    const ratio = value / maxValue;
+    return Math.max(MIN_HEIGHT + 3, Math.min(ratio * MAX_HEIGHT, MAX_HEIGHT));
+  };
 
-  // 전체 연습 시간
-  const totalMinutes = practiceRecords.reduce((sum: number, r: any) => sum + Number(r.practiceTime || 0), 0);
+  // 캘린더 날짜 생성
+  const generateCalendarDays = () => {
+    const startOfMonth = currentMonth.startOf('month');
+    const endOfMonth = currentMonth.endOf('month');
+    const startOfWeek = startOfMonth.startOf('week').add(1, 'day'); // 월요일 시작
+    const endOfWeek = endOfMonth.endOf('week').add(1, 'day');
+    
+    const days = [];
+    let current = startOfWeek;
+    while (current.isBefore(endOfWeek) || current.isSame(endOfWeek, 'day')) {
+      days.push(current);
+      current = current.add(1, 'day');
+    }
+    return days;
+  };
 
-  // 선택된 날짜의 연습내역
-  const selectedRecords = selectedDate
-    ? practiceRecords.filter((r: any) => r.date === selectedDate)
-    : [];
+  const calendarDays = generateCalendarDays();
+  const weeks = [];
+  for (let i = 0; i < calendarDays.length; i += 7) {
+    weeks.push(calendarDays.slice(i, i + 7));
+  }
+
+  const selectedSessions = getSessionsForDate(selectedDate);
+  const weekData = getWeekData(selectedDate);
+  const today = dayjs().format("YYYY-MM-DD");
+  const koreanHolidays = getKoreanHolidays(currentMonth.year());
 
   return (
-    <Box sx={{ p: 3, maxWidth: 600, mx: "auto" }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>통계</Typography>
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography>총 연습 시간: {Math.floor(totalMinutes / 60)}시간 {totalMinutes % 60}분</Typography>
-      </Paper>
+    <div style={{
+      width: "100%",
+      maxWidth: 375,
+      margin: "0 auto",
+      background: "#ffffff",
+      minHeight: "100vh",
+      ...commonFontStyle
+    }}>
+      {/* Header */}
+      <Header 
+        title="statistics" 
+        color="#F0C05A"
+        topMargin={44}
+        showBackButton={true}
+      />
 
-      {/* 주간 연습 시간 그래프 */}
-      <Typography variant="h6" mb={1}>주간 연습 시간</Typography>
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={weekData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis
-              domain={[0, Math.ceil(maxTime / 30) * 30]}
-              tickFormatter={v => {
-                const num = Number(v);
-                return `${Math.floor(num/60)}h${num%60}m`;
+      {/* 총 연습 시간 */}
+      <div style={{
+        width: 277,
+        height: 24,
+        margin: "25px auto 0 auto",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+      }}>
+        <img src={LaurelLeftIcon} alt="laurel left" width="13" height="20" />
+        <div style={{
+          fontSize: 16,
+          color: "#2D2D2A",
+          textAlign: "center",
+          lineHeight: "24px"
+        }}>
+          지금까지 총 <span style={{ fontWeight: 700, color: "#F0C05A" }}>{totalHours}</span>시간 피출
+        </div>
+        <img src={LaurelRightIcon} alt="laurel right" width="13" height="20" />
+      </div>
+
+      {/* 캘린더 */}
+      <div style={{
+        width: 324,
+        margin: "25px auto 0 auto",
+        padding: 16,
+        border: "0.5px solid #9E9C98",
+        borderRadius: 5,
+        background: "#ffffff"
+      }}>
+        {/* 캘린더 헤더 */}
+        <div style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{
+              fontSize: 16,
+              color: "#9E9C98",
+              ...commonFontStyle
+            }}>
+              {currentMonth.format("YYYY년 MM월")}
+            </span>
+            <img src={CalDownIcon} alt="dropdown" width="9" height="6" />
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button
+              onClick={() => setCurrentMonth(currentMonth.subtract(1, 'month'))}
+              style={{ background: "none", border: "none", cursor: "pointer" }}
+            >
+              <img src={CalLeftIcon} alt="previous" width="14" height="8" />
+            </button>
+            <button
+              onClick={() => setCurrentMonth(currentMonth.add(1, 'month'))}
+              style={{ background: "none", border: "none", cursor: "pointer" }}
+            >
+              <img src={CalRightIcon} alt="next" width="14" height="8" />
+            </button>
+          </div>
+        </div>
+
+        {/* 요일 헤더 */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: 8,
+          marginBottom: 8
+        }}>
+          {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
+            <div
+              key={index}
+              style={{
+                fontSize: 16,
+                color: index === 5 ? "#6667AB" : index === 6 ? "#BB2649" : "#9E9C98",
+                textAlign: "center",
+                ...commonFontStyle
               }}
-            />
-            <Tooltip formatter={v => {
-              const num = Number(v);
-              return `${Math.floor(num / 60)}시간 ${num % 60}분`;
-            }} />
-            <Bar
-              dataKey="totalTime"
-              fill="#7e5fff"
-              radius={[8, 8, 0, 0]}
-              onClick={(_, idx) => setSelectedDate(weekData[idx].dateFull)}
-              cursor="pointer"
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </Paper>
+            >
+              {day}
+            </div>
+          ))}
+        </div>
 
-      {/* 주간 연습 곡수 그래프 */}
-      <Typography variant="h6" mb={1}>주간 연습 곡수</Typography>
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={weekData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis domain={[0, Math.ceil(maxTracks / 1) * 1]} />
-            <Tooltip formatter={v => `${v}곡`} />
-            <Bar
-              dataKey="trackCount"
-              fill="#ff9800"
-              radius={[8, 8, 0, 0]}
-              onClick={(_, idx) => setSelectedDate(weekData[idx].dateFull)}
-              cursor="pointer"
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </Paper>
+        {/* 캘린더 그리드 */}
+        {weeks.map((week, weekIndex) => (
+          <div
+            key={weekIndex}
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(7, 1fr)",
+              gap: 8,
+              marginBottom: 8
+            }}
+          >
+            {week.map((date, dayIndex) => {
+              const dateStr = date.format("YYYY-MM-DD");
+              const isCurrentMonth = date.month() === currentMonth.month();
+              const isSelected = dateStr === selectedDate;
+              const isToday = dateStr === today;
+              const isSunday = date.day() === 0;
+              const isHoliday = koreanHolidays.includes(dateStr);
+              const isFuture = date.isAfter(dayjs(), 'day');
+              
+              // 연습 여부 확인
+              const practiced = practiceRecords.some(r => r.date === dateStr) || 
+                              (practiceChecks[dateStr] && Object.values(practiceChecks[dateStr]).some(Boolean));
 
-      {/* 월간 연습 캘린더 */}
-      <Paper sx={{ p: 2 }}>
-        <Typography variant="h6" sx={{ mb: 1 }}>월간 연습 캘린더</Typography>
-        <Calendar
-          calendarType="gregory"
-          locale="ko-KR"
-          tileContent={tileContent}
-          onClickDay={handleDateClick}
-        />
-        <Typography sx={{ color: "#888", fontSize: 14, mt: 1 }}>
-          ● 표시가 있는 날짜만 클릭해 아래에서 상세 연습 내역을 볼 수 있습니다.
-        </Typography>
-      </Paper>
+              return (
+                <div
+                  key={dayIndex}
+                  onClick={() => setSelectedDate(dateStr)}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "relative",
+                    cursor: "pointer",
+                    opacity: isCurrentMonth ? 1 : 0.3
+                  }}
+                >
+                  {practiced && isCurrentMonth && (
+                    <img
+                      src={DoIcon}
+                      alt="practiced"
+                      width="32"
+                      height="32"
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 1
+                      }}
+                    />
+                  )}
+                  
+                  <span style={{
+                    fontSize: 16,
+                    color: dayIndex === 6 || isHoliday ? "#BB2649" : "#2D2D2A",
+                    textDecoration: !practiced && isCurrentMonth && !isFuture ? "line-through" : "none",
+                    zIndex: 2,
+                    position: "relative",
+                    border: isSelected ? "1px solid #BB2649" : "none",
+                    borderRadius: isSelected ? "50px" : "0",
+                    width: isSelected ? "32px" : "auto",
+                    height: isSelected ? "32px" : "auto",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    ...commonFontStyle
+                  }}>
+                    {date.date()}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        ))}
 
-      {/* 선택한 날짜의 연습 내역 */}
-      {selectedDate && (
-        <Paper sx={{ p: 2, mt: 3 }}>
-          <Typography variant="h6" mb={1}>
-            {selectedDate} 연습 내역
-          </Typography>
-          <List>
-            {selectedRecords.length === 0 && (
-              <ListItem>
-                <ListItemText primary="연습 기록이 없습니다." />
-              </ListItem>
-            )}
-            {selectedRecords.map((r: any, idx: number) => (
-              <ListItem key={idx}>
-                <ListItemText
-                  primary={`연습 시간: ${Math.floor(Number(r.practiceTime || 0) / 60)}시간 ${Number(r.practiceTime || 0) % 60}분`}
-                  secondary={r.tracks ? `곡: ${r.tracks.join(", ")}` : ""}
-                />
-              </ListItem>
+        {/* 세션 카드들 */}
+        {selectedSessions.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            {selectedSessions.map((session, index) => (
+              <div
+                key={index}
+                style={{
+                  width: 294,
+                  height: 32,
+                  margin: index === 0 ? "0 auto" : "10px auto 0 auto",
+                  padding: "6px 10px",
+                  border: "0.5px solid #F0EAD6",
+                  borderRadius: 5,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "#ffffff"
+                }}
+              >
+                <img src={HistoryIcon} alt="history" width="16" height="16" />
+                <div style={{
+                  fontSize: 14,
+                  color: "#2D2D2A",
+                  ...commonFontStyle
+                }}>
+                  <span style={{ fontSize: 12, color: "#9E9C98" }}>
+                    Session {session.sessionNumber}.
+                  </span>{" "}
+                  {session.duration} ({session.timeRange})
+                </div>
+              </div>
             ))}
-          </List>
-        </Paper>
-      )}
-    </Box>
+          </div>
+        )}
+      </div>
+
+      {/* 주간 차트 */}
+      <div style={{
+        display: "flex",
+        gap: 8,
+        margin: "10px auto 0 auto",
+        width: 324,
+        justifyContent: "center",
+        alignItems: "flex-start"
+      }}>
+        {/* 주간 피출 시간 */}
+        <div style={{
+          width: 157,
+          height: 161,
+          padding: 10,
+          border: "0.5px solid #9E9C98",
+          borderRadius: 5,
+          background: "#ffffff"
+        }}>
+          <div style={{
+            fontSize: 12,
+            color: "#2D2D2A",
+            marginBottom: 4,
+            ...commonFontStyle
+          }}>
+            주간 피출 시간
+          </div>
+          <div style={{
+            fontSize: 12,
+            color: "#2D2D2A",
+            marginBottom: 12,
+            ...commonFontStyle
+          }}>
+            {weekData.dateRange}
+          </div>
+          
+          {/* ✅ 사이드 눈금 + 그래프 영역 */}
+          <div style={{
+            display: "flex",
+            height: 70,
+            marginBottom: 8
+          }}>
+            {/* 사이드 눈금 */}
+            <div style={{
+              width: 20,
+              height: 70,
+              position: "relative",
+              marginRight: 5
+            }}>
+              {[5, 4, 3, 2, 1, 0].map((hour, index) => (
+                <div key={hour} style={{
+                  position: "absolute",
+                  top: index * 14,
+                  right: 0,
+                  fontSize: 8,
+                  color: "#9E9C98",
+                  lineHeight: "8px",
+                  ...commonFontStyle
+                }}>
+                  {hour}h
+                </div>
+              ))}
+            </div>
+            
+            {/* ✅ 그래프 막대들 - 정확한 정렬 */}
+            <div style={{
+              display: "flex",
+              alignItems: "end",
+              height: 70,
+              width: "calc(100% - 25px)"
+            }}>
+              {weekData.timeData.map((value, index) => {
+                const isToday = weekData.dates[index].format("YYYY-MM-DD") === today;
+                const height = calculateBarHeight(value, 'time');
+                
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      flex: "1 1 0",
+                      height: height,
+                      backgroundColor: isToday ? "#F0C05A" : "#F0EAD6",
+                      borderRadius: 2,
+                      marginRight: index < 6 ? 2 : 0
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* ✅ 요일 라벨 - 그래프와 동일한 레이아웃 */}
+          <div style={{
+            display: "flex",
+            fontSize: 12,
+            ...commonFontStyle
+          }}>
+            {/* 눈금 공간 */}
+            <div style={{ width: 25 }} />
+            
+            {/* 요일들 */}
+            <div style={{
+              display: "flex",
+              width: "calc(100% - 25px)"
+            }}>
+              {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
+                <div
+                  key={index}
+                  style={{
+                    flex: "1 1 0",
+                    textAlign: "center",
+                    color: index === 5 ? "#6667AB" : index === 6 ? "#BB2649" : "#9E9C98",
+                    marginRight: index < 6 ? 2 : 0
+                  }}
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* 주간 연습 곡 */}
+        <div style={{
+          width: 157,
+          height: 161,
+          padding: 10,
+          border: "0.5px solid #9E9C98",
+          borderRadius: 5,
+          background: "#ffffff"
+        }}>
+          <div style={{
+            fontSize: 12,
+            color: "#2D2D2A",
+            marginBottom: 4,
+            ...commonFontStyle
+          }}>
+            주간 연습 곡
+          </div>
+          <div style={{
+            fontSize: 12,
+            color: "#2D2D2A",
+            marginBottom: 12,
+            ...commonFontStyle
+          }}>
+            {weekData.dateRange}
+          </div>
+          
+          {/* ✅ 사이드 눈금 + 그래프 영역 */}
+          <div style={{
+            display: "flex",
+            height: 70,
+            marginBottom: 8
+          }}>
+            {/* 사이드 눈금 */}
+            <div style={{
+              width: 20,
+              height: 70,
+              position: "relative",
+              marginRight: 5
+            }}>
+              {[5, 4, 3, 2, 1, 0].map((songs, index) => (
+                <div key={songs} style={{
+                  position: "absolute",
+                  top: index * 14,
+                  right: 0,
+                  fontSize: 8,
+                  color: "#9E9C98",
+                  lineHeight: "8px",
+                  ...commonFontStyle
+                }}>
+                  {songs}
+                </div>
+              ))}
+            </div>
+            
+            {/* ✅ 그래프 막대들 - 정확한 정렬 */}
+            <div style={{
+              display: "flex",
+              alignItems: "end",
+              height: 70,
+              width: "calc(100% - 25px)"
+            }}>
+              {weekData.songData.map((value, index) => {
+                const isToday = weekData.dates[index].format("YYYY-MM-DD") === today;
+                const height = calculateBarHeight(value, 'songs');
+                
+                return (
+                  <div
+                    key={index}
+                    style={{
+                      flex: "1 1 0",
+                      height: height,
+                      backgroundColor: isToday ? "#F0C05A" : "#F0EAD6",
+                      borderRadius: 2,
+                      marginRight: index < 6 ? 2 : 0
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* ✅ 요일 라벨 - 그래프와 동일한 레이아웃 */}
+          <div style={{
+            display: "flex",
+            fontSize: 12,
+            ...commonFontStyle
+          }}>
+            {/* 눈금 공간 */}
+            <div style={{ width: 25 }} />
+            
+            {/* 요일들 */}
+            <div style={{
+              display: "flex",
+              width: "calc(100% - 25px)"
+            }}>
+              {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
+                <div
+                  key={index}
+                  style={{
+                    flex: "1 1 0",
+                    textAlign: "center",
+                    color: index === 5 ? "#6667AB" : index === 6 ? "#BB2649" : "#9E9C98",
+                    marginRight: index < 6 ? 2 : 0
+                  }}
+                >
+                  {day}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
