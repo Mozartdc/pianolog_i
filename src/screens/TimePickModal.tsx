@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs"; // Dayjs 타입 임포트
 import TimeUpIcon from "../assets/icons/timeup.svg";
 import TimeDownIcon from "../assets/icons/timedown.svg";
 
@@ -8,42 +8,40 @@ interface TimePickModalProps {
   onClose: () => void;
   onSave: (startTime: string, endTime: string) => void;
   currentDuration: number; // 현재 타이머 시간 (초)
+  actualStartTime: number | null; // 현재 타이머의 실제 시작 시간 (타임스탬프)
 }
 
-export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: TimePickModalProps) {
-  const now = dayjs();
-  
-  // 현재 시간을 기준으로 기본값 설정
-  const [endTime, setEndTime] = useState({
-    hour: now.hour(),
-    minute: now.minute()
-  });
-  
-  const [startTime, setStartTime] = useState({
-    hour: now.subtract(Math.floor(currentDuration / 60), 'minute').hour(),
-    minute: now.subtract(Math.floor(currentDuration / 60), 'minute').minute()
-  });
-
+export function TimePickModal({ isOpen, onClose, onSave, currentDuration, actualStartTime }: TimePickModalProps) {
+  const [startTime, setStartTime] = useState<Dayjs>(dayjs());
+  const [endTime, setEndTime] = useState<Dayjs>(dayjs());
   const [error, setError] = useState("");
 
-  // 핵심 수정: currentDuration을 의존성에서 제거
+  // ✅ 핵심 수정: useEffect 훅의 의존성 배열에서 actualStartTime, currentDuration 제거
+  // 모달이 열릴 때 (isOpen이 true가 될 때)만 초기화되도록 합니다.
   useEffect(() => {
     if (isOpen) {
-      const currentTime = dayjs();
-      const newEndTime = {
-        hour: currentTime.hour(),
-        minute: currentTime.minute()
-      };
-      const newStartTime = {
-        hour: currentTime.subtract(Math.floor(currentDuration / 60), 'minute').hour(),
-        minute: currentTime.subtract(Math.floor(currentDuration / 60), 'minute').minute()
-      };
+      let initialStartMoment: Dayjs;
+      let initialEndMoment: Dayjs;
+
+      if (actualStartTime) {
+        // 타이머가 시작된 경우, 실제 시작 시간과 현재 시간을 기준으로 설정
+        initialStartMoment = dayjs(actualStartTime);
+        initialEndMoment = dayjs(); // 모달이 열리는 현재 시각
+      } else {
+        // 타이머가 시작되지 않은 경우 (예: 초기 실행), 현재 시간을 기준으로 계산
+        initialEndMoment = dayjs();
+        initialStartMoment = dayjs().subtract(currentDuration, 'second');
+      }
       
-      setEndTime(newEndTime);
-      setStartTime(newStartTime);
+      console.log('TimePickModal: Modal opened or isOpen changed. Initializing times.');
+      console.log('TimePickModal: Initial Start Time:', initialStartMoment.format('HH:mm:ss'));
+      console.log('TimePickModal: Initial End Time:', initialEndMoment.format('HH:mm:ss'));
+
+      setStartTime(initialStartMoment);
+      setEndTime(initialEndMoment);
       setError("");
     }
-  }, [isOpen]); // currentDuration 제거!
+  }, [isOpen]); // ✅ 변경된 부분: [isOpen] 만 남깁니다.
 
   const commonFontStyle = {
     fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
@@ -51,66 +49,62 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
     MozOsxFontSmoothing: "grayscale" as const
   };
 
-  // 시간 조정 함수 - 검증 없이 상태만 변경
   const adjustTime = (type: 'start' | 'end', field: 'hour' | 'minute', direction: 'up' | 'down') => {
+    setError(""); // 시간 조정 시 에러 메시지 초기화
+    
+    console.log(`TimePickModal: adjustTime called - Type: ${type}, Field: ${field}, Direction: ${direction}`);
+
     if (type === 'start') {
       setStartTime(prev => {
-        const newStartTime = { ...prev };
-        
-        if (field === 'hour') {
-          newStartTime.hour = direction === 'up' 
-            ? Math.min(23, prev.hour + 1)
-            : Math.max(0, prev.hour - 1);
-        } else {
-          newStartTime.minute = direction === 'up'
-            ? Math.min(59, prev.minute + 1)
-            : Math.max(0, prev.minute - 1);
-        }
-        
-        return newStartTime;
+        const newTime = direction === 'up'
+                        ? (field === 'hour' ? prev.add(1, 'hour') : prev.add(1, 'minute'))
+                        : (field === 'hour' ? prev.subtract(1, 'hour') : prev.subtract(1, 'minute'));
+        console.log(`TimePickModal: New Start Time Calculated (inside setStartTime): ${newTime.format('HH:mm:ss')}`);
+        return newTime;
       });
-    } else {
+    } else { // type === 'end'
       setEndTime(prev => {
-        const newEndTime = { ...prev };
-        
-        if (field === 'hour') {
-          newEndTime.hour = direction === 'up'
-            ? Math.min(23, prev.hour + 1)
-            : Math.max(0, prev.hour - 1);
-        } else {
-          newEndTime.minute = direction === 'up'
-            ? Math.min(59, prev.minute + 1)
-            : Math.max(0, prev.minute - 1);
-        }
-        
-        return newEndTime;
+        const newTime = direction === 'up'
+                        ? (field === 'hour' ? prev.add(1, 'hour') : prev.add(1, 'minute'))
+                        : (field === 'hour' ? prev.subtract(1, 'hour') : prev.subtract(1, 'minute'));
+        console.log(`TimePickModal: New End Time Calculated (inside setEndTime): ${newTime.format('HH:mm:ss')}`);
+        return newTime;
       });
     }
-    setError(""); // 에러 초기화
   };
 
-  // 저장 시에만 검증
   const handleSave = () => {
-    const currentTime = dayjs();
-    const startDateTime = currentTime.hour(startTime.hour).minute(startTime.minute);
-    const endDateTime = currentTime.hour(endTime.hour).minute(endTime.minute);
+    const startDateTime = startTime;
+    const endDateTime = endTime;
     
-    // 최종 검증
-    if (startDateTime.isAfter(currentTime)) {
-      setError("피출 시간은 현재 시간보다 이전이어야 합니다");
-      return;
-    }
-    
-    if (endDateTime.isAfter(currentTime)) {
-      setError("피퇴 시간은 현재 시간보다 이전이어야 합니다");
-      return;
-    }
-    
+    const nowMoment = dayjs(); // 현재 시각 (검증용)
+
+    console.log(`TimePickModal: handleSave called - Start: ${startDateTime.format('HH:mm:ss')}, End: ${endDateTime.format('HH:mm:ss')}`);
+
     if (endDateTime.isBefore(startDateTime)) {
-      setError("피퇴 시간은 피출 시간보다 나중이어야 합니다");
+      setError("피퇴 시간은 피출 시간보다 나중이어야 합니다.");
+      console.log("TimePickModal Error: End time is before Start time.");
       return;
     }
     
+    if (endDateTime.diff(startDateTime, 'minute') <= 0) {
+      setError("연습 시간은 1분 이상이어야 합니다.");
+      console.log("TimePickModal Error: Practice duration is 0 or less minutes.");
+      return;
+    }
+
+    if (endDateTime.isAfter(nowMoment.add(1, 'minute'))) { // 1분 여유
+      setError("피퇴 시간은 현재 시간보다 이전이거나 같아야 합니다.");
+      console.log("TimePickModal Error: End time is in the future.");
+      return;
+    }
+    
+    if (startDateTime.isAfter(nowMoment.add(1, 'minute'))) { // 1분 여유
+        setError("피출 시간은 현재 시간보다 이전이거나 같아야 합니다.");
+        return;
+    }
+
+    console.log("TimePickModal: Validation passed. Calling onSave.");
     onSave(
       startDateTime.format("HH:mm"),
       endDateTime.format("HH:mm")
@@ -129,8 +123,8 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
         bottom: 0,
         background: "rgba(0, 0, 0, 0.5)",
         display: "flex",
-        alignItems: "center", // 세로 중앙 정렬
-        justifyContent: "center", // 가로 중앙 정렬
+        alignItems: "center",
+        justifyContent: "center",
         zIndex: 1000,
         padding: "20px"
       }}
@@ -141,14 +135,17 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
           background: "#ffffff",
           borderRadius: 20,
           padding: 24,
-          width: "90%", // ✅ 수정: 화면 너비에 따라 유동적으로 90%를 차지
-          maxWidth: 345, // ✅ 수정: 최대 너비를 345px로 제한
+          width: "90%",
+          maxWidth: 345,
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
-          maxHeight: "80vh", // 화면 높이의 80%를 넘지 않음
-          overflow: "auto", // 내용이 많으면 스크롤
+          maxHeight: "80vh",
+          overflow: "auto",
           ...commonFontStyle
         }}
-        onClick={e => e.stopPropagation()}
+        onClick={e => {
+            e.stopPropagation();
+            console.log("TimePickModal: Inner content clicked (stopPropagation).");
+        }}
       >
         <h3 style={{ 
           fontSize: 18, 
@@ -160,13 +157,11 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
           연습 시간 수정
         </h3>
 
-        {/* 피출/피퇴 시간 좌우 배치 */}
         <div style={{
           display: "flex",
           gap: 24,
           marginBottom: 24
         }}>
-          {/* 피출 시간 (왼쪽) */}
           <div style={{ flex: 1 }}>
             <div style={{ 
               fontSize: 14, 
@@ -182,7 +177,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
               justifyContent: "center",
               gap: 12
             }}>
-              {/* 시간 */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                 <button
                   onClick={() => adjustTime('start', 'hour', 'up')}
@@ -197,7 +191,7 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
                   minWidth: 30,
                   textAlign: "center"
                 }}>
-                  {String(startTime.hour).padStart(2, '0')}
+                  {String(startTime.hour()).padStart(2, '0')}
                 </span>
                 <button
                   onClick={() => adjustTime('start', 'hour', 'down')}
@@ -209,7 +203,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
               
               <span style={{ fontSize: 20, color: "#2d2d2a" }}>:</span>
               
-              {/* 분 */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                 <button
                   onClick={() => adjustTime('start', 'minute', 'up')}
@@ -224,7 +217,7 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
                   minWidth: 30,
                   textAlign: "center"
                 }}>
-                  {String(startTime.minute).padStart(2, '0')}
+                  {String(startTime.minute()).padStart(2, '0')}
                 </span>
                 <button
                   onClick={() => adjustTime('start', 'minute', 'down')}
@@ -236,7 +229,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
             </div>
           </div>
 
-          {/* 피퇴 시간 (오른쪽) */}
           <div style={{ flex: 1 }}>
             <div style={{ 
               fontSize: 14, 
@@ -252,7 +244,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
               justifyContent: "center",
               gap: 12
             }}>
-              {/* 시간 */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                 <button
                   onClick={() => adjustTime('end', 'hour', 'up')}
@@ -267,7 +258,7 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
                   minWidth: 30,
                   textAlign: "center"
                 }}>
-                  {String(endTime.hour).padStart(2, '0')}
+                  {String(endTime.hour()).padStart(2, '0')}
                 </span>
                 <button
                   onClick={() => adjustTime('end', 'hour', 'down')}
@@ -279,7 +270,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
               
               <span style={{ fontSize: 20, color: "#2d2d2a" }}>:</span>
               
-              {/* 분 */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
                 <button
                   onClick={() => adjustTime('end', 'minute', 'up')}
@@ -294,7 +284,7 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
                   minWidth: 30,
                   textAlign: "center"
                 }}>
-                  {String(endTime.minute).padStart(2, '0')}
+                  {String(endTime.minute()).padStart(2, '0')}
                 </span>
                 <button
                   onClick={() => adjustTime('end', 'minute', 'down')}
@@ -307,7 +297,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
           </div>
         </div>
 
-        {/* 연습 시간 표시 */}
         <div style={{
           background: "#f9f9f9",
           borderRadius: 12,
@@ -320,18 +309,20 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
           </div>
           <div style={{ fontSize: 16, fontWeight: 600, color: "#45b5aa" }}>
             {(() => {
-              const currentTime = dayjs();
-              const start = currentTime.hour(startTime.hour).minute(startTime.minute);
-              const end = currentTime.hour(endTime.hour).minute(endTime.minute);
-              const duration = end.diff(start, 'minute');
+              let duration = endTime.diff(startTime, 'minute');
+              if (duration < 0) {
+                duration += 24 * 60;
+              }
+              
               const hours = Math.floor(duration / 60);
               const minutes = duration % 60;
+              
+              if (duration === 0) return "0분"; 
               return hours > 0 ? `${hours}시간 ${minutes}분` : `${minutes}분`;
             })()}
           </div>
         </div>
 
-        {/* 에러 메시지 */}
         {error && (
           <div style={{
             color: "#bb2649",
@@ -346,7 +337,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration }: Time
           </div>
         )}
 
-        {/* 버튼들 */}
         <div style={{ display: "flex", gap: 12 }}>
           <button
             onClick={handleSave}
