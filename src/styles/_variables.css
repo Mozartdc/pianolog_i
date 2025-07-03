@@ -2,41 +2,80 @@
 
 /* 라이트 테마 (기본값) */
 :root {
+  /* 기본 색상 팔레트 */
   --WHITE: #ffffff;
   --BLACK: #2d2d2a;
   --TURQUOISE: #45b5aa;
   --PASTEL_TURQUOISE: #e5f6f5;
   --VERY_PERI: #6b778d;
   --DARK_GRAY: #9e9c98;
+  --VIVA_MAGENTA: #bb2649;
+  --MIMOSA: #f0c05a;
   --TURQUOISE_GRADIENT: linear-gradient(to right, #45b5aa, #5ad8cb);
 
-  /* 추가적으로 의미 있는 색상 변수를 정의할 수 있습니다. */
+  /* 폰트 시스템 */
+  --FONT_FAMILY: 'Pretendard Variable', 'Pretendard', sans-serif;
+
+  /* 의미적 색상 변수 */
   --text-primary: var(--BLACK);
   --text-secondary: var(--DARK_GRAY);
   --bg-primary: var(--WHITE);
   --bg-secondary: var(--PASTEL_TURQUOISE);
   --button-primary-bg: var(--TURQUOISE);
   --button-primary-text: var(--WHITE);
-  --error-color: #bb2649;
+  --error-color: var(--VIVA_MAGENTA);
   --info-bg: #f9f9f9;
+
+  /* 그림자 시스템 */
+  --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 4px 16px rgba(69, 181, 170, 0.25);
+  --shadow-strong: 0 4px 16px rgba(69, 181, 170, 0.3);
+
+  /* 보더 시스템 */
+  --border-light: 0.5px solid #9e9c98;
+  --border-turquoise: 1px solid rgba(69, 181, 170, 0.1);
+
+  /* 레이아웃 시스템 */
+  --container-max-width: 375px;
+  --padding-responsive: clamp(16px, 4vw, 20px);
+  --border-radius-small: 5px;
+  --border-radius-medium: 12px;
+  --border-radius-large: 16px;
+
+  /* 애니메이션 */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
 }
 
 /* 다크 테마 (body에 'dark-mode' 클래스가 있을 때 적용) */
 body.dark-mode {
+  /* 기본 색상 오버라이드 */
   --WHITE: #1A1A1A; /* 다크 모드에서의 '흰색' (어두운 배경) */
   --BLACK: #E0E0E0; /* 다크 모드에서의 '검은색' (밝은 텍스트) */
   --TURQUOISE: #308077; /* 다크 모드에 맞춰 조정 */
   --PASTEL_TURQUOISE: #3A4B4A;
   --VERY_PERI: #909BB0;
   --DARK_GRAY: #777777;
+  --VIVA_MAGENTA: #DD5577;
+  --MIMOSA: #E6B84A;
   --TURQUOISE_GRADIENT: linear-gradient(to right, #308077, #40A097);
 
+  /* 의미적 색상 오버라이드 */
   --text-primary: var(--BLACK); /* 오버라이드된 BLACK 사용 */
   --text-secondary: var(--DARK_GRAY);
   --bg-primary: var(--WHITE); /* 오버라이드된 WHITE 사용 */
   --bg-secondary: #2C2C2C;
   --button-primary-bg: var(--TURQUOISE);
   --button-primary-text: var(--WHITE);
-  --error-color: #DD5577;
+  --error-color: var(--VIVA_MAGENTA);
   --info-bg: #444444;
+
+  /* 다크모드 그림자 시스템 */
+  --shadow-light: 0 2px 12px rgba(255, 255, 255, 0.1);
+  --shadow-medium: 0 4px 16px rgba(48, 128, 119, 0.4);
+  --shadow-strong: 0 4px 16px rgba(48, 128, 119, 0.5);
+
+  /* 다크모드 보더 시스템 */
+  --border-light: 0.5px solid #555555;
+  --border-turquoise: 1px solid rgba(48, 128, 119, 0.3);
 }

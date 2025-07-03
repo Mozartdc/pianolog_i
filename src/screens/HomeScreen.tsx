@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { getTodayCheer } from "../utils/cheers";
-import { HomeStartTimerModal} from "./HomeStartTimerModal";
-import { TimePickModal } from "./TimePickModal"; // 경로 수정: components 폴더
-import { HomeStopModal } from "./HomeStopModal";
-import { ExportCardModal } from "./ExportCardModal";
+import { HomeStartTimerModal} from "./HomeStartTimerModal"; // ✅ 경로 수정
+import { TimePickModal } from "./TimePickModal"; // ✅ 경로 수정
+import { HomeStopModal } from "./HomeStopModal"; // ✅ 경로 수정
+import { ExportCardModal } from "./ExportCardModal"; // ✅ 경로 수정
 import Header from "../components/Header";
 import ProfileSection from "../components/ProfileSection";
 import StatsCard from "../components/StatsCard";
 import WeekCalendar from "../components/WeekCalendar";
-import './Home.css';
+import './Home.css'; // ✅ CSS 파일 경로 수정 (Home.css → ../styles/Home.css)
 
 // 실제 SVG/이미지 파일들 import
 import KeyboardIcon from "../assets/icons/keyboard.svg";
@@ -22,10 +22,11 @@ import PlayIcon from "../assets/icons/play.svg";
 // 타입 정의
 interface PracticeRecord {
   date: string;
-  practiceTime: number; // 총 연습 시간 (분 단위)
-  startTime: number;   // 세션 시작 시간 (타임스탬프)
-  endTime: number;     // 세션 종료 시간 (타임스탬프)
-  id: string;           // 각 세션을 고유하게 식별할 ID (필수!)
+  practiceTime: number;
+  startTime: number;
+  endTime: number;
+  id: string;
+  memo?: string;
 }
 
 type Track = {
@@ -52,34 +53,25 @@ interface CheerData {
 // 한국 공휴일 계산 함수
 const getKoreanHolidays = (year: number): string[] => {
   const holidays = [
-    `${year}-01-01`, // 신정
-    `${year}-03-01`, // 삼일절
-    `${year}-05-05`, // 어린이날
-    `${year}-06-06`, // 현충일
-    `${year}-08-15`, // 광복절
-    `${year}-10-03`, // 개천절
-    `${year}-10-09`, // 한글날
-    `${year}-12-25`, // 크리스마스
+    `${year}-01-01`, `${year}-03-01`, `${year}-05-05`, `${year}-06-06`,
+    `${year}-08-15`, `${year}-10-03`, `${year}-10-09`, `${year}-12-25`,
   ];
-  // 2025년 공휴일 추가
   if (year === 2025) {
     holidays.push(
-      '2025-01-28', '2025-01-29', '2025-01-30', // 설날
-      '2025-05-13', // 부처님오신날
-      '2025-09-06', '2025-09-07', '2025-09-08'  // 추석
+      '2025-01-28', '2025-01-29', '2025-01-30',
+      '2025-05-13', '2025-09-06', '2025-09-07', '2025-09-08'
     );
   }
   return holidays;
 };
 
-// 특별 치어스 (필요 시 여기에 추가)
+// 특별 치어스
 const specialCheers: CheerData[] = [];
 
 // 치어스 데이터 가져오기
 function getTodayCheerData(): CheerData {
   const today = new Date().toISOString().slice(0, 10);
   
-  // localStorage에서 임시 치어스 확인
   const savedCheers = localStorage.getItem('temporaryCheers');
   if (savedCheers) {
     try {
@@ -91,11 +83,9 @@ function getTodayCheerData(): CheerData {
     }
   }
   
-  // 기본 특별 치어스 확인
   const specialCheer = specialCheers.find(cheer => cheer.date === today);
   if (specialCheer) return specialCheer;
   
-  // src/utils/cheers.ts에서 메시지 가져오기
   try {
     const cheerMessage = getTodayCheer();
     if (typeof cheerMessage === 'string' && cheerMessage.trim()) {
@@ -105,7 +95,6 @@ function getTodayCheerData(): CheerData {
     console.error('getTodayCheer error:', e);
   }
   
-  // 대체 메시지
   const fallbackMessages = [
     "오늘도 화이팅!",
     "꾸준히 연습하는 당신이 멋져요",
@@ -132,7 +121,6 @@ function HomeScreen() {
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   
-  // tracks 상태 추가 - 체크박스 정보 동기화를 위해
   const [tracks, setTracks] = useState<Track[]>(() => {
     const saved = localStorage.getItem("tracks");
     return saved ? JSON.parse(saved) : [];
@@ -147,25 +135,23 @@ function HomeScreen() {
   const [showExportModal, setShowExportModal] = useState(false);
   const timerRef = useRef<number | null>(null);
 
-  // actualStartTime (실제 타이머 시작 시간), pausedDuration (일시정지 누적 시간)
   const [actualStartTime, setActualStartTime] = useState<number | null>(null);
-  const [pausedDuration, setPausedDuration] = useState<number>(0); 
+  const [pausedDuration, setPausedDuration] = useState<number>(0);
+  const [isCompleting, setIsCompleting] = useState(false);
 
-  // 데이터 로딩 (practiceRecords 타입 안전하게 처리 및 id 부여)
+  // 데이터 로딩
   useEffect(() => {
     try {
       const savedRecords = localStorage.getItem("practiceRecords");
       if (savedRecords) {
         const parsed = JSON.parse(savedRecords);
         if (Array.isArray(parsed)) {
-          // 기존 데이터에 id가 없다면 새로 부여 (업그레이드 용)
           const recordsWithIds = parsed.map((record: PracticeRecord) => ({
             ...record,
             id: record.id || dayjs(record.startTime || record.date).valueOf().toString() + Math.random().toString(36).substring(2, 8)
           }));
           setPracticeRecords(recordsWithIds);
         } else if (parsed && typeof parsed === 'object') {
-          // 단일 객체인 경우 (하위 호환성)
           setPracticeRecords([{ 
             ...parsed, 
             id: parsed.id || dayjs(parsed.startTime || parsed.date).valueOf().toString() + Math.random().toString(36).substring(2, 8)
@@ -178,7 +164,6 @@ function HomeScreen() {
         setPracticeChecks(JSON.parse(savedChecks));
       }
 
-      // tracks 데이터 로딩
       const savedTracks = localStorage.getItem("tracks");
       if (savedTracks) {
         setTracks(JSON.parse(savedTracks));
@@ -190,47 +175,45 @@ function HomeScreen() {
     setCheerData(getTodayCheerData());
   }, []);
 
-  // 타이머 상태 복원 useEffect
+  // 타이머 상태 복원
   useEffect(() => {
     const restoreTimer = () => {
       const timerState = localStorage.getItem('timerState');
       if (timerState) {
         try {
-          const { isRunning, startTime, pausedTime = 0, pausedAt, sessionId } = JSON.parse(timerState);
+          const { isRunning, startTime, pausedTime = 0, pausedAt, sessionId, memo } = JSON.parse(timerState);
           
           let currentPausedDuration = pausedTime;
-          // 현재 일시정지 중이라면 일시정지 시간 계산
           if (!isRunning && pausedAt) {
             currentPausedDuration += (Date.now() - pausedAt);
           }
           
           const elapsedSeconds = Math.floor((Date.now() - startTime - currentPausedDuration) / 1000);
           
-          setTimerSeconds(Math.max(0, elapsedSeconds)); // 표시될 시간
+          setTimerSeconds(Math.max(0, elapsedSeconds));
           setTimerActive(true);
           setTimerRunning(isRunning);
-          setActualStartTime(startTime); // 실제 시작 시간 복원
-          setPausedDuration(currentPausedDuration); // 누적 일시정지 시간 복원
+          setActualStartTime(startTime);
+          setPausedDuration(currentPausedDuration);
           
           if (isRunning) {
-            if (timerRef.current) clearInterval(timerRef.current); // 기존 인터벌 정리
+            if (timerRef.current) clearInterval(timerRef.current);
             timerRef.current = window.setInterval(() => {
-              // Date.now() 기반으로 타이머 초 업데이트
               setTimerSeconds(Math.floor((Date.now() - startTime - currentPausedDuration) / 1000));
             }, 1000);
           }
           
-          console.log('타이머 복원됨:', { elapsedSeconds, isRunning, sessionId, startTime, currentPausedDuration });
+          console.log('타이머 복원됨:', { elapsedSeconds, isRunning, sessionId, startTime, currentPausedDuration, memo });
         } catch (error) {
           console.error('타이머 복원 실패:', error);
           localStorage.removeItem('timerState');
-          setTimerActive(false); // 오류 시 타이머 비활성화
+          setTimerActive(false);
         }
       }
     };
     
     restoreTimer();
-  }, []); // 의존성 배열 비워 초기 렌더링 시 한 번만 실행
+  }, []);
 
   // tracks 변경 감지 및 동기화
   useEffect(() => {
@@ -290,11 +273,11 @@ function HomeScreen() {
   useEffect(() => {
     const cheerInterval = setInterval(() => {
       setCheerData(getTodayCheerData());
-    }, 86400000); // 24시간마다 갱신
+    }, 86400000);
     return () => clearInterval(cheerInterval);
   }, []);
 
-  // localStorage 변경 감지 (닉네임, 아바타)
+  // localStorage 변경 감지
   useEffect(() => {
     const handleStorageChange = () => {
       const newAvatar = localStorage.getItem("avatar") || "";
@@ -322,7 +305,7 @@ function HomeScreen() {
     };
   }, [avatar, nickname]);
 
-  // 키보드 이벤트 처리 (Escape 키)
+  // 키보드 이벤트 처리
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -335,7 +318,6 @@ function HomeScreen() {
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      // 컴포넌트 언마운트 시 모든 인터벌 정리
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
@@ -344,40 +326,25 @@ function HomeScreen() {
   const today = dayjs();
   const todayStr = today.format("YYYY-MM-DD");
   const displayDate = dayjs(selectedDate);
-  
-  // 날짜 형식 변경
   const selectedDateFormatted = displayDate.format("YYYY년 MM월 DD일");
   
-  // 안전한 practiceRecords 필터링
   const selectedDateRecords = Array.isArray(practiceRecords)
     ? practiceRecords.filter((r: PracticeRecord) => r.date === selectedDate)
     : [];
   const selectedDateMinutes = selectedDateRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0);
 
-  // 핵심 해결책: 분모는 현재 tracks 개수로 계산!
   const selectedDateCheckedCount = (() => {
     try {
       const checks = practiceChecks[selectedDate];
       if (!checks) return { numerator: 0, denominator: tracks.length };
       
-      // 실제 존재하는 곡만 필터링
       const existingTrackIds = new Set(tracks.map(t => t.id.toString()));
       const validChecks = Object.entries(checks).filter(([trackId]) => 
         existingTrackIds.has(trackId)
       );
       
       const numerator = validChecks.filter(([, checked]) => checked).length;
-      const denominator = tracks.length; // 핵심: 현재 tracks 개수로 분모 계산!
-      
-      console.log("분모 계산 디버그 (수정됨):", {
-        selectedDate,
-        allChecks: Object.keys(checks),
-        existingTrackIds: Array.from(existingTrackIds),
-        validChecks: validChecks.map(([id]) => id),
-        numerator,
-        denominator,
-        tracksLength: tracks.length
-      });
+      const denominator = tracks.length;
       
       return { numerator, denominator };
     } catch (error) {
@@ -412,14 +379,14 @@ function HomeScreen() {
         while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
           streak++;
           day = day.subtract(1, "day");
-          if (streak > 365) break; // 무한 루프 방지
+          if (streak > 365) break;
         }
       } else {
         day = day.subtract(1, "day");
         while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
           streak++;
           day = day.subtract(1, "day");
-          if (streak > 365) break; // 무한 루프 방지
+          if (streak > 365) break;
         }
       }
     } catch (error) {
@@ -439,27 +406,27 @@ function HomeScreen() {
     setShowExportModal(true);
   };
 
-  // 타이머 기능들 (지속성 추가 및 정확성 개선)
+  // 타이머 기능들
   const startTimer = () => {
     const currentTimestamp = Date.now();
-    const sessionId = dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8); // 고유 ID 생성
+    const sessionId = dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
 
     localStorage.setItem('timerState', JSON.stringify({
       isRunning: true,
-      startTime: currentTimestamp, // 실제 시작 시간 저장
+      startTime: currentTimestamp,
       pausedTime: 0,
-      sessionId: sessionId // 세션 ID 저장
+      sessionId: sessionId,
+      memo: ""
     }));
     
     setTimerActive(true);
     setTimerRunning(true);
-    setTimerSeconds(0); // 새로 시작할 땐 0초부터
-    setActualStartTime(currentTimestamp); // 실제 시작 시간 설정
-    setPausedDuration(0); // 일시정지 시간 초기화
+    setTimerSeconds(0);
+    setActualStartTime(currentTimestamp);
+    setPausedDuration(0);
 
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
-      // Date.now() 기반으로 초 업데이트
       setTimerSeconds(Math.floor((Date.now() - currentTimestamp - 0) / 1000));
     }, 1000);
   };
@@ -469,35 +436,32 @@ function HomeScreen() {
     setTimerRunning(false);
     
     const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
-    
     const newPausedDuration = (pausedDuration || 0) + (Date.now() - (timerState.pausedAt || Date.now()));
-    setPausedDuration(newPausedDuration); // 누적 일시정지 시간 업데이트
+    setPausedDuration(newPausedDuration);
 
     localStorage.setItem('timerState', JSON.stringify({
       ...timerState,
       isRunning: false,
-      pausedAt: Date.now(), // 현재 일시정지된 시각
-      pausedTime: newPausedDuration // 누적된 일시정지 시간
+      pausedAt: Date.now(),
+      pausedTime: newPausedDuration
     }));
   };
 
   const resumeTimer = () => {
     const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
-    
     const newPausedDuration = (pausedDuration || 0) + (Date.now() - (timerState.pausedAt || Date.now()));
-    setPausedDuration(newPausedDuration); // 누적 일시정지 시간 업데이트
+    setPausedDuration(newPausedDuration);
 
     localStorage.setItem('timerState', JSON.stringify({
       ...timerState,
       isRunning: true,
-      pausedAt: undefined, // 일시정지 시각 초기화
-      pausedTime: newPausedDuration // 누적된 일시정지 시간 저장
+      pausedAt: undefined,
+      pausedTime: newPausedDuration
     }));
     
     setTimerRunning(true);
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
-      // Date.now() 기반으로 초 업데이트: actualStartTime과 newPausedDuration 활용
       if (actualStartTime !== null) {
         setTimerSeconds(Math.floor((Date.now() - actualStartTime - newPausedDuration) / 1000));
       }
@@ -512,7 +476,6 @@ function HomeScreen() {
     setShowTimePickModal(true);
   };
 
-  // ✅ 핵심 수정: handleTimeSave 함수
   const handleTimeSave = (startInput: string, endInput: string) => {
     const today = dayjs();
     const startMoment = today.hour(Number(startInput.split(':')[0])).minute(Number(startInput.split(':')[1]));
@@ -520,9 +483,8 @@ function HomeScreen() {
     
     let newDurationSeconds = endMoment.diff(startMoment, 'second');
     
-    // 만약 종료 시간이 시작 시간보다 이전이라면 다음 날로 간주하여 24시간을 더함
     if (newDurationSeconds < 0) {
-      newDurationSeconds += 24 * 60 * 60; // 24시간 (86400초) 추가
+      newDurationSeconds += 24 * 60 * 60;
     }
 
     if (newDurationSeconds <= 0) {
@@ -530,10 +492,9 @@ function HomeScreen() {
       return;
     }
     
-    const recordStartTime = startMoment.valueOf(); // 타임스탬프
-    const recordEndTime = endMoment.valueOf();     // 타임스탬프
+    const recordStartTime = startMoment.valueOf();
+    const recordEndTime = endMoment.valueOf();
 
-    // 기존 timerState를 불러옴 (sessionId를 유지하기 위함)
     const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
     const sessionId = timerState.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8); 
 
@@ -542,84 +503,91 @@ function HomeScreen() {
       date: today.format("YYYY-MM-DD"),
       practiceTime: Math.floor(newDurationSeconds / 60), 
       startTime: recordStartTime,
-      endTime: recordEndTime
+      endTime: recordEndTime,
+      memo: timerState.memo || ""
     };
 
     let updatedRecords: PracticeRecord[];
     const existingRecordIndex = practiceRecords.findIndex(record => record.id === newRecord.id);
 
     if (existingRecordIndex > -1) {
-      // 기존 레코드 업데이트 (타이머가 켜진 상태에서 수정 모드로 진입했을 경우)
       updatedRecords = [...practiceRecords];
       updatedRecords[existingRecordIndex] = newRecord;
     } else {
-      // 새 레코드 추가 (아마도 직접 TimePickModal을 열어 새 기록을 만든 경우)
       updatedRecords = [...practiceRecords, newRecord];
     }
     
     setPracticeRecords(updatedRecords);
     localStorage.setItem("practiceRecords", JSON.stringify(updatedRecords));
 
-    // ✅ 타이머 상태를 '저장' 후에도 유지하고 업데이트
-    // 새로운 시작 시간 (실제 수정된 시작 시간)으로 actualStartTime 업데이트
     setActualStartTime(recordStartTime); 
-    setTimerSeconds(newDurationSeconds); // 수정된 시간으로 타이머 초 업데이트
+    setTimerSeconds(newDurationSeconds);
 
-    // localStorage의 timerState도 업데이트 (sessionId는 그대로 유지)
     localStorage.setItem('timerState', JSON.stringify({
-      isRunning: timerRunning, // 기존 타이머 실행 상태 유지
-      startTime: recordStartTime, // 수정된 시작 시간으로 업데이트
-      pausedTime: 0, // 수정 완료 후에는 일시정지 시간 초기화 (새로운 시작 시각 기준)
-      sessionId: sessionId
+      isRunning: timerRunning,
+      startTime: recordStartTime,
+      pausedTime: 0,
+      sessionId: sessionId,
+      memo: timerState.memo || ""
     }));
 
-    // 타이머 인터벌도 새롭게 시작 (또는 재개)
     if (timerRef.current) clearInterval(timerRef.current);
-    if (timerRunning) { // 타이머가 실행 중이었다면 계속 실행
+    if (timerRunning) {
       timerRef.current = window.setInterval(() => {
-        setTimerSeconds(Math.floor((Date.now() - recordStartTime - 0) / 1000)); // 새로운 시작 시간 기준
+        setTimerSeconds(Math.floor((Date.now() - recordStartTime - 0) / 1000));
       }, 1000);
-    } else { // 일시정지 상태였다면 일시정지 상태 유지
-        // 여기서는 실제 타이머가 다시 시작될 때 pausedDuration이 계산될 것이므로 별도 처리 없음
     }
     
-    setTimerActive(true); // 타이머 활성화 상태 유지
-    setShowTimePickModal(false); // 모달 닫기
+    setTimerActive(true);
+    setShowTimePickModal(false);
   };
 
-
   const handlePracticeComplete = () => {
-    const addMinutes = Math.floor(timerSeconds / 60);
-    
-    if (addMinutes > 0) {
-      const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
-      const recordedStartTime = timerState.startTime; // startTimer에서 저장한 실제 시작 시간
-      const recordedEndTime = Date.now(); // 현재 시간
+    if (isCompleting) return;
+    setIsCompleting(true);
 
-      const newRecord: PracticeRecord = {
-        id: timerState.sessionId, // 시작 시 부여했던 세션 ID 사용
-        date: dayjs().format("YYYY-MM-DD"),
-        practiceTime: addMinutes,
-        startTime: recordedStartTime,
-        endTime: recordedEndTime
-      };
+    try {
+      const addMinutes = Math.floor(timerSeconds / 60);
+      
+      if (addMinutes > 0) {
+        const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
+        const recordedStartTime = timerState.startTime;
+        const recordedEndTime = Date.now();
 
-      // 기존 practiceRecords에 새 세션 추가
-      const updatedRecords = [...practiceRecords, newRecord]; 
+        const newRecord: PracticeRecord = {
+          id: timerState.sessionId,
+          date: dayjs().format("YYYY-MM-DD"),
+          practiceTime: addMinutes,
+          startTime: recordedStartTime,
+          endTime: recordedEndTime,
+          memo: timerState.memo || ""
+        };
 
-      setPracticeRecords(updatedRecords);
-      localStorage.setItem("practiceRecords", JSON.stringify(updatedRecords));
+        const existingRecordIndex = practiceRecords.findIndex(record => record.id === newRecord.id);
+        let updatedRecords: PracticeRecord[];
+
+        if (existingRecordIndex > -1) {
+          updatedRecords = [...practiceRecords];
+          updatedRecords[existingRecordIndex] = newRecord;
+        } else {
+          updatedRecords = [...practiceRecords, newRecord];
+        }
+
+        setPracticeRecords(updatedRecords);
+        localStorage.setItem("practiceRecords", JSON.stringify(updatedRecords));
+      }
+      
+      localStorage.removeItem('timerState');
+      if (timerRef.current) clearInterval(timerRef.current);
+      setTimerActive(false);
+      setTimerRunning(false);
+      setTimerSeconds(0);
+      setActualStartTime(null);
+      setPausedDuration(0);
+      setShowHomeStopModal(false);
+    } finally {
+      setIsCompleting(false);
     }
-    
-    // 타이머 관련 상태 초기화 (여기서는 완전히 종료)
-    localStorage.removeItem('timerState');
-    if (timerRef.current) clearInterval(timerRef.current); // 인터벌 정리
-    setTimerActive(false);
-    setTimerRunning(false);
-    setTimerSeconds(0);
-    setActualStartTime(null); // 실제 시작 시간 초기화
-    setPausedDuration(0); // 일시정지 시간 초기화
-    setShowHomeStopModal(false);
   };
 
   const handleEditTimeFromStop = () => {
@@ -628,7 +596,7 @@ function HomeScreen() {
   };
 
   const commonFontStyle = {
-    fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
+    fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const
   };
@@ -636,13 +604,13 @@ function HomeScreen() {
   return (
     <div style={{
       width: "100%",
-      maxWidth: 375,
+      maxWidth: "100%", // ⭐ 이 부분을 "100%"로 변경했습니다.
       minHeight: "100vh", 
-      background: "#ffffff",
-      overflowX: "hidden", // 👈 좌우 스크롤을 방지합니다.
+      background: "var(--bg-primary)", // ✅ CSS 변수 적용
+      overflowX: "hidden",
       overflowY: "auto", 
       margin: "0 auto",
-      padding: "0", // 👈 최상위 div의 좌우 padding을 제거합니다.
+      padding: "0",
       boxSizing: "border-box", 
       ...commonFontStyle
     }}>
@@ -650,7 +618,7 @@ function HomeScreen() {
       {/* Header */}
       <Header 
         title="digital piano gallery 피출앱"
-        color="#45b5aa"
+        color="var(--TURQUOISE)" // ✅ CSS 변수 적용
         topMargin={44}
       />
 
@@ -659,20 +627,18 @@ function HomeScreen() {
         width: "100%", 
         height: 20,
         fontSize: 14,
-        color: "#2d2d2a",
+        color: "var(--text-primary)", // ✅ CSS 변수 적용
         textAlign: "center",
         lineHeight: "20px",
         marginTop: "15px", 
-        // 👇 이 내부 div에 좌우 패딩을 줍니다 (Header의 기본 패딩 16px에 맞춤)
         padding: "0 16px", 
-        boxSizing: "border-box", // 패딩이 너비에 포함되도록
+        boxSizing: "border-box",
         ...commonFontStyle
       }}>
         {displayDate.format("YYYY. MM. DD ddd").toUpperCase()}
       </div>
 
       {/* Profile Section */}
-      {/* ProfileSection 내부에 직접 padding을 적용해야 할 수도 있습니다. */}
       <ProfileSection 
         avatar={avatar}
         nickname={nickname}
@@ -681,29 +647,22 @@ function HomeScreen() {
 
       {/* Total Achievement Card */}
       <div style={{
-        width: "100%", 
+        // ✅ 완전 반응형: 고정 maxWidth 제거
+        width: "calc(100% - 32px)", // 좌우 16px 패딩 고려
         height: 60,
-        background: "#c7e6df",
-        borderRadius: 16,
+        background: "var(--PASTEL_TURQUOISE)", // ✅ CSS 변수 적용
+        borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
         display: "flex",
         alignItems: "center",
-        // 👇 이 내부 div에 좌우 패딩을 줍니다. (Header의 기본 패딩 16px에 맞춤)
-        paddingLeft: 16, 
-        paddingRight: 16, // 기존 65에서 16으로 변경하여 오른쪽 여백 통일
-        paddingTop: 16,
-        paddingBottom: 16,
+        padding: "16px", // ✅ 패딩 통일
         gap: 12,
-        marginTop: "23px", 
-        boxSizing: "border-box" ,
         margin: "23px auto 0 auto", // 중앙 정렬
-        // maxWidth 375px 컨테이너에 맞게 조정 (16px * 2 = 32px)
-        // 실제 width는 375 - 32 = 343px
-        maxWidth: 375 - (16 * 2) // 내부 콘텐츠의 실제 최대 너비 계산
+        boxSizing: "border-box"
       }}>
         <img src={FlameIcon} alt="flame" width="25" height="25" />
         <span style={{
           fontSize: 20,
-          color: "#2d2d2a",
+          color: "var(--text-primary)", // ✅ CSS 변수 적용
           lineHeight: "20px",
           ...commonFontStyle
         }}>
@@ -712,7 +671,6 @@ function HomeScreen() {
       </div>
 
       {/* Stats Cards */}
-      {/* StatsCard 컴포넌트 내부에 직접 padding을 적용해야 할 수도 있습니다. */}
       <StatsCard
         icon={KeyboardIcon}
         iconAlt="keyboard"
@@ -744,7 +702,6 @@ function HomeScreen() {
       />
 
       {/* Week Calendar */}
-      {/* WeekCalendar 내부에 직접 padding을 적용해야 할 수도 있습니다. */}
       <WeekCalendar
         selectedDate={selectedDate}
         practiceRecords={practiceRecords}
@@ -759,8 +716,7 @@ function HomeScreen() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          margin: "43px auto 0 auto", 
-          // 👇 이 요소에만 특정 패딩이 필요한 경우 여기에도 추가할 수 있습니다.
+          margin: "43px auto 0 auto"
         }}>
           <button
             onClick={startTimer}
@@ -768,7 +724,8 @@ function HomeScreen() {
               background: "none",
               border: "none",
               cursor: "pointer",
-              padding: 0
+              padding: 0,
+              transition: "var(--transition-fast)" // ✅ 부드러운 호버 효과
             }}
           >
             <img src={PlayIcon} alt="play" width="50" height="50" />
@@ -777,7 +734,7 @@ function HomeScreen() {
           <span style={{
             marginTop: 8,
             fontSize: 14,
-            color: "#45b5aa",
+            color: "var(--TURQUOISE)", // ✅ CSS 변수 적용
             lineHeight: "32px",
             pointerEvents: "none",
             ...commonFontStyle
@@ -804,8 +761,8 @@ function HomeScreen() {
           isOpen={showTimePickModal}
           onClose={() => setShowTimePickModal(false)}
           onSave={handleTimeSave}
-          currentDuration={timerSeconds} // TimePickModal에 현재 경과 시간 전달 (수정 시 초기값)
-          actualStartTime={actualStartTime} // ✅ 추가: 실제 시작 시간을 TimePickModal에 전달
+          currentDuration={timerSeconds}
+          actualStartTime={actualStartTime}
         />
       )}
 

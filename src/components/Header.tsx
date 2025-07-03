@@ -1,3 +1,4 @@
+// src/components/Header.tsx
 "use client";
 
 interface HeaderProps {
@@ -8,15 +9,15 @@ interface HeaderProps {
   topMargin?: number;
 }
 
-function Header({ 
-  title = "Today", 
-  onBack, 
+function Header({
+  title = "Today",
+  onBack,
   showBackButton = false,
-  color = "#45b5aa",
+  color = "var(--TURQUOISE)", // CSS 변수 사용
   topMargin = 0
 }: HeaderProps) {
   const commonFontStyle = {
-    fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
+    fontFamily: "var(--FONT_FAMILY)", // CSS 변수 사용
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const
   };
@@ -24,14 +25,15 @@ function Header({
   return (
     <div style={{
       width: "100%",
-      maxWidth: 375,
+      maxWidth: "100%", // ⭐ 이 부분을 "100%"로 변경했습니다.
       margin: `${topMargin}px auto 0 auto`,
       height: 42,
-      background: "#ffffff",
-      borderBottom: "0.5px solid #9e9c98",
+      background: "var(--bg-primary)",        // CSS 변수 사용
+      borderBottom: "var(--border-light)",    // CSS 변수 사용
       display: "flex",
       alignItems: "center",
-      justifyContent: "center"
+      justifyContent: "center",
+      fontFamily: "var(--FONT_FAMILY)"        // 폰트 통일
     }}>
       <span style={{
         fontSize: 17,

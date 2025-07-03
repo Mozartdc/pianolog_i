@@ -25,6 +25,17 @@ type PracticeChecks = {
   [date: string]: { [trackId: number]: boolean };
 };
 
+// ✅ PracticeRecord 타입 추가
+interface PracticeRecord {
+  date: string;
+  practiceTime: number;
+  startTime: number;
+  endTime: number;
+  id: string;
+  memo?: string;
+  track?: string; // ✅ 곡 제목 필드 추가
+}
+
 function toDateStr(date: Dayjs) {
   return date.format("YYYY-MM-DD");
 }
@@ -68,28 +79,67 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
 
     if (isOpen) {
       document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden"; // 모달 열릴 때 스크롤 방지
+      document.body.style.overflow = "hidden";
     }
 
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "unset"; // 모달 닫힐 때 스크롤 복원
+      document.body.style.overflow = "unset";
     };
   }, [isOpen, onClose]);
 
   if (!isOpen || !track) return null;
 
-  // 날짜 클릭 핸들러
+  // ✅ 수정된 날짜 클릭 핸들러 - practiceRecords도 함께 업데이트
   const handleDayClick = (date: Dayjs) => {
     const dateStr = toDateStr(date);
     const todayStr = toDateStr(dayjs());
     if (dateStr > todayStr) return; // 미래 날짜는 클릭 불가
 
+    // 기존 practiceChecks 업데이트
     setPracticeChecks((prev) => {
       const dayChecks = prev[dateStr] ? { ...prev[dateStr] } : {};
+      const wasChecked = dayChecks[trackId!];
       dayChecks[trackId!] = !dayChecks[trackId!];
       const updated = { ...prev, [dateStr]: dayChecks };
       localStorage.setItem("practiceChecks", JSON.stringify(updated));
+      
+      // ✅ practiceRecords도 함께 업데이트
+      const practiceRecords: PracticeRecord[] = JSON.parse(localStorage.getItem("practiceRecords") || "[]");
+      
+      if (!wasChecked) {
+        // 체크 상태로 변경 - 연습 기록 생성
+        const existingRecord = practiceRecords.find((r: PracticeRecord) => 
+          r.date === dateStr && (r.track === track?.title || r.id.includes(`${trackId}`))
+        );
+        
+        if (!existingRecord) {
+          const newRecord: PracticeRecord = {
+            id: `${dateStr}-${track?.id}-${Date.now()}`,
+            date: dateStr,
+            practiceTime: 30, // 기본 30분 (과거 연습 기록)
+            track: track?.title,
+            startTime: new Date(dateStr + "T09:00:00").getTime(),
+            endTime: new Date(dateStr + "T09:30:00").getTime(),
+            memo: `${track?.title} 과거 연습 기록`
+          };
+          
+          practiceRecords.push(newRecord);
+          localStorage.setItem("practiceRecords", JSON.stringify(practiceRecords));
+          console.log(`과거 날짜 연습 기록 생성: ${dateStr} - ${track?.title}`);
+        }
+      } else {
+        // 체크 해제 - 연습 기록 삭제 (선택사항)
+        const filteredRecords = practiceRecords.filter((r: PracticeRecord) => 
+          !(r.date === dateStr && (r.track === track?.title || r.id.includes(`${trackId}`)))
+        );
+        
+        if (filteredRecords.length !== practiceRecords.length) {
+          localStorage.setItem("practiceRecords", JSON.stringify(filteredRecords));
+          console.log(`과거 날짜 연습 기록 삭제: ${dateStr} - ${track?.title}`);
+        }
+      }
+      
       if (onPracticeUpdate) onPracticeUpdate();
       return updated;
     });
@@ -103,17 +153,17 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
         if (idx !== -1) {
           tracksArr[idx].addedDate = dateStr;
           localStorage.setItem("tracks", JSON.stringify(tracksArr));
-          setTracks(tracksArr); // 상태 업데이트
+          setTracks(tracksArr);
         }
       }
     }
 
-    setSelectedDate(date); // 선택된 날짜 업데이트 (선택 표시에 사용될 경우)
+    setSelectedDate(date);
   };
 
   // 곡 완성 핸들러
   const handleComplete = () => {
-    if (isCompleted) { // 이미 완성된 곡은 다시 토글하지 않음
+    if (isCompleted) {
       alert("이미 완성 처리된 곡입니다.");
       return;
     }
@@ -140,8 +190,8 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
   const generateCalendarDays = () => {
     const startOfMonth = currentMonth.startOf("month");
     const endOfMonth = currentMonth.endOf("month");
-    const startOfWeek = startOfMonth.startOf("week").add(1, "day"); // 월요일을 시작으로
-    const endOfWeek = endOfMonth.endOf("week").add(1, "day"); // 월요일을 시작으로
+    const startOfWeek = startOfMonth.startOf("week").add(1, "day");
+    const endOfWeek = endOfMonth.endOf("week").add(1, "day");
     const days = [];
     let current = startOfWeek;
     while (current.isBefore(endOfWeek) || current.isSame(endOfWeek, "day")) {
@@ -184,27 +234,25 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1000,
-        fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+        fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
       }}
       onClick={onClose}
     >
       <div
         style={{
-          // ✅ 반응형으로 변경: 최대 너비 324px, 화면 여백 16px을 고려하여 100% 너비 적용
           width: "calc(100% - 32px)",
           maxWidth: 324,
-          // ✅ 높이도 유동적으로 변경: 콘텐츠에 맞춰 늘어나고, 넘칠 경우 스크롤
           height: "auto",
-          maxHeight: "calc(100% - 64px)", // 상하 여백 고려 (예: 32px * 2)
-          background: "var(--WHITE)", // ✅ CSS 변수 사용
-          borderRadius: 5,
-          border: "0.5px solid var(--VERY_PERI)", // ✅ CSS 변수 사용 (6667AB 대신)
+          maxHeight: "calc(100% - 64px)",
+          background: "var(--bg-primary)", // ✅ CSS 변수 사용
+          borderRadius: "var(--border-radius-small)", // ✅ CSS 변수 사용
+          border: "var(--border-light)", // ✅ CSS 변수 사용
           boxSizing: "border-box",
           padding: 16,
           display: "flex",
           flexDirection: "column",
           position: "relative",
-          overflowY: "auto", // 내용이 넘칠 경우 스크롤
+          overflowY: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -216,9 +264,9 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           <span
             style={{
               fontSize: 16,
-              color: "var(--BLACK)", // ✅ CSS 변수 사용
+              color: "var(--text-primary)", // ✅ CSS 변수 사용
               fontWeight: "normal",
-              fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+              fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
             }}
           >
             {track.title}
@@ -229,9 +277,9 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
         <div
           style={{
             fontSize: 16,
-            color: "var(--BLACK)", // ✅ CSS 변수 사용
+            color: "var(--text-primary)", // ✅ CSS 변수 사용
             fontWeight: "normal",
-            fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+            fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
             marginBottom: 10,
           }}
         >
@@ -246,14 +294,14 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
             justifyContent: "center",
             gap: 12,
             padding: "8px 12px",
-            border: "0.5px solid var(--VERY_PERI)", // ✅ CSS 변수 사용
+            border: "var(--border-light)", // ✅ CSS 변수 사용
             borderRadius: 3,
-            width: "100%", // ✅ width 고정값 대신 100%
-            height: 33, // 고정 높이 유지 (디자인 의도에 따라)
+            width: "100%",
+            height: 33,
             margin: "0 auto 10px auto",
-            cursor: isCompleted ? "default" : "pointer", // 완성된 곡은 커서 변경
+            cursor: isCompleted ? "default" : "pointer",
           }}
-          onClick={handleComplete} // ✅ 부모 div에 클릭 핸들러 부여
+          onClick={handleComplete}
         >
           <div
             style={{
@@ -273,9 +321,9 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           <span
             style={{
               fontSize: 14,
-              color: "var(--BLACK)", // ✅ CSS 변수 사용
+              color: "var(--text-primary)", // ✅ CSS 변수 사용
               fontWeight: "normal",
-              fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+              fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
             }}
           >
             곡 완성
@@ -283,7 +331,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           <span
             style={{
               fontSize: 10,
-              color: "var(--ERROR_COLOR)", // ✅ CSS 변수 사용 (BB2649 대신)
+              color: "var(--VIVA_MAGENTA)", // ✅ CSS 변수 사용
               marginLeft: "auto",
             }}
           >
@@ -291,7 +339,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           </span>
         </div>
 
-        {/* ✅ 캘린더 시작점: 곡완성 박스에서 16px 아래로 */}
+        {/* 캘린더 */}
         <div style={{ marginTop: 16 }}>
           {/* 캘린더 헤더 */}
           <div
@@ -313,9 +361,9 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
               <span
                 style={{
                   fontSize: 16,
-                  color: "var(--DARK_GRAY)", // ✅ CSS 변수 사용
+                  color: "var(--text-secondary)", // ✅ CSS 변수 사용
                   textAlign: "center",
-                  fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+                  fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
                 }}
               >
                 {currentMonth.format("YYYY년 MM월")}
@@ -333,8 +381,8 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                     position: "absolute",
                     top: 25,
                     left: 0,
-                    background: "var(--WHITE)", // ✅ CSS 변수 사용
-                    border: "1px solid var(--VERY_PERI)", // ✅ CSS 변수 사용
+                    background: "var(--bg-primary)", // ✅ CSS 변수 사용
+                    border: "var(--border-light)", // ✅ CSS 변수 사용
                     borderRadius: 4,
                     padding: 8,
                     zIndex: 1001,
@@ -343,7 +391,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                   }}
                 >
                   {Array.from({ length: 10 }, (_, i) => {
-                    const year = dayjs().year() - 5 + i; // 현재 년도 기준 -5년부터 +4년까지 표시
+                    const year = dayjs().year() - 5 + i;
                     return (
                       <div
                         key={year}
@@ -352,8 +400,8 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                           padding: "4px 8px",
                           cursor: "pointer",
                           fontSize: 14,
-                          color: "var(--BLACK)", // ✅ CSS 변수 사용
-                          fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+                          color: "var(--text-primary)", // ✅ CSS 변수 사용
+                          fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
                         }}
                       >
                         {year}년
@@ -376,8 +424,8 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           <div
             style={{
               display: "flex",
-              height: 24, // 고정 높이 유지 (디자인 의도에 따라)
-              width: "100%", // ✅ width 고정값 대신 100%
+              height: 24,
+              width: "100%",
               marginBottom: 10,
             }}
           >
@@ -385,14 +433,14 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
               <div
                 key={index}
                 style={{
-                  flex: 1, // 각 요일 칸이 유동적으로 너비를 차지
+                  flex: 1,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 16,
-                  color: index === 6 ? "var(--ERROR_COLOR)" : "var(--BLACK)", // ✅ CSS 변수 사용
+                  color: index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-primary)", // ✅ CSS 변수 사용
                   fontWeight: "normal",
-                  fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+                  fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
                 }}
               >
                 {day}
@@ -406,7 +454,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
               display: "flex",
               flexDirection: "column",
               gap: 8,
-              width: "100%", // ✅ width 고정값 대신 100%
+              width: "100%",
             }}
           >
             {weeks.map((week, weekIndex) => (
@@ -414,8 +462,8 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                 key={weekIndex}
                 style={{
                   display: "flex",
-                  height: 32, // 고정 높이 유지 (디자인 의도에 따라)
-                  width: "100%", // ✅ width 고정값 대신 100%
+                  height: 32,
+                  width: "100%",
                 }}
               >
                 {week.map((date, dayIndex) => {
@@ -426,8 +474,8 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                     <div
                       key={dayIndex}
                       style={{
-                        flex: 1, // 각 날짜 칸이 유동적으로 너비를 차지
-                        height: 32, // 고정 높이 유지 (아이콘 크기와 맞춰짐)
+                        flex: 1,
+                        height: 32,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -456,11 +504,11 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                         style={{
                           fontSize: 16,
                           color:
-                            dayIndex === 6 ? "var(--ERROR_COLOR)" : "var(--BLACK)", // ✅ CSS 변수 사용
+                            dayIndex === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-primary)", // ✅ CSS 변수 사용
                           fontWeight: "normal",
                           zIndex: 2,
                           position: "relative",
-                          fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+                          fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
                         }}
                       >
                         {date.date()}
@@ -479,21 +527,21 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
             display: "flex",
             justifyContent: "flex-end",
             marginTop: 16,
-            width: "100%", // ✅ width 고정값 대신 100%
+            width: "100%",
           }}
         >
           <button
             onClick={onClose}
             style={{
-              width: "auto", // ✅ 너비 유동적으로 변경
-              padding: "4px 8px", // ✅ 패딩으로 크기 조절
-              background: "var(--DARK_GRAY)", // ✅ CSS 변수 사용 (C4C3D0 대신)
+              width: "auto",
+              padding: "4px 8px",
+              background: "var(--text-secondary)", // ✅ CSS 변수 사용
               border: "none",
               borderRadius: 6,
               fontSize: 14,
-              color: "var(--BLACK)", // ✅ CSS 변수 사용
+              color: "var(--WHITE)", // ✅ CSS 변수 사용
               cursor: "pointer",
-              fontFamily: "var(--Pretendard)", // ✅ CSS 변수 사용
+              fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
             }}
           >
             닫기

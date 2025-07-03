@@ -13,18 +13,19 @@ interface ProfileSectionProps {
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheerData }) => {
   const commonFontStyle = {
-    fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
+    fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const
   };
 
   const renderCheerContent = () => {
     const baseStyle = {
-      width: 250,
+      // ✅ 완전 반응형: 고정 너비 제거
+      width: "100%",
       height: 80,
       fontSize: 11,
-      color: "#9e9c98",
-      fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
+      color: "var(--text-secondary)", // ✅ CSS 변수 적용
+      fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
       lineHeight: "20px",
       textAlign: "left" as const,
       display: "flex",
@@ -42,7 +43,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
                 width: "100%", 
                 height: "100%", 
                 objectFit: "contain",
-                borderRadius: 8
+                borderRadius: "var(--border-radius-medium)" // ✅ CSS 변수 적용
               }}
             />
           </div>
@@ -59,11 +60,17 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
                   width: 40, 
                   height: 40, 
                   objectFit: "contain",
-                  borderRadius: 4,
+                  borderRadius: "var(--border-radius-small)", // ✅ CSS 변수 적용
                   flexShrink: 0
                 }}
               />
-              <span style={{ flex: 1, fontSize: 11, lineHeight: "16px" }}>
+              <span style={{ 
+                flex: 1, 
+                fontSize: 11, 
+                lineHeight: "16px",
+                color: "var(--text-secondary)", // ✅ CSS 변수 적용
+                fontFamily: "var(--FONT_FAMILY)" // ✅ CSS 변수 적용
+              }}>
                 {cheerData.message}
               </span>
             </div>
@@ -84,27 +91,27 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
     <>
       {/* Profile Section */}
       <div style={{
-        width: "100%",
-        maxWidth: 375,
+        // ✅ 완전 반응형: 고정 maxWidth 제거
+        width: "calc(100% - 32px)", // 좌우 16px 패딩 고려
         display: "flex",
         margin: "18px auto 0 auto",
-        paddingLeft: 16,
-        paddingRight: 16
+        boxSizing: "border-box" // ✅ 박스 사이징 명시
       }}>
-        {/* Profile + Nickname Container - 정확한 간격 7 */}
+        {/* Profile + Nickname Container */}
         <div style={{
           display: "flex",
           flexDirection: "column",
-          alignItems: "center"
+          alignItems: "center",
+          flexShrink: 0 // ✅ 프로필 영역 고정
         }}>
           {/* Profile Avatar */}
           <div 
             style={{
               width: "80px",
               height: "80px",
-              borderRadius: "24px",
+              borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
               overflow: "hidden",
-              background: avatar ? "transparent" : "#f9f9f9",
+              background: avatar ? "transparent" : "var(--info-bg)", // ✅ CSS 변수 적용
               display: "flex",
               alignItems: "center",
               justifyContent: "center"
@@ -117,7 +124,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
                 style={{ 
                   width: "80px",
                   height: "80px",
-                  borderRadius: "24px",
+                  borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
                   objectFit: "cover",
                   display: "block"
                 }}
@@ -126,15 +133,15 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
               <div style={{
                 width: "80px",
                 height: "80px",
-                background: "#f9f9f9",
+                background: "var(--info-bg)", // ✅ CSS 변수 적용
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                borderRadius: "24px"
+                borderRadius: "var(--border-radius-large)" // ✅ CSS 변수 적용
               }}>
                 <span style={{ 
                   fontSize: 12, 
-                  color: "#9e9c98", 
+                  color: "var(--text-secondary)", // ✅ CSS 변수 적용
                   textAlign: "center",
                   ...commonFontStyle
                 }}>
@@ -144,13 +151,13 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
             )}
           </div>
 
-          {/* Nickname - 정확한 스펙 적용 */}
+          {/* Nickname */}
           <div style={{
-            fontSize: 16,           // 글자크기 16
-            lineHeight: "20px",     // 라인하이트 20
-            color: "#2d2d2a",       // 제트블랙
+            fontSize: 16,
+            lineHeight: "20px",
+            color: "var(--text-primary)", // ✅ CSS 변수 적용
             textAlign: "center",
-            marginTop: 7,           // 버티컬 간격 7 (gap 제거)
+            marginTop: 7,
             ...commonFontStyle
           }}>
             {nickname}
@@ -161,7 +168,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
         <div style={{
           marginLeft: 22,
           marginTop: 20,
-          flex: 1
+          flex: 1, // ✅ 남은 공간 모두 사용 (완전 반응형)
+          minWidth: 0 // ✅ flex 아이템 축소 허용
         }}>
           {renderCheerContent()}
         </div>

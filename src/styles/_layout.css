@@ -3,28 +3,49 @@
 /* 통일된 레이아웃 시스템 */
 .app-layout {
   width: 100%;
-  max-width: 375px; /* 모바일 우선 디자인의 기준 너비 */
+  /* ✅ 이전 max-width: 375px; 를 제거하고, 100%로 설정하여 모든 화면에서 너비를 유연하게 가져가도록 합니다. */
+  max-width: 100%; 
   margin: 0 auto;
   min-height: 100vh;
-  background: var(--bg-primary); /* 변수 사용 */
+  background: var(--bg-primary);
   position: relative;
+  /* ✅ overflow-x: hidden; 을 auto로 변경하여 필요 시 가로 스크롤 허용 */
+  overflow-x: auto; 
+  box-sizing: border-box; /* 명시적 박스 사이징 */
+
+  /* 스크롤바 숨기기 (선택 사항: 필요 시 추가. 내용이 많을 경우 스크롤은 되나 스크롤바가 보이지 않음) */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Chrome, Safari, Opera 등 WebKit 기반 브라우저용 스크롤바 숨김 */
+.app-layout::-webkit-scrollbar {
+  display: none;
 }
 
 /* 페이지 컨테이너 variants */
 .page-container {
-  padding: 44px 16px 100px 16px;
+  width: 100%;
+  padding: 44px var(--padding-responsive) 100px var(--padding-responsive); /* CSS 변수 사용 */
+  box-sizing: border-box; /* 박스 사이징 명시 */
 }
 
 .page-container--no-side-padding {
+  width: 100%;
   padding: 44px 0 100px 0;
+  box-sizing: border-sizing;
 }
 
 .page-container--stats {
+  width: 100%;
   padding: 44px 0 20px 0;
+  box-sizing: border-box;
 }
 
 .page-container--today {
+  width: 100%;
   padding: 44px 0 120px 0;
+  box-sizing: border-box;
 }
 
 /* 콘텐츠 영역 */
@@ -33,27 +54,76 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  box-sizing: border-box;
 }
 
 .content-area--full-width {
   width: 100%;
-  max-width: 375px;
+  /* ✅ 이전 max-width: 375px; 를 제거하고, 100%로 설정하여 부모 너비에 맞춤 */
+  max-width: 100%; 
   margin: 0 auto;
+  box-sizing: border-box;
 }
 
-/* 반응형 대응 */
+/* 완전 반응형 유틸리티 클래스 */
+.responsive-container {
+  width: calc(100% - 32px); /* 좌우 16px 패딩 */
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.responsive-full {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* 미디어 쿼리 조정 */
 @media (max-width: 320px) {
-  .app-layout {
-    max-width: 320px;
+  .page-container {
+    padding: 44px 12px 100px 12px; /* 작은 화면에서 패딩 줄임 */
   }
   
-  .page-container {
-    padding: 44px 12px 100px 12px;
+  :root {
+    --padding-responsive: 12px; /* 작은 화면용 패딩 */
   }
 }
 
+/* ✅ 큰 화면에서도 375px 고정 유지하지 않고 100% 너비 사용 */
 @media (min-width: 768px) {
   .app-layout {
-    max-width: 480px;
+    max-width: 100%; /* ⭐ 변경: 768px 이상에서는 100% 너비를 사용 */
+  }
+  
+  .content-area--full-width {
+    max-width: 100%; /* ⭐ 변경: 768px 이상에서는 100% 너비를 사용 */
+  }
+}
+
+/* 추가 안전장치 */
+* {
+  /* ✅ 어떤 요소도 부모를 넘지 않도록 max-width: 100% 유지. */
+  /* 단, 특정 컴포넌트에서 의도적으로 overflow를 만들고 싶다면 해당 컴포넌트에서 재정의 필요 */
+  max-width: 100%; 
+}
+
+/* 스크롤바 문제 해결 - HTML 엘리먼트 */
+html {
+  /* ✅ overflow-x: hidden; 을 auto로 변경 */
+  overflow-x: auto; 
+  width: 100%;
+  /* 스크롤바 숨김 (선택 사항) */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+/* 모바일 Safari 대응 - Body 엘리먼트 */
+@supports (-webkit-touch-callout: none) {
+  body {
+    -webkit-overflow-scrolling: touch;
+    /* ✅ overflow-x: hidden; 을 auto로 변경 */
+    overflow-x: auto; 
   }
 }

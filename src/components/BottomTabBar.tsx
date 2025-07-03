@@ -18,12 +18,13 @@ const labels = {
   setting: "설정",
 };
 
+// CSS 변수로 변경
 const activeColors = {
-  home: "#45B5AA",
-  today: "#6667AB",
-  apple: "#2D2D2A",
-  statistic: "#F0C05A",
-  setting: "#BB2649"
+  home: "var(--TURQUOISE)",
+  today: "var(--VERY_PERI)",
+  apple: "var(--BLACK)",
+  statistic: "var(--MIMOSA)",
+  setting: "var(--VIVA_MAGENTA)"
 };
 
 const tabOrder: BottomTabBarProps["activeTab"][] = [
@@ -34,7 +35,7 @@ const tabOrder: BottomTabBarProps["activeTab"][] = [
   "setting",
 ];
 
-// ✅ Routes와 일치하도록 수정
+// Routes와 일치하도록 수정
 const tabToPath = {
   home: "/",
   today: "/today",
@@ -66,29 +67,30 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         left: "50%",
         transform: "translateX(-50%)",
         width: "100%",
-        maxWidth: 375,                    // ✅ 480 → 375 (홈스크린 너비와 동일)
+        maxWidth: "100%", // ⭐ 이 부분을 "100%"로 변경했습니다.
         height: 78,
-        background: "#fff",
+        background: "var(--bg-primary)",      // ✅ #fff → CSS 변수
         boxShadow: "0px 0px 0px rgba(0,0,0,0.1)",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
         zIndex: 100,
         padding: "0 16px",
-        boxSizing: "border-box"
+        boxSizing: "border-box",
+        fontFamily: "var(--FONT_FAMILY)"     // ✅ 폰트 통일
       }}
     >
       {tabOrder.map((tab) => {
         const Icon = iconComponents[tab];
         const isActive = activeTab === tab;
-        const color = isActive ? activeColors[tab] : "#9E9C98";
+        const color = isActive ? activeColors[tab] : "var(--text-secondary)"; // ✅ #9E9C98 → CSS 변수
         
         return (
           <button
             key={tab}
             onClick={() => handleTabChange(tab)}
             style={{
-              width: 60,                  // ✅ 76 → 60 (너비 줄임)
+              width: 60,
               height: 44,
               display: "flex",
               flexDirection: "column",
@@ -98,15 +100,16 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
               border: "none",
               cursor: "pointer",
               padding: 0,
-              transition: "all 0.2s",
+              transition: "var(--transition-fast)",  // ✅ all 0.2s → CSS 변수
               color: color,
+              fontFamily: "var(--FONT_FAMILY)"      // ✅ 폰트 통일
             }}
             aria-current={isActive ? "page" : undefined}
             aria-label={labels[tab]}
           >
             <Icon 
-              width={20}                  // ✅ 24 → 20 (아이콘 크기 줄임)
-              height={20}                 // ✅ 24 → 20 (아이콘 크기 줄임)
+              width={20}
+              height={20}
               fill={color}
               style={{ color: color }}
             />

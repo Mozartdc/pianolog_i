@@ -24,6 +24,17 @@ type PartialCounts = {
   [trackId: number]: number;
 };
 
+// PracticeRecord 타입 추가
+interface PracticeRecord {
+  date: string;
+  practiceTime: number;
+  startTime: number;
+  endTime: number;
+  id: string;
+  memo?: string;
+  track?: string;
+}
+
 const getKoreanHolidays = (year: number): string[] => {
   const holidays = [
     `${year}-01-01`, `${year}-03-01`, `${year}-05-05`, `${year}-06-06`,
@@ -43,7 +54,7 @@ function getToday(): string {
   return now.toISOString().slice(0, 10);
 }
 
-function loadPracticeData(): any[] {
+function loadPracticeData(): PracticeRecord[] {
   try {
     const data = localStorage.getItem("practiceRecords");
     if (!data) return [];
@@ -55,8 +66,8 @@ function loadPracticeData(): any[] {
   }
 }
 
-// ✅ savePracticeData 함수 수정: 'data' 파라미터를 올바르게 받고 저장하도록 변경
-function savePracticeData(data: any): void {
+// savePracticeData 함수 수정: 'data' 파라미터를 올바르게 받아서 저장하도록 변경
+function savePracticeData(data: PracticeRecord[]): void {
   try {
     if (Array.isArray(data)) {
       localStorage.setItem("practiceRecords", JSON.stringify(data));
@@ -83,10 +94,63 @@ export function Today() {
     return saved ? JSON.parse(saved) : {};
   });
 
+  // practiceRecords 상태 추가
+  const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>(() => {
+    return loadPracticeData();
+  });
+
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [showSongPlusModal, setShowSongPlusModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
+
+  // 디버깅을 위한 콘솔 로그
+  useEffect(() => {
+    console.log("현재 practiceRecords:", practiceRecords);
+    console.log("현재 practiceChecks:", practiceChecks);
+    console.log("선택된 날짜:", selectedDate);
+  }, [practiceRecords, practiceChecks, selectedDate]);
+
+  // practiceRecords localStorage 동기화
+  useEffect(() => {
+    // localStorage 변경 감지 (다른 탭/컴포넌트에서 변경 시)
+    const handleStorageChange = () => {
+      const savedRecords = localStorage.getItem("practiceRecords");
+      if (savedRecords) {
+        try {
+          const parsed = JSON.parse(savedRecords);
+          if (Array.isArray(parsed)) {
+            setPracticeRecords(parsed);
+          }
+        } catch (error) {
+          console.error("practiceRecords 동기화 실패:", error);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    // 같은 탭 내에서 변경 감지 (폴링 방식)
+    const interval = setInterval(() => {
+      const currentRecords = localStorage.getItem("practiceRecords");
+      if (currentRecords && currentRecords !== JSON.stringify(practiceRecords)) {
+        try {
+          const parsed = JSON.parse(currentRecords);
+          if (Array.isArray(parsed)) {
+            setPracticeRecords(parsed);
+            console.log("practiceRecords 동기화됨:", parsed.length, "개 기록");
+          }
+        } catch (error) {
+          console.error("practiceRecords 폴링 동기화 실패:", error);
+        }
+      }
+    }, 1000); // 1초마다 체크
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [practiceRecords]);
 
   useEffect(() => {
     localStorage.setItem("tracks", JSON.stringify(tracks));
@@ -125,8 +189,9 @@ export function Today() {
     });
 
     if (track) {
-      const prevRecords = loadPracticeData();
-      const updated = prevRecords.filter((r: any) => r.track !== track.title);
+      // practiceRecords 상태도 업데이트
+      const updated = practiceRecords.filter((r: PracticeRecord) => r.track !== track.title);
+      setPracticeRecords(updated);
       savePracticeData(updated);
     }
   };
@@ -139,22 +204,29 @@ export function Today() {
       const updated = { ...prev, [selectedDate]: dayChecks };
 
       try {
-        let practiceRecords = loadPracticeData();
-        if (!Array.isArray(practiceRecords)) {
-          practiceRecords = [];
-        }
         const track = tracks.find(t => t.id === trackId);
         if (checked && track) {
-          practiceRecords = [
-            ...practiceRecords,
-            { date: selectedDate, track: track.title, repeatCount: 1 }
-          ];
+          // 새로운 연습 기록 추가
+          const newRecord: PracticeRecord = {
+            id: `${selectedDate}-${trackId}-${Date.now()}`,
+            date: selectedDate,
+            practiceTime: 0,
+            track: track.title,
+            startTime: new Date(selectedDate + "T09:00:00").getTime(),
+            endTime: new Date(selectedDate + "T09:00:00").getTime(),
+            memo: `${track.title} 연습 완료`
+          };
+          const updatedRecords = [...practiceRecords, newRecord];
+          setPracticeRecords(updatedRecords);
+          savePracticeData(updatedRecords);
         } else if (!checked && track) {
-          practiceRecords = practiceRecords.filter(
-            (r: any) => !(r.date === selectedDate && r.track === track.title)
+          // 연습 기록 제거
+          const updatedRecords = practiceRecords.filter(
+            (r: PracticeRecord) => !(r.date === selectedDate && r.track === track.title)
           );
+          setPracticeRecords(updatedRecords);
+          savePracticeData(updatedRecords);
         }
-        savePracticeData(practiceRecords);
       } catch (error) {
         console.error("localStorage 업데이트 실패:", error);
       }
@@ -201,6 +273,45 @@ export function Today() {
     setSelectedDate(dateStr);
   };
 
+  // onPracticeUpdate 콜백 개선
+  const handlePracticeUpdate = () => {
+    // practiceChecks 동기화
+    const savedChecks = localStorage.getItem("practiceChecks");
+    if (savedChecks) {
+      setPracticeChecks(JSON.parse(savedChecks));
+    }
+    
+    // practiceRecords 동기화
+    const savedRecords = localStorage.getItem("practiceRecords");
+    if (savedRecords) {
+      try {
+        const parsed = JSON.parse(savedRecords);
+        if (Array.isArray(parsed)) {
+          setPracticeRecords(parsed);
+          console.log("TodayCalendarModal에서 업데이트된 practiceRecords 동기화됨:", parsed.length, "개 기록");
+          
+          // practiceRecords 기반으로 practiceChecks도 업데이트
+          const newChecks: PracticeChecks = { ...practiceChecks };
+          parsed.forEach((record: PracticeRecord) => {
+            if (record.track) {
+              const track = tracks.find(t => t.title === record.track);
+              if (track) {
+                if (!newChecks[record.date]) {
+                  newChecks[record.date] = {};
+                }
+                newChecks[record.date][track.id] = true;
+              }
+            }
+          });
+          setPracticeChecks(newChecks);
+          localStorage.setItem("practiceChecks", JSON.stringify(newChecks));
+        }
+      } catch (error) {
+        console.error("practiceRecords 동기화 실패:", error);
+      }
+    }
+  };
+
   const visibleTracks = tracks.filter(
     (track) =>
       track.addedDate <= selectedDate &&
@@ -215,26 +326,27 @@ export function Today() {
       paddingTop: 44,
       margin: "0 auto",
       width: "100%",
-      maxWidth: 375,
-      background: "white",
+      maxWidth: "100%",
+      background: "var(--bg-primary)", // CSS 변수 적용
       overflow: "hidden",
       minHeight: "100vh",
-      paddingBottom: 120
+      paddingBottom: 120,
+      fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
     }}>
       <Header
         title="Today"
-        color="#6667AB"
+        color="var(--VERY_PERI)" // CSS 변수 적용
         showBackButton={false}
       />
 
       <div style={{
         width: "100%",
-        maxWidth: 343,
+        maxWidth: "100%",
         margin: "15px auto 0 auto"
       }}>
         <WeekCalendar
           selectedDate={selectedDate}
-          practiceRecords={loadPracticeData()}
+          practiceRecords={practiceRecords} // 상태로 관리되는 practiceRecords 사용
           onDateClick={handleDateClick}
           getKoreanHolidays={getKoreanHolidays}
         />
@@ -249,7 +361,17 @@ export function Today() {
         gap: 4
       }}>
         {visibleTracks.map((track) => {
-          const isChecked = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
+          // practiceRecords에서 체크 상태 계산
+          const isCheckedFromRecords = practiceRecords.some(
+            (record) => record.date === selectedDate && record.track === track.title
+          );
+          
+          // practiceChecks와 practiceRecords 둘 다 확인
+          const isCheckedFromChecks = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
+          
+          // 둘 중 하나라도 true면 체크된 것으로 표시
+          const isChecked = isCheckedFromRecords || isCheckedFromChecks;
+          
           const partialCount = partialCounts[track.id] || 0;
           const daysSince = dayjs().diff(dayjs(track.addedDate), 'day') + 1;
 
@@ -258,7 +380,7 @@ export function Today() {
               key={track.id}
               title={track.title}
               subtitle={`오늘로 ${daysSince}일째`}
-              checked={isChecked}
+              checked={isChecked} // 개선된 체크 상태
               count={partialCount}
               onCheck={() => toggleCheck(track.id)}
               onInc={() => incPartial(track.id)}
@@ -305,24 +427,31 @@ export function Today() {
           zIndex: 1000
         }}>
           <div style={{
-            background: "white",
+            background: "var(--bg-primary)", // CSS 변수 적용
             padding: 24,
-            borderRadius: 8,
-            maxWidth: 320,
-            width: "calc(100% - 32px)", /* 반응형 */
+            borderRadius: "var(--border-radius-medium)", // CSS 변수 적용
+            maxWidth: "100%",
+            width: "calc(100% - 32px)",
             margin: "0 16px"
           }}>
-            <h2 style={{ fontSize: 18, fontWeight: "bold", marginBottom: 16 }}>연습 곡 추가</h2>
+            <h2 style={{ 
+              fontSize: 18, 
+              fontWeight: "bold", 
+              marginBottom: 16,
+              color: "var(--text-primary)", // CSS 변수 적용
+              fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
+            }}>연습 곡 추가</h2>
             <input
               type="text"
               placeholder="곡명을 입력하세요"
               style={{
                 width: "100%",
                 padding: 8,
-                border: "1px solid #ccc",
+                border: "var(--border-light)", // CSS 변수 적용
                 borderRadius: 4,
                 marginBottom: 16,
-                fontSize: 16
+                fontSize: 16,
+                fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
               }}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -338,10 +467,12 @@ export function Today() {
                 style={{
                   flex: 1,
                   padding: 8,
-                  border: "1px solid #ccc",
+                  border: "var(--border-light)", // CSS 변수 적용
                   borderRadius: 4,
-                  background: "white",
-                  cursor: "pointer"
+                  background: "var(--bg-primary)", // CSS 변수 적용
+                  color: "var(--text-primary)", // CSS 변수 적용
+                  cursor: "pointer",
+                  fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
                 }}
               >
                 취소
@@ -358,11 +489,12 @@ export function Today() {
                 style={{
                   flex: 1,
                   padding: 8,
-                  background: "#6667AB",
-                  color: "white",
+                  background: "var(--VERY_PERI)", // CSS 변수 적용
+                  color: "var(--WHITE)", // CSS 변수 적용
                   border: "none",
                   borderRadius: 4,
-                  cursor: "pointer"
+                  cursor: "pointer",
+                  fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
                 }}
               >
                 추가
@@ -377,12 +509,7 @@ export function Today() {
           isOpen={showCalendarModal}
           onClose={() => setShowCalendarModal(false)}
           trackId={selectedTrackId || undefined}
-          onPracticeUpdate={() => {
-            const savedChecks = localStorage.getItem("practiceChecks");
-            if (savedChecks) {
-              setPracticeChecks(JSON.parse(savedChecks));
-            }
-          }}
+          onPracticeUpdate={handlePracticeUpdate} // 개선된 콜백
         />
       )}
     </main>

@@ -9,23 +9,27 @@
 
 /* 통일된 폰트 설정 */
 html, body, #root {
-  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+  font-family: var(--FONT_FAMILY); /* ✅ CSS 변수 사용 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'kern' 1;
   text-rendering: optimizeLegibility;
-  color: var(--text-primary); /* 변수 사용 */
-  background: var(--bg-primary); /* 변수 사용 */
+  color: var(--text-primary);
+  background: var(--bg-primary);
 }
 
 body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  overflow-x: hidden; /* ✅ 가로 스크롤 완전 차단 */
+  width: 100%; /* ✅ 명시적 너비 설정 */
 }
 
 #root {
   min-height: 100vh;
+  width: 100%; /* ✅ 명시적 너비 설정 */
+  overflow-x: hidden; /* ✅ 가로 스크롤 완전 차단 */
 }
 
 /* 브라우저별 폰트 렌더링 최적화 */
@@ -36,12 +40,4 @@ body {
   }
 }
 
-/* Variable 폰트 지원 브라우저용 */
-@supports (font-variation-settings: normal) {
-  /* 🚨🚨🚨 이 줄을 제거하거나 아래처럼 주석 처리합니다. 🚨🚨🚨 */
-  /*
-  html, body, #root {
-    font-variation-settings: 'wght' 400;
-  }
-  */
-}
+/* ✅ Variable 폰트 설정 제거 (문제 원인 제거) */

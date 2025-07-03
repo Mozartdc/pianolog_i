@@ -266,7 +266,7 @@ function StatsScreen() {
   return (
     <div style={{
       width: "100%",
-      maxWidth: 375,
+      maxWidth: "100%",
       margin: "0 auto",
       background: "#ffffff",
       minHeight: "100vh",

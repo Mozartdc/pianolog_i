@@ -44,7 +44,7 @@ export function HomeStartTimerModal({
       pointerEvents: "none"
     }}>
       <div style={{
-        width: 345,
+        width: "100%",
         height: 97,
         background: "#ffffff",
         border: "0.5px solid #45b5aa",

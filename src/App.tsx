@@ -1,4 +1,3 @@
-import './chart-setup';
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import HomeScreen from "./screens/HomeScreen";
 import Today from "./screens/Today";
@@ -8,7 +7,6 @@ import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';
 import StatsDayDetailScreen from './screens/StatsDayDetailScreen';
-import "./App.css";
 
 // 외부 BottomTabBar 컴포넌트 import
 import BottomTabBar from "./components/BottomTabBar";
@@ -22,7 +20,7 @@ function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "s
     case "/stats": return "statistic";
     case "/settings": return "setting";
     case "/calendar": return "today";
-    case "/practice": return "apple"; // `Fallthrough case in switch` 에러를 해결했습니다.
+    case "/practice": return "apple";
     default: return "home";
   }
 }
@@ -59,14 +57,15 @@ function AppRoutes() {
 function App() {
   return (
     <BrowserRouter>
+      {/* 🔴 이 div의 maxWidth를 "100%"로 변경하여 앱이 화면 너비에 맞춰 유연하게 확장되도록 합니다. */}
       <div style={{
         width: "100%",
-        maxWidth: 480,
+        maxWidth: "100%", // ⭐ 이 부분을 "100%"로 변경했습니다.
         margin: "0 auto",
         paddingBottom: 80,
         minHeight: "100vh",
         background: "white",
-        boxShadow: "none" // `box-shadow`를 제거했습니다.
+        boxShadow: "none"
       }}>
         <AppRoutes />
       </div>

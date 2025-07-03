@@ -25,7 +25,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
   exportIcon
 }) => {
   const commonFontStyle = {
-    fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
+    fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const
   };
@@ -65,27 +65,29 @@ const StatsCard: React.FC<StatsCardProps> = ({
   return (
     <div 
       style={{
-        width: "100%",
-        maxWidth: 345,
+        // ✅ 완전 반응형: 고정 maxWidth 제거
+        width: "calc(100% - 32px)", // 좌우 16px 패딩 고려
         height: 60,
-        background: "#ffffff",
-        border: "0.5px solid #9e9c98",
-        borderRadius: 16,
+        background: "var(--bg-primary)", // ✅ CSS 변수 적용
+        border: "var(--border-light)", // ✅ CSS 변수 적용
+        borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
         display: "flex",
         alignItems: "center",
-        paddingLeft: 16,
-        paddingRight: 16,
-        paddingTop: 16,
-        paddingBottom: 16,
+        padding: "16px", // ✅ 패딩 통일
         gap: 12,
-        margin: "7px auto 0 auto"
+        margin: "7px auto 0 auto", // 중앙 정렬
+        boxSizing: "border-box", // ✅ 박스 사이징 명시
+        fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
+        cursor: onClick ? "pointer" : "default", // ✅ 클릭 가능 시 커서 변경
+        transition: "var(--transition-fast)" // ✅ 부드러운 호버 효과
       }}
+      onClick={onClick}
     >
       <img src={icon} alt={iconAlt} width={iconWidth} height={iconHeight} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
         <span style={{ 
           fontSize: 14, 
-          color: "#9e9c98", 
+          color: "var(--text-secondary)", // ✅ CSS 변수 적용
           lineHeight: "20px",
           textAlign: "left",
           ...commonFontStyle
@@ -94,7 +96,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
         </span>
         <span style={{ 
           fontSize: 12, 
-          color: "#2d2d2a", 
+          color: "var(--text-primary)", // ✅ CSS 변수 적용
           lineHeight: "16px",
           textAlign: "left",
           ...commonFontStyle
@@ -109,7 +111,17 @@ const StatsCard: React.FC<StatsCardProps> = ({
           width="16" 
           height="20"
           onClick={handleExportClick}
-          style={{ cursor: "pointer" }}
+          style={{ 
+            cursor: "pointer",
+            transition: "var(--transition-fast)", // ✅ 부드러운 호버 효과
+            opacity: 0.8
+          }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.opacity = "1";
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.opacity = "0.8";
+          }}
         />
       )}
     </div>
