@@ -334,7 +334,7 @@ export function Today() {
       fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
     }}>
       <Header
-        title="Today"
+        title="today"
         color="var(--VERY_PERI)" // CSS 변수 적용
         showBackButton={false}
       />

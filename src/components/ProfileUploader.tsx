@@ -1,225 +1,133 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import Cropper, { ReactCropperElement } from 'react-cropper';
+import 'cropperjs/dist/cropper.css'; // Cropper CSS import
 import Icon from './Icon';
 
-interface ProfileUploaderProps {
-  currentAvatar: string;
-  onAvatarChange: (newAvatar: string) => void;
-  size?: number;
-  responsive?: boolean; // ✅ 반응형 옵션 추가
+export interface AvatarCropperHandles {
+  triggerFileInput: () => void;
 }
 
-const ProfileUploader: React.FC<ProfileUploaderProps> = ({ 
-  currentAvatar, 
-  onAvatarChange, 
-  size = 60,
-  responsive = false
-}) => {
+interface ProfileUploaderProps {
+  onAvatarChange: (newAvatar: string) => void;
+  size?: number;
+}
+
+const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>(({
+  onAvatarChange,
+  size = 80 // SettingScreen에서 80으로 사용하므로 기본값을 맞춰줍니다.
+}, ref) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const cropperRef = useRef<ReactCropperElement>(null);
 
-  // ✅ 반응형 크기 계산
-  const getResponsiveSize = () => {
-    if (!responsive) return `${size}px`;
-    
-    // 화면 크기에 따른 동적 크기
-    const minSize = Math.max(size * 0.8, 40); // 최소 40px
-    const maxSize = size * 1.2; // 최대 120%
-    return `clamp(${minSize}px, ${size / 375 * 100}vw, ${maxSize}px)`;
-  };
+  const [currentAvatar, setCurrentAvatar] = useState(() => localStorage.getItem('avatar') || '');
+  
+  // ✨ 변경점: 모달 및 이미지 소스 상태 추가
+  const [imageToCrop, setImageToCrop] = useState<string | undefined>(undefined);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
 
-  const containerSize = getResponsiveSize();
+  useEffect(() => {
+    const handleStorageChange = () => setCurrentAvatar(localStorage.getItem('avatar') || '');
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
+  useImperativeHandle(ref, () => ({
+    triggerFileInput: () => fileInputRef.current?.click(),
+  }));
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // 파일 크기 체크 (5MB 제한)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('파일 크기는 5MB 이하여야 합니다.');
-      return;
-    }
-
-    // 이미지 파일 타입 체크
-    if (!file.type.startsWith('image/')) {
-      alert('이미지 파일만 업로드 가능합니다.');
-      return;
-    }
-
-    setIsUploading(true);
-
-    // FileReader로 이미지를 Base64로 변환하여 localStorage에 저장
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (result) {
-        // localStorage에 저장
-        localStorage.setItem('avatar', result);
-        // 상태 업데이트
-        onAvatarChange(result);
+  // ✨ 변경점: 파일 선택 시 모달을 띄우도록 수정
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.size > 5 * 1024 * 1024) {
+        alert('파일 크기는 5MB 이하여야 합니다.');
+        return;
       }
-      setIsUploading(false);
-    };
+      const reader = new FileReader();
+      reader.addEventListener('load', () => {
+        setImageToCrop(reader.result as string);
+        setCropModalOpen(true);
+      });
+      reader.readAsDataURL(file);
+      e.target.value = ''; // 같은 파일 다시 선택 가능하도록 초기화
+    }
+  };
 
-    reader.onerror = () => {
-      alert('이미지 업로드 중 오류가 발생했습니다.');
-      setIsUploading(false);
-    };
+  // ✨ 변경점: 이미지 자르기 및 저장 함수
+  const handleCrop = () => {
+    if (cropperRef.current) {
+      const croppedCanvas = cropperRef.current.cropper.getCroppedCanvas();
+      const croppedImage = croppedCanvas.toDataURL('image/png');
 
-    reader.readAsDataURL(file);
+      localStorage.setItem('avatar', croppedImage);
+      setCurrentAvatar(croppedImage);
+      onAvatarChange(croppedImage);
+      setCropModalOpen(false);
+      setImageToCrop(undefined);
+    }
   };
 
   return (
-    <div style={{ 
-      position: 'relative',
-      fontFamily: 'var(--FONT_FAMILY)' // ✅ 폰트 통일
-    }}>
-      {/* 프로필 이미지 */}
+    <>
+      {/* 프로필 이미지 표시 영역 */}
       <div
-        onClick={handleImageClick}
         style={{
-          width: containerSize, // ✅ 반응형 크기 적용
-          height: containerSize, // ✅ 반응형 크기 적용
-          borderRadius: '50%',
-          backgroundColor: 'var(--PASTEL_TURQUOISE)', // ✅ CSS 변수 적용
+          width: `${size}px`,
+          height: `${size}px`,
+          borderRadius: '25px',
+          backgroundColor: '#f0f0f0',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          cursor: 'pointer',
           overflow: 'hidden',
-          border: `2px solid var(--TURQUOISE)`, // ✅ CSS 변수 적용
-          transition: 'var(--transition-fast)', // ✅ CSS 변수 적용
-          position: 'relative',
-          boxSizing: 'border-box' // ✅ 박스 사이징 명시
-        }}
-        onMouseOver={(e) => {
-          e.currentTarget.style.opacity = '0.8';
-          e.currentTarget.style.transform = 'scale(1.02)'; // ✅ 부드러운 호버 효과
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.opacity = '1';
-          e.currentTarget.style.transform = 'scale(1)';
-        }}
-        // ✅ 접근성 개선
-        role="button"
-        tabIndex={0}
-        aria-label="프로필 이미지 변경"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleImageClick();
-          }
+          border: '1px solid #ddd',
+          // ✨ 변경점: 직접 클릭 기능 제거 (cursor: 'pointer' 삭제)
         }}
       >
-        {isUploading ? (
-          <div style={{ 
-            fontSize: responsive ? 'clamp(12px, 4vw, 20px)' : `${size * 0.3}px`, // ✅ 반응형 폰트
-            animation: 'spin 1s linear infinite',
-            color: 'var(--TURQUOISE)' // ✅ CSS 변수 적용
-          }}>
-            ⏳
-          </div>
-        ) : currentAvatar ? (
-          <img 
-            src={currentAvatar} 
-            alt="프로필" 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover'
-            }} 
-          />
+        {currentAvatar ? (
+          <img src={currentAvatar} alt="프로필" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <Icon 
-            name="keyboard" 
-            size={responsive ? size * 0.5 : size * 0.5} 
-            color="var(--TURQUOISE)" // ✅ CSS 변수 적용
-            responsive={responsive} // ✅ 반응형 아이콘
-          />
+          <Icon name="keyboard" size={size * 0.5} color="#45b5aa" />
         )}
       </div>
 
-      {/* 편집 아이콘 */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '0',
-          right: '0',
-          width: responsive 
-            ? `clamp(${size * 0.25}px, ${size * 0.3 / 375 * 100}vw, ${size * 0.35}px)` 
-            : `${size * 0.3}px`, // ✅ 반응형 크기
-          height: responsive 
-            ? `clamp(${size * 0.25}px, ${size * 0.3 / 375 * 100}vw, ${size * 0.35}px)` 
-            : `${size * 0.3}px`, // ✅ 반응형 크기
-          backgroundColor: 'var(--TURQUOISE)', // ✅ CSS 변수 적용
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          border: `2px solid var(--WHITE)`, // ✅ CSS 변수 적용
-          transition: 'var(--transition-fast)', // ✅ CSS 변수 적용
-          boxSizing: 'border-box' // ✅ 박스 사이징 명시
-        }}
-        onClick={handleImageClick}
-        onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--VERY_PERI)'; // ✅ 호버 색상 변경
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = 'var(--TURQUOISE)';
-        }}
-        // ✅ 접근성 개선
-        role="button"
-        tabIndex={0}
-        aria-label="이미지 편집"
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleImageClick();
-          }
-        }}
-      >
-        <span style={{ 
-          color: 'var(--WHITE)', // ✅ CSS 변수 적용
-          fontSize: responsive 
-            ? `clamp(${size * 0.12}px, ${size * 0.15 / 375 * 100}vw, ${size * 0.18}px)` 
-            : `${size * 0.15}px`, // ✅ 반응형 폰트
-          fontWeight: 'bold',
-          fontFamily: 'var(--FONT_FAMILY)' // ✅ 폰트 통일
-        }}>
-          ✏️
-        </span>
-      </div>
-
-      {/* 숨겨진 파일 입력 */}
+      {/* 숨겨진 파일 입력창 */}
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         onChange={handleFileChange}
         style={{ display: 'none' }}
-        aria-label="프로필 이미지 파일 선택"
       />
 
-      {/* 회전 애니메이션 CSS */}
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-    </div>
+      {/* ✨ 추가: 이미지 자르기 모달 */}
+      {cropModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '400px' }}>
+            <h3 style={{ marginTop: 0 }}>프로필 사진 편집</h3>
+            <div style={{ height: '300px', width: '100%', marginBottom: '20px' }}>
+                <Cropper
+                    ref={cropperRef}
+                    src={imageToCrop}
+                    style={{ height: '100%', width: '100%' }}
+                    aspectRatio={1} // 1:1 비율로 자르기
+                    guides={false}
+                    viewMode={1}
+                    dragMode='move'
+                    background={false}
+                    responsive={true}
+                    checkOrientation={false}
+                />
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                <button onClick={() => setCropModalOpen(false)} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #ccc' }}>취소</button>
+                <button onClick={handleCrop} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#BB2649', color: 'white' }}>저장</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
-};
-
-// ✅ 편의 컴포넌트
-export const ResponsiveProfileUploader: React.FC<Omit<ProfileUploaderProps, 'responsive'>> = (props) => (
-  <ProfileUploader {...props} responsive={true} />
-);
+});
 
 export default ProfileUploader;

@@ -45,9 +45,9 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
     : null;
 
   // 곡명: 곡이 있으면 곡명, 없으면 Piano
-  const displayTitle = track ? track.title : "Piano";
+  const displayTitle = track ? track.title : "piano";
   // 카운트 키: trackId 있으면 trackId, 없으면 "Piano"
-  const countKey = trackId !== null && track ? String(trackId) : "Piano";
+  const countKey = trackId !== null && track ? String(trackId) : "piano";
 
   // 카운트 동기화
   useEffect(() => {
@@ -142,7 +142,7 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
           marginBottom: 25,
           ...commonFontStyle // 폰트 스타일 적용
         }}>
-          Practice
+          practice
         </div>
 
         {/* ✅ 숫자: 폰트 굵기 (fontWeight: 600) 및 폰트 스타일 적용 */}

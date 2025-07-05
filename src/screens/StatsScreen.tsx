@@ -536,7 +536,7 @@ function StatsScreen() {
                       ...commonFontStyle
                     }}>
                       <span style={{ fontSize: 12, color: "#9E9C98" }}>
-                        Session {session.sessionNumber}.
+                        session {session.sessionNumber}.
                       </span>{" "}
                       {session.duration} ({session.timeRange})
                     </div>
