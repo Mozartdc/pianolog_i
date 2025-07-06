@@ -68,7 +68,7 @@ export default function PracticeItem({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        margin: 0,
+        margin: 3,
         padding: 0
       }}>
         <div style={{

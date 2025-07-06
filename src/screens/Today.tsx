@@ -208,19 +208,7 @@ export function Today() {
         const track = tracks.find(t => t.id === trackId);
         if (checked && track) {
           // 새로운 연습 기록 추가
-          const newRecord: PracticeRecord = {
-            id: `${selectedDate}-${trackId}-${Date.now()}`,
-            date: selectedDate,
-            practiceTime: 0,
-            track: track.title,
-            startTime: new Date(selectedDate + "T09:00:00").getTime(),
-            endTime: new Date(selectedDate + "T09:00:00").getTime(),
-            memo: `${track.title} 연습 완료`
-          };
-          const updatedRecords = [...practiceRecords, newRecord];
-          setPracticeRecords(updatedRecords);
-          savePracticeData(updatedRecords);
-        } else if (!checked && track) {
+         
           // 연습 기록 제거
           const updatedRecords = practiceRecords.filter(
             (r: PracticeRecord) => !(r.date === selectedDate && r.track === track.title)

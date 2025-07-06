@@ -4,18 +4,18 @@ import LogoImg from "../utils/img/logo.png"; // 이 경로가 올바른지 확�
 
 interface ExportCardModalProps {
   isOpen: boolean;
-  nickname: string;
+  nickname: string; // HomeScreen에서 받아온 닉네임
   date: string;
   practiceTime: string;
-  avatar?: string;
+  avatar?: string; // HomeScreen에서 받아온 아바타
   onClose: () => void;
 }
 
 export const generateExportImage = async (
-  nickname: string,
+  nickname: string, // 이 값을 사용합니다.
   date: string,
   practiceTime: string,
-  avatar?: string
+  avatar?: string // 이 값을 사용합니다.
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     try {
@@ -114,7 +114,7 @@ export const generateExportImage = async (
         const profileSize = 80;
         const centerX = 180;
 
-        if (avatar) {
+        if (avatar) { // 프롭으로 받은 avatar 값을 사용
           const avatarImg = new window.Image();
           avatarImg.onload = () => {
             if (ctx) {
@@ -159,12 +159,12 @@ export const generateExportImage = async (
           }
           ctx.textBaseline = 'alphabetic';
           const avatarBottom = profileY + profileSize;
-          // 닉네임
+          // 닉네임 (프롭으로 받은 nickname 값을 사용)
           const nicknameY = avatarBottom + 24;
           ctx.fillStyle = '#2D2D2A';
           ctx.font = 'bold 24px Pretendard';
           ctx.textAlign = 'center';
-          ctx.fillText(nickname, centerX, nicknameY);
+          ctx.fillText(nickname, centerX, nicknameY); // <-- 프롭 nickname 사용
 
           // 날짜
           const dateY = nicknameY + 22 + 16;
@@ -172,48 +172,74 @@ export const generateExportImage = async (
           ctx.font = '16px Pretendard';
           ctx.fillText(date, centerX, dateY);
 
-          // 시간
-          const timeY = dateY + 6 + 48;
-          const timeParts = practiceTime.match(/(\d+)시간\s*(\d+)분/);
-          if (timeParts) {
-            const hourNum = timeParts[1];
-            const minNum = timeParts[2];
-            ctx.font = 'bold 48px Pretendard';
-            const hourWidth = ctx.measureText(hourNum).width;
-            ctx.font = '300 48px Pretendard';
-            const hourUnitWidth = ctx.measureText('시간').width;
-            ctx.font = 'bold 48px Pretendard';
-            const minWidth = ctx.measureText(minNum).width;
-            ctx.font = '300 48px Pretendard';
-            const minUnitWidth = ctx.measureText('분').width;
-            const totalWidth = hourWidth + hourUnitWidth + minWidth + minUnitWidth;
-            let x = centerX - (totalWidth / 2);
+          const timeY = dateY + 6 + 48; // 시간 텍스트의 Y 위치
 
+          // 정규식을 사용하여 '시간'과 '분' 부분을 분리
+          const hourMatch = practiceTime.match(/(\d+)시간/);
+          const minuteMatch = practiceTime.match(/(\d+)분/);
+
+          let hourNum = hourMatch ? hourMatch[1] : null;
+          let minNum = minuteMatch ? minuteMatch[1] : null;
+
+          let totalWidth = 0;
+          let currentX = 0;
+
+          // 각 부분의 너비를 미리 계산
+          const tempFontBold = 'bold 48px Pretendard';
+          const tempFontLight = '300 48px Pretendard';
+
+          // 총 너비 계산
+          if (hourNum !== null) {
+            ctx.font = tempFontBold;
+            totalWidth += ctx.measureText(hourNum).width;
+            ctx.font = tempFontLight;
+            totalWidth += ctx.measureText('시간').width;
+          }
+          if (minNum !== null) {
+            if (hourNum !== null) totalWidth += 5; // '시간'과 '분' 사이에 약간의 간격 추가
+            ctx.font = tempFontBold;
+            totalWidth += ctx.measureText(minNum).width;
+            ctx.font = tempFontLight;
+            totalWidth += ctx.measureText('분').width;
+          } else if (hourNum === null && minNum === null) {
+              // 아무것도 매칭되지 않는 경우, 기본값 또는 오류 처리
+              safeResolve(canvas.toDataURL('image/png', 1.0));
+              return;
+          }
+
+          currentX = centerX - (totalWidth / 2); // 중앙 정렬 시작점
+
+          ctx.textAlign = 'left'; // 텍스트를 왼쪽에서부터 그리기 시작
+
+          // '시간' 부분 그리기
+          if (hourNum !== null) {
             ctx.fillStyle = '#45B5AA';
-            ctx.font = 'bold 48px Pretendard';
-            ctx.textAlign = 'left';
-            ctx.fillText(hourNum, x, timeY);
-            x += hourWidth;
+            ctx.font = tempFontBold;
+            ctx.fillText(hourNum, currentX, timeY);
+            currentX += ctx.measureText(hourNum).width;
 
             ctx.fillStyle = '#9E9C98';
-            ctx.font = '300 48px Pretendard';
-            ctx.fillText('시간', x, timeY);
-            x += hourUnitWidth;
+            ctx.font = tempFontLight;
+            ctx.fillText('시간', currentX, timeY);
+            currentX += ctx.measureText('시간').width;
+          }
 
+          // '분' 부분 그리기
+          if (minNum !== null) {
+            if (hourNum !== null) currentX += 5; // '시간'과 '분' 사이에 간격 추가
             ctx.fillStyle = '#45B5AA';
-            ctx.font = 'bold 48px Pretendard';
-            ctx.fillText(minNum, x, timeY);
-            x += minWidth;
+            ctx.font = tempFontBold;
+            ctx.fillText(minNum, currentX, timeY);
+            currentX += ctx.measureText(minNum).width;
 
             ctx.fillStyle = '#9E9C98';
-            ctx.font = '300 48px Pretendard';
-            ctx.fillText('분', x, timeY);
+            ctx.font = tempFontLight;
+            ctx.fillText('분', currentX, timeY);
           }
           safeResolve(canvas.toDataURL('image/png', 1.0));
         }
       }
     } catch (err) {
-      // 예외 발생 시 항상 reject
       reject(err);
     }
   });
@@ -231,10 +257,10 @@ const downloadImage = (dataUrl: string, filename: string) => {
 
 export function ExportCardModal({ 
   isOpen, 
-  nickname, 
+  nickname, // HomeScreen에서 전달받은 nickname 프롭
   date, 
   practiceTime, 
-  avatar, 
+  avatar, // HomeScreen에서 전달받은 avatar 프롭
   onClose 
 }: ExportCardModalProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -254,7 +280,8 @@ export function ExportCardModal({
     if (hasExecutedRef.current !== true) return;
     setIsLoading(true);
     try {
-      const dataUrl = await generateExportImage(nickname, date, practiceTime, avatar);
+      // generateExportImage 호출 시, 함수에 전달받은 nickname과 avatar 프롭을 그대로 사용
+      const dataUrl = await generateExportImage(nickname, date, practiceTime, avatar); 
       const filename = `피출기록_${date.replace(/\./g, '').replace(/\s/g, '_')}_${nickname}.png`;
       downloadImage(dataUrl, filename);
       setTimeout(() => {

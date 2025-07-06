@@ -1,13 +1,13 @@
-/* src/screens/Home/Home.css */
+/* src/screens/Home.css */
 
 /* 홈 화면 정밀 레이아웃 */
 .home-container {
-  max-width: 390px;
+  max-width: 390px; /* 이 max-width는 컴포넌트 자체의 책임이므로 유지 */
   margin: 0 auto;
   min-height: 100vh;
   background: var(--bg-primary); /* 변수 사용 */
   padding: 20px 16px 100px 16px;
-  font-family: var(--FONT_FAMILY); /* FONT_FAMILY 변수 정의가 필요할 수 있습니다. */
+  font-family: var(--FONT_FAMILY);
 }
 
 /* 헤더 영역 */
@@ -26,7 +26,7 @@
 
 .home-date {
   font-size: 10px;
-  color: var(--DARK_GRAY); /* 변수 사용 */
+  color: var(--text-secondary); /* var(--DARK_GRAY) 대신 의미적 변수 사용 권장 */
   font-weight: 500;
   margin-bottom: 16px;
   text-transform: uppercase;
@@ -44,7 +44,7 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--PASTEL_TURQUOISE); /* 변수 사용 */
+  background: var(--bg-secondary); /* var(--PASTEL_TURQUOISE) 대신 의미적 변수 사용 권장 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,7 +54,7 @@
 .home-profile-name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--BLACK); /* 변수 사용 */
+  color: var(--text-primary); /* var(--BLACK) 대신 의미적 변수 사용 권장 */
   margin-bottom: 2px;
   line-height: 1.2;
 }
@@ -62,27 +62,27 @@
 .home-profile-time {
   font-size: 14px;
   font-weight: 600;
-  color: var(--TURQUOISE); /* 변수 사용 */
+  color: var(--TURQUOISE);
   margin-bottom: 2px;
   line-height: 1.2;
 }
 
 .home-profile-subtitle {
   font-size: 9px;
-  color: var(--DARK_GRAY); /* 변수 사용 */
+  color: var(--text-secondary); /* var(--DARK_GRAY) 대신 의미적 변수 사용 권장 */
   font-weight: 400;
   line-height: 1.2;
 }
 
 /* 성취 카드 */
 .achievement-card {
-  background: var(--TURQUOISE_GRADIENT); /* 변수 사용 */
-  color: var(--WHITE); /* 변수 사용 */
+  background: var(--TURQUOISE_GRADIENT);
+  color: var(--button-primary-text); /* var(--WHITE) 대신 의미적 변수 사용 권장 */
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 12px;
   text-align: center;
-  box-shadow: 0 4px 16px rgba(69, 181, 170, 0.25);
+  box-shadow: var(--shadow-medium); /* 기존 rgba(69, 181, 170, 0.25)는 변수로 대체 */
 }
 
 .achievement-content {
@@ -108,8 +108,8 @@
 
 /* 통계 카드 */
 .stats-card {
-  background: var(--PASTEL_TURQUOISE); /* 변수 사용 */
-  border: 1px solid rgba(69, 181, 170, 0.1);
+  background: var(--bg-secondary); /* var(--PASTEL_TURQUOISE) 대신 의미적 변수 사용 권장 */
+  border: var(--border-turquoise); /* 1px solid rgba(69, 181, 170, 0.1)는 변수로 대체 */
   border-radius: 12px;
   padding: 14px;
   margin-bottom: 8px;
@@ -130,7 +130,7 @@
 
 .stats-card-label-text {
   font-size: 10px;
-  color: var(--DARK_GRAY); /* 변수 사용 */
+  color: var(--text-secondary); /* var(--DARK_GRAY) 대신 의미적 변수 사용 권장 */
   font-weight: 500;
   line-height: 1.2;
 }
@@ -138,18 +138,18 @@
 .stats-card-value {
   font-size: 16px;
   font-weight: 700;
-  color: var(--VERY_PERI); /* 변수 사용 */
+  color: var(--VERY_PERI);
   line-height: 1.2;
 }
 
 /* 주간 캘린더 */
 .weekly-calendar {
-  background: var(--WHITE); /* 변수 사용 */
+  background: var(--bg-primary); /* var(--WHITE) 대신 의미적 변수 사용 권장 */
   border-radius: 12px;
   padding: 14px;
   margin-bottom: 20px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-light); /* 0 2px 12px rgba(0, 0, 0, 0.08)는 변수로 대체 */
+  border: 1px solid rgba(0, 0, 0, 0.04); /* 이 값은 변수로 대체되지 않았으므로 수동 변경 필요 */
 }
 
 .weekly-calendar-grid {
@@ -175,18 +175,18 @@
 .start-button {
   width: 100%;
   padding: 14px;
-  background: var(--TURQUOISE); /* 변수 사용 */
-  color: var(--WHITE); /* 변수 사용 */
+  background: var(--button-primary-bg); /* var(--TURQUOISE) 대신 의미적 변수 사용 권장 */
+  color: var(--button-primary-text); /* var(--WHITE) 대신 의미적 변수 사용 권장 */
   border: none;
   border-radius: 12px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: var(--transition-fast);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  box-shadow: 0 4px 16px rgba(69, 181, 170, 0.3);
-  font-family: var(--FONT_FAMILY); /* FONT_FAMILY 변수 정의가 필요할 수 있습니다. */
+  box-shadow: var(--shadow-strong); /* 0 4px 16px rgba(69, 181, 170, 0.3)는 변수로 대체 */
+  font-family: var(--FONT_FAMILY);
 }

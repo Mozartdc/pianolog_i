@@ -47,8 +47,8 @@
   --transition-medium: 0.3s ease;
 }
 
-/* 다크 테마 (body에 'dark-mode' 클래스가 있을 때 적용) */
-body.dark-mode {
+/* 다크 테마 (<html> 태그에 data-theme="dark" 속성이 있을 때 적용) */
+html[data-theme="dark"] { /* <-- 여기를 body.dark-mode에서 html[data-theme="dark"]로 변경 */
   /* 기본 색상 오버라이드 */
   --WHITE: #1A1A1A; /* 다크 모드에서의 '흰색' (어두운 배경) */
   --BLACK: #E0E0E0; /* 다크 모드에서의 '검은색' (밝은 텍스트) */
@@ -66,7 +66,7 @@ body.dark-mode {
   --bg-primary: var(--WHITE); /* 오버라이드된 WHITE 사용 */
   --bg-secondary: #2C2C2C;
   --button-primary-bg: var(--TURQUOISE);
-  --button-primary-text: var(--WHITE);
+  --button-primary-text: var(--BLACK); /* 다크모드에서 버튼 텍스트는 밝은색으로 */
   --error-color: var(--VIVA_MAGENTA);
   --info-bg: #444444;
 

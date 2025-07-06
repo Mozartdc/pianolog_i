@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { getTodayCheer } from "../utils/cheers";
-import { HomeStartTimerModal} from "./HomeStartTimerModal"; // ✅ 경로 수정
-import { TimePickModal } from "./TimePickModal"; // ✅ 경로 수정
-import { HomeStopModal } from "./HomeStopModal"; // ✅ 경로 수정
-import { ExportCardModal } from "./ExportCardModal"; // ✅ 경로 수정
+import { HomeStartTimerModal} from "./HomeStartTimerModal";
+import { TimePickModal } from "./TimePickModal";
+import { HomeStopModal } from "./HomeStopModal";
+import { ExportCardModal } from "./ExportCardModal";
 import Header from "../components/Header";
 import ProfileSection from "../components/ProfileSection";
 import StatsCard from "../components/StatsCard";
 import WeekCalendar from "../components/WeekCalendar";
-import './Home.css'; // ✅ CSS 파일 경로 수정 (Home.css → ../styles/Home.css)
+import './Home.css';
 
 // 실제 SVG/이미지 파일들 import
 import KeyboardIcon from "../assets/icons/keyboard.svg";
@@ -27,6 +27,7 @@ interface PracticeRecord {
   endTime: number;
   id: string;
   memo?: string;
+  track?: string; // StatsCard와 Total.tsx와 일관성을 위해 추가
 }
 
 type Track = {
@@ -65,7 +66,7 @@ const getKoreanHolidays = (year: number): string[] => {
   return holidays;
 };
 
-// 특별 치어스
+// 특별 치어스 (현재 비어있음)
 const specialCheers: CheerData[] = [];
 
 // 치어스 데이터 가져오기
