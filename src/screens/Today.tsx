@@ -8,6 +8,7 @@ import WeekCalendar from "../components/WeekCalendar";
 import PracticeItem from "../components/PracticeItem";
 import TodayCalendarModal from "./TodayCalendarModal";
 import SongPlusIcon from "../assets/icons/songplus.svg";
+import SongNoteIcon from "../assets/icons/song_note.svg";
 
 type Track = {
   id: number;
@@ -416,93 +417,127 @@ export function Today() {
         <img src={SongPlusIcon} alt="add song" width="45" height="45" />
       </button>
 
-      {showSongPlusModal && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0, 0, 0, 0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          zIndex: 1000
+{showSongPlusModal && (
+  <div style={{
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000
+  }}>
+    <div style={{
+      width: "calc(100% - 32px)",
+      maxWidth: 324,
+      background: "var(--bg-primary)",
+      border: "var(--border-light)",
+      borderRadius: "var(--border-radius-small)",
+      boxSizing: "border-box",
+      padding: 22,
+      display: "flex",
+      flexDirection: "column"
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
+        <img src={SongNoteIcon} alt="song note" width="16" height="16" />
+        <span style={{
+          fontSize: 15,
+          color: "var(--text-primary)",
+          fontFamily: "var(--FONT_FAMILY)"
         }}>
-          <div style={{
-            background: "var(--bg-primary)", // CSS 변수 적용
-            padding: 24,
-            borderRadius: "var(--border-radius-medium)", // CSS 변수 적용
-            maxWidth: "100%",
-            width: "calc(100% - 32px)",
-            margin: "0 16px"
-          }}>
-            <h2 style={{ 
-              fontSize: 18, 
-              fontWeight: "bold", 
-              marginBottom: 16,
-              color: "var(--text-primary)", // CSS 변수 적용
-              fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
-            }}>연습 곡 추가</h2>
-            <input
-              type="text"
-              placeholder="곡명을 입력하세요"
-              style={{
-                width: "100%",
-                padding: 8,
-                border: "var(--border-light)", // CSS 변수 적용
-                borderRadius: 4,
-                marginBottom: 16,
-                fontSize: 16,
-                fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
-              }}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  addTrack((e.target as HTMLInputElement).value);
-                  setShowSongPlusModal(false);
-                  (e.target as HTMLInputElement).value = '';
-                }
-              }}
-            />
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                onClick={() => setShowSongPlusModal(false)}
-                style={{
-                  flex: 1,
-                  padding: 8,
-                  border: "var(--border-light)", // CSS 변수 적용
-                  borderRadius: 4,
-                  background: "var(--bg-primary)", // CSS 변수 적용
-                  color: "var(--text-primary)", // CSS 변수 적용
-                  cursor: "pointer",
-                  fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
-                }}
-              >
-                취소
-              </button>
-              <button
-                onClick={() => {
-                  const input = document.querySelector('input[placeholder="곡명을 입력하세요"]') as HTMLInputElement;
-                  if (input) {
-                    addTrack(input.value);
-                    setShowSongPlusModal(false);
-                    input.value = '';
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  padding: 8,
-                  background: "var(--VERY_PERI)", // CSS 변수 적용
-                  color: "var(--WHITE)", // CSS 변수 적용
-                  border: "none",
-                  borderRadius: 4,
-                  cursor: "pointer",
-                  fontFamily: "var(--FONT_FAMILY)" // CSS 변수 적용
-                }}
-              >
-                추가
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          연습곡 추가
+        </span>
+      </div>
+
+      <div style={{
+        width: "100%",
+        height: "0.5px",
+        background: "var(--text-secondary)",
+        marginBottom: 15
+      }} />
+
+      <input
+        type="text"
+        placeholder="여기에 곡명 입력"
+        style={{
+          width: "100%",
+          height: 36,
+          border: "var(--border-light)",
+          borderRadius: "var(--border-radius-small)",
+          padding: "0 12px",
+          fontSize: 16,
+          color: "var(--text-primary)",
+          fontFamily: "var(--FONT_FAMILY)",
+          marginBottom: 15,
+          boxSizing: "border-box"
+        }}
+        onKeyPress={(e) => {
+          if (e.key === 'Enter') {
+            addTrack((e.target as HTMLInputElement).value);
+            setShowSongPlusModal(false);
+            (e.target as HTMLInputElement).value = '';
+          }
+        }}
+      />
+
+      <div style={{
+        fontSize: 14,
+        color: "var(--text-secondary)",
+        fontFamily: "var(--FONT_FAMILY)",
+        marginBottom: 33
+      }}>
+        새로운 연습곡을 추가할 수 있습니다.
+      </div>
+
+      <div style={{
+        display: "flex",
+        gap: 8,
+        width: "100%"
+      }}>
+        <button
+          onClick={() => setShowSongPlusModal(false)}
+          style={{
+            flex: 1,
+            height: 43,
+            background: "transparent",
+            border: "none",
+            fontSize: 16,
+            color: "var(--VERY_PERI)",
+            cursor: "pointer",
+            fontFamily: "var(--FONT_FAMILY)"
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={() => {
+            const input = document.querySelector('input[placeholder="여기에 곡명 입력"]') as HTMLInputElement;
+            if (input) {
+              addTrack(input.value);
+              setShowSongPlusModal(false);
+              input.value = '';
+            }
+          }}
+          style={{
+            flex: 1,
+            height: 43,
+            background: "var(--VERY_PERI)",
+            border: "none",
+            borderRadius: "var(--border-radius-small)",
+            fontSize: 16,
+            color: "var(--WHITE)",
+            cursor: "pointer",
+            fontFamily: "var(--FONT_FAMILY)"
+          }}
+        >
+          추가완료
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
 
       {showCalendarModal && (
         <TodayCalendarModal

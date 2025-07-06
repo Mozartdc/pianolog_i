@@ -105,7 +105,7 @@ export default function SettingScreen() {
       paddingBottom: 34,
       paddingTop: 44,
     }}>
-      <Header title="app setting" />
+      <Header title="app setting" color="var(--VIVA_MAGENTA)" />
 
       {/* 프로필 섹션 */}
       <div style={{
