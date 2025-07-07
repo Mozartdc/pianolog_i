@@ -12,12 +12,13 @@ import WeekCalendar from "../components/WeekCalendar";
 import './Home.css';
 
 // 실제 SVG/이미지 파일들 import
-import KeyboardIcon from "../assets/icons/keyboard.svg";
-import StaffIcon from "../assets/icons/staff.svg";
-import TrophyIcon from "../assets/icons/trophy.svg";
-import FlameIcon from "../assets/icons/flame.svg";
-import ExportIcon from "../assets/icons/export.svg";
-import PlayIcon from "../assets/icons/play.svg";
+// 수정할 내용
+import KeyboardIcon from "../assets/icons/keyboard.svg?react";
+import StaffIcon from "../assets/icons/staff.svg?react";
+import TrophyIcon from "../assets/icons/trophy.svg?react";
+import FlameIcon from "../assets/icons/flame.svg?react";
+import ExportIcon from "../assets/icons/export.svg?react";
+import PlayIcon from "../assets/icons/play.svg?react";
 
 // 타입 정의
 interface PracticeRecord {
@@ -660,7 +661,7 @@ function HomeScreen() {
         margin: "23px auto 0 auto", // 중앙 정렬
         boxSizing: "border-box"
       }}>
-        <img src={FlameIcon} alt="flame" width="25" height="25" />
+        <FlameIcon width={25} height={25} />
         <span style={{
           fontSize: 20,
           color: "var(--text-primary)", // ✅ CSS 변수 적용
@@ -674,6 +675,7 @@ function HomeScreen() {
       {/* Stats Cards */}
       <StatsCard
         icon={KeyboardIcon}
+        iconColor="var(--TURQUOISE)" // ✅ 이 줄을 추가해주세요
         iconAlt="keyboard"
         iconWidth={24}
         iconHeight={24}
@@ -686,6 +688,7 @@ function HomeScreen() {
 
       <StatsCard
         icon={StaffIcon}
+        iconColor="var(--TURQUOISE)" // ✅ 이 줄을 추가해주세요
         iconAlt="staff"
         iconWidth={24}
         iconHeight={24}
@@ -695,6 +698,7 @@ function HomeScreen() {
 
       <StatsCard
         icon={TrophyIcon}
+        iconColor="var(--TURQUOISE)" // ✅ 이 줄을 추가해주세요
         iconAlt="trophy"
         iconWidth={21}
         iconHeight={21}
@@ -719,21 +723,21 @@ function HomeScreen() {
           alignItems: "center",
           margin: "43px auto 0 auto"
         }}>
-          <button
-            onClick={startTimer}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              transition: "var(--transition-fast)" // ✅ 부드러운 호버 효과
-            }}
-          >
-            <img src={PlayIcon} alt="play" width="50" height="50" />
-          </button>
+<button
+  onClick={startTimer}
+  style={{
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    padding: 0,
+    transition: "var(--transition-fast)"
+  }}
+>
+  <PlayIcon style={{ color: "var(--TURQUOISE)" }} width={50} height={50} />
+</button>
           
           <span style={{
-            marginTop: 8,
+            marginTop: 1,
             fontSize: 14,
             color: "var(--TURQUOISE)", // ✅ CSS 변수 적용
             lineHeight: "32px",

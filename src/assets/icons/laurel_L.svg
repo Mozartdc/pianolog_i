@@ -1,6 +1,6 @@
-<svg width="16" height="22" viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M6.98902 5.5C6.98902 5.5 8.82102 5.434 9.66202 3.934C10.502 2.434 9.51202 1 9.51202 1C9.51202 1 7.67902 1.066 6.83802 2.566C5.99802 4.066 6.98802 5.5 6.98802 5.5M7.18302 5.5C5.72002 7.599 3.86602 12.475 8.15902 15.188C13.524 18.578 14.012 19.547 14.5 21" stroke="#F0C05A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M12.032 17.5C12.032 17.5 8.46002 16.136 10.502 12.5C10.502 12.5 14.584 13.864 12.032 17.5Z" stroke="#F0C05A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M12 18C12 18 9.63301 14.925 6.50001 18.105C6.50001 18.105 9.00801 21.682 12 18ZM5.49001 11.94C5.49001 11.94 5.88801 7.85403 1.53001 8.00403C1.53001 8.00403 0.894006 12.577 5.49001 11.94Z" stroke="#F0C05A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M5.51001 11.4999C5.51001 11.4999 5.11201 7.41495 9.47001 7.56495C9.47001 7.56495 10.106 12.1369 5.51001 11.4999Z" stroke="#F0C05A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<svg viewBox="0 0 16 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M6.98902 5.5C6.98902 5.5 8.82102 5.434 9.66202 3.934C10.502 2.434 9.51202 1 9.51202 1C9.51202 1 7.67902 1.066 6.83802 2.566C5.99802 4.066 6.98802 5.5 6.98802 5.5M7.18302 5.5C5.72002 7.599 3.86602 12.475 8.15902 15.188C13.524 18.578 14.012 19.547 14.5 21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12.032 17.5C12.032 17.5 8.46002 16.136 10.502 12.5C10.502 12.5 14.584 13.864 12.032 17.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M12 18C12 18 9.63301 14.925 6.50001 18.105C6.50001 18.105 9.00801 21.682 12 18ZM5.49001 11.94C5.49001 11.94 5.88801 7.85403 1.53001 8.00403C1.53001 8.00403 0.894006 12.577 5.49001 11.94Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M5.51001 11.4999C5.51001 11.4999 5.11201 7.41495 9.47001 7.56495C9.47001 7.56495 10.106 12.1369 5.51001 11.4999Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -1,21 +1,23 @@
 import React, { useState, useEffect, useRef } from "react";
-import StarIcon from "../assets/icons/star.svg";
-import LogoImg from "../utils/img/logo.png"; // 이 경로가 올바른지 확인해주세요.
+import StarIcon from "../assets/icons/star.svg?url";
+import LogoImg from "../utils/img/logo.png";
 
 interface ExportCardModalProps {
   isOpen: boolean;
-  nickname: string; // HomeScreen에서 받아온 닉네임
+  nickname: string;
   date: string;
   practiceTime: string;
-  avatar?: string; // HomeScreen에서 받아온 아바타
+  avatar?: string;
   onClose: () => void;
 }
 
+// ✅ [수정] generateExportImage 함수가 themeColors 객체를 인자로 받도록 변경
 export const generateExportImage = async (
-  nickname: string, // 이 값을 사용합니다.
+  nickname: string,
   date: string,
   practiceTime: string,
-  avatar?: string // 이 값을 사용합니다.
+  avatar: string | undefined,
+  themeColors: { [key: string]: string } // 현재 테마의 실제 색상 값들을 담을 객체
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     try {
@@ -26,8 +28,6 @@ export const generateExportImage = async (
       const height = 435;
       canvas.width = width * scale;
       canvas.height = height * scale;
-      canvas.style.width = width + 'px';
-      canvas.style.height = height + 'px';
 
       if (!ctx) {
         reject(new Error('Canvas context not available'));
@@ -38,62 +38,72 @@ export const generateExportImage = async (
       ctx.imageSmoothingQuality = 'high';
       ctx.scale(scale, scale);
 
-      ctx.fillStyle = '#FFFFFF';
+      // ✅ [수정] 하드코딩된 색상 대신 themeColors 객체의 값을 사용
+      ctx.fillStyle = themeColors.bgPrimary || '#FFFFFF';
       ctx.fillRect(0, 0, width, height);
 
       let finished = false;
       const safeResolve = (url: string) => {
-        if (!finished) {
-          finished = true;
-          resolve(url);
-        }
+        if (!finished) { finished = true; resolve(url); }
       };
       const safeReject = (err: any) => {
-        if (!finished) {
-          finished = true;
-          reject(err);
-        }
+        if (!finished) { finished = true; reject(err); }
       };
 
-      // 별 아이콘
-      const starImg = new window.Image();
-      starImg.onload = () => {
-        if (ctx) {
-          ctx.drawImage(starImg, 30, 30, 30, 30);
-          ctx.fillStyle = '#9E9C98';
-          ctx.font = '12px Pretendard';
-          ctx.textAlign = 'left';
-          ctx.fillText('오늘 피출 기록', 57, 45);
-        }
-        drawLogoAndContent();
-      };
-      starImg.onerror = () => {
-        if (ctx) {
-          ctx.fillStyle = '#9E9C98';
-          ctx.font = '12px Pretendard';
-          ctx.textAlign = 'left';
-          ctx.fillText('오늘 피출 기록', 30, 45);
-        }
-        drawLogoAndContent();
-      };
-      starImg.src = StarIcon as string;
+// 별 아이콘
+const starImg = new window.Image();
+starImg.onload = () => {
+  if (ctx) {
+    const iconX = 30;
+    const iconY = 30;
+    const iconSize = 20;
+    ctx.drawImage(starImg, iconX, iconY, iconSize, iconSize);
 
-      function drawLogoAndContent() {
+    ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
+    ctx.font = '12px Pretendard';
+    ctx.textAlign = 'left';
+    // ✅ 텍스트를 아이콘의 세로 중앙에 맞춥니다.
+    ctx.textBaseline = 'middle';
+    // ✅ 아이콘 오른쪽으로 3px 간격을 두고 텍스트를 그립니다.
+    ctx.fillText('오늘 피출 기록', iconX + iconSize + 3, iconY + iconSize / 2);
+  }
+  drawLogoAndContent();
+};
+// ✅ 로드 실패 시 에러를 명확히 알립니다.
+starImg.onerror = () => {
+  safeReject(new Error('StarIcon failed to load. Check the path and file.'));
+};
+starImg.src = StarIcon; // 'as string' 캐스팅은 이제 필요 없습니다.
+
+function drawLogoAndContent() {
         const logoImg = new window.Image();
         logoImg.onload = () => {
           if (ctx) {
-            ctx.drawImage(logoImg, 30, 365, 37, 39);
-            ctx.fillStyle = '#9E9C98';
+            const logoX = 30;
+            const logoWidth = 37;
+            const logoHeight = 24;
+            const text = 'digital piano gallery';
+            
+            // ✅ 두 요소를 정렬할 기준 Y 좌표를 계산합니다.
+            const verticalCenterY = 385;
+
+            // ✅ 로고를 그립니다. (Y 좌표를 중앙 기준으로 재조정)
+            ctx.drawImage(logoImg, logoX, verticalCenterY - (logoHeight / 2), logoWidth, logoHeight);
+            
+            ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
             ctx.font = '12px Pretendard';
             ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-            ctx.fillText('digital piano gallery', 72, 385);
+            // ✅ 텍스트의 세로 정렬 기준을 'middle'로 설정합니다.
+            ctx.textBaseline = 'middle';
+            // ✅ 로고 오른쪽으로 간격을 두고, 동일한 Y 좌표 기준으로 텍스트를 그립니다.
+            ctx.fillText(text, logoX + logoWidth + 5, verticalCenterY);
           }
           drawProfileAndTexts();
         };
         logoImg.onerror = () => {
           if (ctx) {
-            ctx.fillStyle = '#9E9C98';
+            // ... 로고 로드 실패 시의 로직은 동일 ...
+            ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
             ctx.font = '12px Pretendard';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
@@ -103,18 +113,14 @@ export const generateExportImage = async (
         };
         logoImg.src = LogoImg as string;
       }
-
       function drawProfileAndTexts() {
-        if (!ctx) {
-          safeReject(new Error('Canvas context not available'));
-          return;
-        }
+        if (!ctx) { safeReject(new Error('Canvas context not available')); return; }
         const profileX = 140;
         const profileY = 130;
         const profileSize = 80;
         const centerX = 180;
 
-        if (avatar) { // 프롭으로 받은 avatar 값을 사용
+        if (avatar) {
           const avatarImg = new window.Image();
           avatarImg.onload = () => {
             if (ctx) {
@@ -130,9 +136,7 @@ export const generateExportImage = async (
             }
             drawTexts();
           };
-          avatarImg.onerror = () => {
-            drawDefaultProfile();
-          };
+          avatarImg.onerror = () => { drawDefaultProfile(); };
           avatarImg.src = avatar;
         } else {
           drawDefaultProfile();
@@ -141,7 +145,7 @@ export const generateExportImage = async (
         function drawDefaultProfile() {
           if (ctx) {
             const radius = 24;
-            ctx.strokeStyle = '#E0E0E0';
+            ctx.strokeStyle = themeColors.borderLight || '#E0E0E0';
             ctx.lineWidth = 2;
             if (ctx.roundRect) {
               ctx.beginPath();
@@ -153,86 +157,65 @@ export const generateExportImage = async (
         }
 
         function drawTexts() {
-          if (!ctx) {
-            safeReject(new Error('Canvas context not available'));
-            return;
-          }
+          if (!ctx) { safeReject(new Error('Canvas context not available')); return; }
           ctx.textBaseline = 'alphabetic';
           const avatarBottom = profileY + profileSize;
-          // 닉네임 (프롭으로 받은 nickname 값을 사용)
           const nicknameY = avatarBottom + 24;
-          ctx.fillStyle = '#2D2D2A';
+          ctx.fillStyle = themeColors.textPrimary || '#2D2D2A';
           ctx.font = 'bold 24px Pretendard';
           ctx.textAlign = 'center';
-          ctx.fillText(nickname, centerX, nicknameY); // <-- 프롭 nickname 사용
+          ctx.fillText(nickname, centerX, nicknameY);
 
-          // 날짜
           const dateY = nicknameY + 22 + 16;
-          ctx.fillStyle = '#9E9C98';
+          ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
           ctx.font = '16px Pretendard';
           ctx.fillText(date, centerX, dateY);
 
-          const timeY = dateY + 6 + 48; // 시간 텍스트의 Y 위치
-
-          // 정규식을 사용하여 '시간'과 '분' 부분을 분리
+          const timeY = dateY + 6 + 48;
           const hourMatch = practiceTime.match(/(\d+)시간/);
           const minuteMatch = practiceTime.match(/(\d+)분/);
-
           let hourNum = hourMatch ? hourMatch[1] : null;
           let minNum = minuteMatch ? minuteMatch[1] : null;
-
           let totalWidth = 0;
           let currentX = 0;
-
-          // 각 부분의 너비를 미리 계산
           const tempFontBold = 'bold 48px Pretendard';
           const tempFontLight = '300 48px Pretendard';
 
-          // 총 너비 계산
           if (hourNum !== null) {
-            ctx.font = tempFontBold;
-            totalWidth += ctx.measureText(hourNum).width;
-            ctx.font = tempFontLight;
-            totalWidth += ctx.measureText('시간').width;
+            ctx.font = tempFontBold; totalWidth += ctx.measureText(hourNum).width;
+            ctx.font = tempFontLight; totalWidth += ctx.measureText('시간').width;
           }
           if (minNum !== null) {
-            if (hourNum !== null) totalWidth += 5; // '시간'과 '분' 사이에 약간의 간격 추가
-            ctx.font = tempFontBold;
-            totalWidth += ctx.measureText(minNum).width;
-            ctx.font = tempFontLight;
-            totalWidth += ctx.measureText('분').width;
+            if (hourNum !== null) totalWidth += 5;
+            ctx.font = tempFontBold; totalWidth += ctx.measureText(minNum).width;
+            ctx.font = tempFontLight; totalWidth += ctx.measureText('분').width;
           } else if (hourNum === null && minNum === null) {
-              // 아무것도 매칭되지 않는 경우, 기본값 또는 오류 처리
-              safeResolve(canvas.toDataURL('image/png', 1.0));
-              return;
+              safeResolve(canvas.toDataURL('image/png', 1.0)); return;
           }
 
-          currentX = centerX - (totalWidth / 2); // 중앙 정렬 시작점
+          currentX = centerX - (totalWidth / 2);
+          ctx.textAlign = 'left';
 
-          ctx.textAlign = 'left'; // 텍스트를 왼쪽에서부터 그리기 시작
-
-          // '시간' 부분 그리기
           if (hourNum !== null) {
-            ctx.fillStyle = '#45B5AA';
+            ctx.fillStyle = themeColors.turquoise || '#45B5AA';
             ctx.font = tempFontBold;
             ctx.fillText(hourNum, currentX, timeY);
             currentX += ctx.measureText(hourNum).width;
 
-            ctx.fillStyle = '#9E9C98';
+            ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
             ctx.font = tempFontLight;
             ctx.fillText('시간', currentX, timeY);
             currentX += ctx.measureText('시간').width;
           }
 
-          // '분' 부분 그리기
           if (minNum !== null) {
-            if (hourNum !== null) currentX += 5; // '시간'과 '분' 사이에 간격 추가
-            ctx.fillStyle = '#45B5AA';
+            if (hourNum !== null) currentX += 5;
+            ctx.fillStyle = themeColors.turquoise || '#45B5AA';
             ctx.font = tempFontBold;
             ctx.fillText(minNum, currentX, timeY);
             currentX += ctx.measureText(minNum).width;
 
-            ctx.fillStyle = '#9E9C98';
+            ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
             ctx.font = tempFontLight;
             ctx.fillText('분', currentX, timeY);
           }
@@ -245,7 +228,6 @@ export const generateExportImage = async (
   });
 };
 
-// 단일 다운로드 함수
 const downloadImage = (dataUrl: string, filename: string) => {
   const link = document.createElement('a');
   link.download = filename;
@@ -257,10 +239,10 @@ const downloadImage = (dataUrl: string, filename: string) => {
 
 export function ExportCardModal({ 
   isOpen, 
-  nickname, // HomeScreen에서 전달받은 nickname 프롭
+  nickname,
   date, 
   practiceTime, 
-  avatar, // HomeScreen에서 전달받은 avatar 프롭
+  avatar,
   onClose 
 }: ExportCardModalProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -280,8 +262,18 @@ export function ExportCardModal({
     if (hasExecutedRef.current !== true) return;
     setIsLoading(true);
     try {
-      // generateExportImage 호출 시, 함수에 전달받은 nickname과 avatar 프롭을 그대로 사용
-      const dataUrl = await generateExportImage(nickname, date, practiceTime, avatar); 
+      // ✅ [수정] 현재 테마의 CSS 변수 값을 읽어옵니다.
+      const rootStyle = getComputedStyle(document.documentElement);
+      const themeColors = {
+        bgPrimary: rootStyle.getPropertyValue('--bg-primary').trim(),
+        textPrimary: rootStyle.getPropertyValue('--text-primary').trim(),
+        textSecondary: rootStyle.getPropertyValue('--text-secondary').trim(),
+        turquoise: rootStyle.getPropertyValue('--TURQUOISE').trim(),
+        borderLight: rootStyle.getPropertyValue('--border-light').trim().split(' ')[2] || '#E0E0E0' // '0.5px solid #E0E0E0'에서 색상만 추출
+      };
+      
+      // ✅ [수정] 읽어온 색상 값을 generateExportImage 함수에 전달합니다.
+      const dataUrl = await generateExportImage(nickname, date, practiceTime, avatar, themeColors); 
       const filename = `피출기록_${date.replace(/\./g, '').replace(/\s/g, '_')}_${nickname}.png`;
       downloadImage(dataUrl, filename);
       setTimeout(() => {
@@ -299,22 +291,17 @@ export function ExportCardModal({
   return (
     <div
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
         background: "rgba(45, 45, 42, 0.3)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        display: "flex", alignItems: "center", justifyContent: "center",
         zIndex: 1000
       }}
       onClick={onClose}
     >
       <div
         style={{
-          background: "#ffffff",
+          // ✅ [수정] 모달 UI도 CSS 변수를 사용하도록 변경
+          background: "var(--bg-primary)",
           borderRadius: 8,
           padding: "40px",
           textAlign: "center",
@@ -324,20 +311,20 @@ export function ExportCardModal({
       >
         {isLoading ? (
           <div>
-            <div style={{ fontSize: 18, color: "#2d2d2a", marginBottom: 16 }}>
-              최고 화질 이미지 생성 중...
+            <div style={{ fontSize: 18, color: "var(--text-primary)", marginBottom: 16 }}>
+              이미지 생성 중...
             </div>
-            <div style={{ fontSize: 14, color: "#9e9c98" }}>
+            <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
               잠시만 기다려주세요
             </div>
           </div>
         ) : (
           <div>
-            <div style={{ fontSize: 18, color: "#45b5aa", marginBottom: 16 }}>
+            <div style={{ fontSize: 18, color: "var(--TURQUOISE)", marginBottom: 16 }}>
               다운로드 완료!
             </div>
-            <div style={{ fontSize: 14, color: "#9e9c98" }}>
-              최고 화질 피출 기록이 저장되었습니다
+            <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+              피출 카드가 저장되었습니다
             </div>
           </div>
         )}

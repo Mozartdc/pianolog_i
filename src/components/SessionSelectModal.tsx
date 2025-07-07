@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import HistoryIcon from "../assets/icons/History.svg";
+import HistoryIcon from "../assets/icons/History.svg?react"; // ✅ .svg?react로 임포트
 
 interface PracticeRecord {
   id: string;
@@ -42,6 +42,10 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
       alert('세션을 선택해주세요.');
     }
   };
+  
+  const commonFontStyle = {
+    fontFamily: "var(--FONT_FAMILY)"
+  };
 
   return (
     <div style={{
@@ -60,42 +64,37 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
     }}>
       <div style={{
         width: "100%",
-        background: "#fff",
+        background: "var(--bg-primary)", // ✅ 수정
+        color: "var(--text-primary)", // ✅ 기본 텍스트 색상
         borderRadius: 8,
         padding: "20px",
         display: "flex",
         flexDirection: "column",
         gap: 16,
         maxHeight: "80vh",
-        overflowY: "auto"
+        overflowY: "auto",
+        ...commonFontStyle
       }}>
         <div style={{
           fontSize: 16,
           fontWeight: 600,
-          color: "#2D2D2A",
           textAlign: "center",
-          fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif"
         }}>
           공유할 피출 기록을 선택해주세요.
         </div>
         
         <div style={{
           fontSize: 12,
-          color: "#9E9C98",
+          color: "var(--text-secondary)", // ✅ 수정
           textAlign: "center",
-          fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif"
         }}>
           오늘 날짜의 피출기록만 선택 가능합니다.
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {sessions.map((session, index) => {
-            const startTime = new Date(session.startTime).toLocaleTimeString('ko-KR', { 
-              hour: '2-digit', minute: '2-digit' 
-            });
-            const endTime = new Date(session.endTime).toLocaleTimeString('ko-KR', { 
-              hour: '2-digit', minute: '2-digit' 
-            });
+            const startTime = new Date(session.startTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+            const endTime = new Date(session.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
             const duration = `${Math.floor(session.practiceTime / 60)}시간 ${session.practiceTime % 60}분`;
             const timeRange = `${startTime}~${endTime}`;
             const isSelected = selectedSessionId === session.id;
@@ -106,30 +105,28 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
                 onClick={() => handleSessionClick(session)}
                 style={{
                   width: "100%",
-                  height: 32,
-                  padding: "6px 10px",
-                  border: `0.5px solid ${isSelected ? "#6667AB" : "#F0EAD6"}`,
+                  padding: "8px 10px",
+                  border: `1px solid ${isSelected ? "var(--VERY_PERI)" : "var(--text-secondary)"}`, // ✅ 수정
                   borderRadius: 5,
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: isSelected ? "#F8F8F8" : "#ffffff",
+                  background: isSelected ? "var(--bg-secondary)" : "var(--bg-primary)", // ✅ 수정
                   boxSizing: "border-box",
                   cursor: "pointer",
-                  position: 'relative'
+                  position: 'relative',
+                  color: "var(--text-primary)" // ✅ 아이콘 색상 상속
                 }}
               >
-                <img src={HistoryIcon} alt="history" width="16" height="16" />
+                <HistoryIcon style={{ width: 16, height: 16, flexShrink: 0, color: "var(--text-secondary)" }} />
                 <div style={{
                   fontSize: 14,
-                  color: "#2D2D2A",
                   flex: 1,
                   overflow: "hidden",
-                  fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
                   whiteSpace: "nowrap",
                   textOverflow: "ellipsis"
                 }}>
-                  <span style={{ fontSize: 12, color: "#9E9C98" }}>
+                  <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
                     session {index + 1}.
                   </span>{" "}
                   {duration} ({timeRange})
@@ -147,10 +144,10 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
               height: 43,
               background: "transparent",
               border: "none",
-              color: "#9E9C98",
+              color: "var(--text-secondary)", // ✅ 수정
               fontSize: 14,
               cursor: "pointer",
-              fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif"
+              ...commonFontStyle
             }}
           >
             Cancel
@@ -161,13 +158,13 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
             style={{
               width: 137,
               height: 43,
-              background: "#6667AB",
+              background: "var(--VERY_PERI)", // ✅ 수정
               border: "none",
               borderRadius: 8,
-              color: "#fff",
+              color: "var(--button-primary-text)", // ✅ 수정
               fontSize: 14,
               cursor: "pointer",
-              fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif"
+              ...commonFontStyle
             }}
           >
             확인

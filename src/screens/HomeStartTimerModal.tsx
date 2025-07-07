@@ -1,7 +1,7 @@
 import React from "react";
-import MetronomIcon from "../assets/icons/metronom.svg";
-import PauseIcon from "../assets/icons/pause.svg";
-import ReplayIcon from "../assets/icons/replay.svg";
+import MetronomIcon from "../assets/icons/metronom.svg?react";
+import PauseIcon from "../assets/icons/pause.svg?react";
+import ReplayIcon from "../assets/icons/replay.svg?react";
 
 interface HomeStartTimerModalProps {
   timerSeconds: number;
@@ -56,10 +56,10 @@ export function HomeStartTimerModal({
         padding: 16,
         gap: 16,
         pointerEvents: "auto"
-        // ✅ boxShadow: "var(--shadow-strong)" <-- 이 줄을 삭제했습니다.
       }}>
         {/* 메트로놈 아이콘 */}
         <button
+          aria-label="메트로놈"
           style={{
             width: 20,
             height: 20,
@@ -71,7 +71,8 @@ export function HomeStartTimerModal({
             justifyContent: "center"
           }}
         >
-          <img src={MetronomIcon} alt="metronom" width="20" height="20" />
+          {/* ✅ [수정] alt 속성 제거 */}
+          <MetronomIcon style={{ color: "var(--TURQUOISE)" }} width="20" height="20" />
         </button>
 
         {/* 중앙 상태 및 시간 표시 */}
@@ -99,43 +100,23 @@ export function HomeStartTimerModal({
           }}>
             {hours > 0 && (
               <>
-                <span style={{
-                  fontSize: 32,
-                  lineHeight: "32px",
-                  ...commonFontStyle
-                }}>
+                <span style={{ fontSize: 32, lineHeight: "32px", ...commonFontStyle }}>
                   {hours}
                 </span>
-                <span style={{
-                  fontSize: 20,
-                  lineHeight: "32px",
-                  ...commonFontStyle
-                }}>
+                <span style={{ fontSize: 20, lineHeight: "32px", ...commonFontStyle }}>
                   h
                 </span>
               </>
             )}
 
-            <span style={{
-              fontSize: 32,
-              lineHeight: "32px",
-              ...commonFontStyle
-            }}>
+            <span style={{ fontSize: 32, lineHeight: "32px", ...commonFontStyle }}>
               {minutes}
             </span>
-            <span style={{
-              fontSize: 20,
-              lineHeight: "32px",
-              ...commonFontStyle
-            }}>
+            <span style={{ fontSize: 20, lineHeight: "32px", ...commonFontStyle }}>
               m
             </span>
 
-            <span style={{
-              fontSize: 14,
-              lineHeight: "20px",
-              ...commonFontStyle
-            }}>
+            <span style={{ fontSize: 14, lineHeight: "20px", ...commonFontStyle }}>
               {seconds}s
             </span>
           </div>
@@ -144,6 +125,7 @@ export function HomeStartTimerModal({
         {/* 퍼즈/리플레이 버튼 */}
         <button
           onClick={isRunning ? onPause : onResume}
+          aria-label={isRunning ? "일시정지" : "다시시작"}
           style={{
             width: 20,
             height: 20,
@@ -155,12 +137,11 @@ export function HomeStartTimerModal({
             justifyContent: "center"
           }}
         >
-          <img
-            src={isRunning ? PauseIcon : ReplayIcon}
-            alt={isRunning ? "pause" : "replay"}
-            width="20"
-            height="20"
-          />
+          {/* ✅ [수정] alt 속성 제거 */}
+          {isRunning 
+            ? <PauseIcon style={{ color: "var(--text-primary)" }} width="20" height="20" />
+            : <ReplayIcon style={{ color: "var(--MIMOSA)" }} width="20" height="20" />
+          }
         </button>
 
         {/* 액션 버튼들 */}

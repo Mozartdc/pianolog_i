@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import EndingNoteIcon from "../assets/icons/endingnote.svg";
-import CloseIcon from "../assets/icons/close.svg";
+// ✅ [수정] 아이콘을 React 컴포넌트로 불러옵니다.
+import EndingNoteIcon from "../assets/icons/endingnote.svg?react";
+import CloseIcon from "../assets/icons/close.svg?react";
 
 interface HomeStopModalProps {
   isOpen: boolean;
@@ -19,7 +20,6 @@ export function HomeStopModal({
 }: HomeStopModalProps) {
   const [practiceNote, setPracticeNote] = useState("");
 
-  // ✅ timerState에서 메모 불러오기
   useEffect(() => {
     if (isOpen) {
       const timerState = localStorage.getItem('timerState');
@@ -34,7 +34,6 @@ export function HomeStopModal({
     }
   }, [isOpen]);
 
-  // ✅ 메모 변경 시 timerState에 실시간 저장
   useEffect(() => {
     const timerState = localStorage.getItem('timerState');
     if (timerState) {
@@ -49,14 +48,12 @@ export function HomeStopModal({
   }, [practiceNote]);
 
   const commonFontStyle = {
-    fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
+    fontFamily: "var(--FONT_FAMILY)",
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const
   };
 
   const handleComplete = () => {
-    // ✅ timerState에 메모가 이미 저장되어 있으므로 추가 저장 불필요
-    // HomeScreen의 handlePracticeComplete에서 처리됨
     onComplete();
   };
 
@@ -75,31 +72,31 @@ export function HomeStopModal({
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1000,
-        padding: "40px 20px", // ✅ 상하 여백 증가
-        WebkitBackfaceVisibility: "hidden", // ✅ iOS 최적화
-        transform: "translateZ(0)" // ✅ 하드웨어 가속
+        padding: "40px 20px",
+        WebkitBackfaceVisibility: "hidden",
+        transform: "translateZ(0)"
       }}
       onClick={onClose}
     >
       <div
         style={{
-          background: "var(--bg-primary)", // ✅ CSS 변수 적용
-          borderRadius: 8, // ✅ CSS 변수 대신 고정값 8px 사용 (선명도 개선)
-          width: "100%", // ✅ 반응형으로 변경
+          background: "var(--bg-primary)",
+          borderRadius: 8,
+          width: "100%",
           maxWidth: 345,
-          height: "auto", // ✅ 320px → auto로 변경 (잘림 해결)
-          minHeight: 320,  // ✅ 최소 높이만 보장
-          maxHeight: "80vh", // ✅ 여유 공간 확보
-          boxShadow: "var(--shadow-medium)", // ✅ CSS 변수 적용
+          height: "auto",
+          minHeight: 320,
+          maxHeight: "80vh",
+          boxShadow: "var(--shadow-medium)",
           display: "flex",
           flexDirection: "column",
-          padding: "32px 20px 20px 20px", // ✅ 상단 패딩 증가
-          boxSizing: "border-box", // ✅ 박스 사이징 추가
-          position: "relative", // ✅ X 버튼 위치를 위해 추가
-          overflowY: "auto", // ✅ 내용이 넘치면 스크롤
-          border: "1px solid rgba(0, 0, 0, 0.1)", // ✅ 명확한 테두리 추가
-          transform: "translateZ(0)", // ✅ 하드웨어 가속으로 선명도 개선
-          WebkitBackfaceVisibility: "hidden", // ✅ iOS Safari 렌더링 최적화
+          padding: "32px 20px 20px 20px",
+          boxSizing: "border-box",
+          position: "relative",
+          overflowY: "auto",
+          border: "1px solid rgba(0, 0, 0, 0.1)",
+          transform: "translateZ(0)",
+          WebkitBackfaceVisibility: "hidden",
           ...commonFontStyle
         }}
         onClick={e => e.stopPropagation()}
@@ -107,10 +104,11 @@ export function HomeStopModal({
         {/* 우측 상단 X 버튼 */}
         <button
           onClick={onClose}
+          aria-label="닫기"
           style={{
             position: "absolute",
-            top: 16, // ✅ 아래로 이동
-            right: 16, // ✅ 안쪽으로 이동
+            top: 16,
+            right: 16,
             width: 20,
             height: 20,
             background: "none",
@@ -122,7 +120,8 @@ export function HomeStopModal({
             padding: 0
           }}
         >
-          <img src={CloseIcon} alt="close" width="20" height="20" />
+          {/* ✅ [수정] <img>를 컴포넌트로 바꾸고 색상 지정 */}
+          <CloseIcon style={{ color: "var(--text-secondary)" }} width="20" height="20" />
         </button>
 
         {/* 제목 + 아이콘 */}
@@ -132,19 +131,19 @@ export function HomeStopModal({
           justifyContent: "center",
           gap: 8,
           marginBottom: 24,
-          marginTop: 4, // ✅ 위쪽 여백 줄임
+          marginTop: 4,
           ...commonFontStyle
         }}>
-          <img 
-            src={EndingNoteIcon} 
-            alt="ending note" 
+          {/* ✅ [수정] <img>를 컴포넌트로 바꾸고 색상 지정 */}
+          <EndingNoteIcon 
+            style={{ color: "var(--TURQUOISE)" }}
             width="24" 
             height="24"
           />
           <span style={{
             fontSize: 20,
             fontWeight: 600,
-            color: "var(--text-primary)" // ✅ CSS 변수 적용
+            color: "var(--text-primary)"
           }}>
             오늘 {practiceTime} 연습
           </span>
@@ -161,12 +160,12 @@ export function HomeStopModal({
             style={{
               width: "100%",
               height: 150,
-              border: "var(--border-light)", // ✅ CSS 변수 적용
-              borderRadius: "var(--border-radius-medium)", // ✅ CSS 변수 적용
+              border: "var(--border-light)",
+              borderRadius: "var(--border-radius-medium)",
               padding: 16,
-              fontSize: 16, // ✅ 14px → 16px (iOS 확대 버그 해결)
-              color: "var(--text-primary)", // ✅ CSS 변수 적용
-              background: "var(--bg-primary)", // ✅ CSS 변수 적용
+              fontSize: 16,
+              color: "var(--text-primary)",
+              background: "var(--bg-primary)",
               resize: "none",
               outline: "none",
               boxSizing: "border-box",
@@ -186,14 +185,14 @@ export function HomeStopModal({
             style={{
               width: 140,
               height: 35,
-              borderRadius: "var(--border-radius-small)", // ✅ CSS 변수 적용
+              borderRadius: "var(--border-radius-small)",
               border: "none",
-              background: "var(--VERY_PERI)", // ✅ CSS 변수 적용
-              color: "var(--WHITE)", // ✅ CSS 변수 적용
+              background: "var(--TURQUOISE)",
+              color: "var(--button-primary-text)", // ✅ --WHITE 대신 의미적 변수 사용
               fontSize: 16,
               fontWeight: 600,
               cursor: "pointer",
-              transition: "var(--transition-fast)", // ✅ CSS 변수 적용
+              transition: "var(--transition-fast)",
               ...commonFontStyle
             }}
           >
@@ -204,14 +203,14 @@ export function HomeStopModal({
             style={{
               width: 140,
               height: 35,
-              borderRadius: "var(--border-radius-small)", // ✅ CSS 변수 적용
+              borderRadius: "var(--border-radius-small)",
               border: "none",
-              background: "var(--text-secondary)", // ✅ CSS 변수 적용
-              color: "var(--WHITE)", // ✅ CSS 변수 적용
+              background: "var(--text-secondary)",
+              color: "var(--text-primary)", // ✅ --WHITE 대신 의미적 변수 사용
               fontSize: 16,
               fontWeight: 600,
               cursor: "pointer",
-              transition: "var(--transition-fast)", // ✅ CSS 변수 적용
+              transition: "var(--transition-fast)",
               ...commonFontStyle
             }}
           >

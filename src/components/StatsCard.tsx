@@ -1,20 +1,20 @@
 import React, { useState } from "react";
 import { generateExportImage } from "../screens/ExportCardModal";
-import SessionSelectModal from "./SessionSelectModal"; // 사용자님의 SessionSelectModal 임포트
+import SessionSelectModal from "./SessionSelectModal";
 
 interface StatsCardProps {
-  icon: string;
+  icon: React.ElementType;
   iconAlt: string;
   iconWidth: number;
   iconHeight: number;
   title: string;
   value: string;
+  iconColor?: string;
   onClick?: () => void;
   showExportIcon?: boolean;
-  exportIcon?: string;
+  exportIcon?: React.ElementType;
 }
 
-// PracticeRecord 타입 정의 (SessionSelectModal과 일관성 유지)
 interface PracticeRecord {
   id: string;
   date: string;
@@ -26,18 +26,19 @@ interface PracticeRecord {
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
-  icon,
+  icon: Icon,
   iconAlt,
   iconWidth,
   iconHeight,
   title,
   value,
+  iconColor,
   onClick,
   showExportIcon = false,
-  exportIcon
+  exportIcon: ExportIcon
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림/닫힘 상태
-  const [sessionsToExport, setSessionsToExport] = useState<PracticeRecord[]>([]); // 모달에 전달할 세션 목록
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sessionsToExport, setSessionsToExport] = useState<PracticeRecord[]>([]);
 
   const commonFontStyle = {
     fontFamily: "var(--FONT_FAMILY)",
@@ -45,89 +46,78 @@ const StatsCard: React.FC<StatsCardProps> = ({
     MozOsxFontSmoothing: "grayscale" as const
   };
 
-  /**
-   * 선택된 세션을 실제로 익스포트하는 함수
-   * @param session 익스포트할 PracticeRecord 객체
-   */
-  const exportSelectedSession = async (session: PracticeRecord) => {
-    try {
-      const nickname = localStorage.getItem("nickname") || "피출러";
-      const avatar = localStorage.getItem("avatar") || "";
-      const sessionDate = new Date(session.startTime); // Date 객체 사용
+const exportSelectedSession = async (session: PracticeRecord) => {
+  try {
+    const nickname = localStorage.getItem("nickname") || "피출러";
+    const avatar = localStorage.getItem("avatar") || "";
+    const sessionDate = new Date(session.startTime);
 
-      // 날짜를 'YYMMDD 요일' 형식으로 포맷 (예: '240706 토')
-      const dateOptions: Intl.DateTimeFormatOptions = {
-        year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short'
-      };
-      const dateStr = new Intl.DateTimeFormat('ko-KR', dateOptions)
-                         .format(sessionDate)
-                         .replace(/\./g, '') // 점 제거 (예: 24.07.06 -> 240706)
-                         .replace(/ /g, '.') // 공백을 점으로 변경 (예: 240706 토 -> 240706.토)
-                         .toUpperCase(); // 요일을 대문자로
+    // 현재 테마의 CSS 변수 값을 읽어옵니다.
+    const rootStyle = getComputedStyle(document.documentElement);
+    const themeColors = {
+      bgPrimary: rootStyle.getPropertyValue('--bg-primary').trim(),
+      textPrimary: rootStyle.getPropertyValue('--text-primary').trim(),
+      textSecondary: rootStyle.getPropertyValue('--text-secondary').trim(),
+      turquoise: rootStyle.getPropertyValue('--TURQUOISE').trim(),
+      borderLight: rootStyle.getPropertyValue('--border-light').trim().split(' ')[2] || '#E0E0E0'
+    };
 
-      const hours = Math.floor(session.practiceTime / 60);
-      const minutes = session.practiceTime % 60;
-      
-      // --- 디버깅을 위한 console.log 추가 ---
-      console.log("--- 익스포트 시간 디버깅 시작 ---");
-      console.log("session.practiceTime (분 단위):", session.practiceTime);
-      console.log("계산된 시간 (hours):", hours);
-      console.log("계산된 분 (minutes):", minutes);
-      // --- 디버깅 console.log 끝 ---
+    const dateOptions: Intl.DateTimeFormatOptions = {
+      year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short'
+    };
+    const dateStr = new Intl.DateTimeFormat('ko-KR', dateOptions)
+                       .format(sessionDate)
+                       .replace(/\./g, '')
+                       .replace(/ /g, '.')
+                       .toUpperCase();
 
-      // 시간을 포맷하는 로직 수정:
-      let practiceTimeFormatted: string;
-      if (hours > 0 && minutes > 0) {
-        practiceTimeFormatted = `${hours}시간 ${minutes}분`;
-      } else if (hours > 0) { // 분이 0인 경우 (예: 1시간 0분)
-        practiceTimeFormatted = `${hours}시간`;
-      } else { // 1시간 미만인 경우 (분만 있음)
-        practiceTimeFormatted = `${minutes}분`;
-      }
-
-      console.log("최종 포맷된 시간:", practiceTimeFormatted);
-      console.log("--- 익스포트 시간 디버깅 끝 ---");
-      
-      const imageDataUrl = await generateExportImage(nickname, dateStr, practiceTimeFormatted, avatar);
-      
-      const link = document.createElement("a");
-      // 다운로드 파일명 생성: '피출러_연습기록_YYYYMMDD_HHMM.png'
-      const filenameDate = new Date(session.startTime).toISOString().slice(0, 10).replace(/-/g, ''); //YYYYMMDD
-      const filenameTime = new Date(session.startTime).toTimeString().slice(0, 5).replace(/:/g, ''); //HHMM
-      link.download = `피출러_연습기록_${filenameDate}_${filenameTime}.png`;
-      link.href = imageDataUrl;
-      link.click();
-      
-      alert("익스포트가 완료되었습니다!");
-      setIsModalOpen(false); // 익스포트 완료 후 모달 닫기
-    } catch (err) {
-      console.error("익스포트 실패:", err);
-      alert("익스포트에 실패했습니다.");
+    const hours = Math.floor(session.practiceTime / 60);
+    const minutes = session.practiceTime % 60;
+    
+    let practiceTimeFormatted: string;
+    if (hours > 0 && minutes > 0) {
+      practiceTimeFormatted = `${hours}시간 ${minutes}분`;
+    } else if (hours > 0) {
+      practiceTimeFormatted = `${hours}시간`;
+    } else {
+      practiceTimeFormatted = `${minutes}분`;
     }
-  };
 
-  /**
-   * 익스포트 아이콘 클릭 시 실행되는 핸들러 (모달을 열기 전 데이터 준비)
-   * @param e 마우스 이벤트 객체
-   */
+    // generateExportImage 호출 시 themeColors 인자를 추가합니다.
+    const imageDataUrl = await generateExportImage(nickname, dateStr, practiceTimeFormatted, avatar, themeColors);
+    
+    const link = document.createElement("a");
+    const filenameDate = new Date(session.startTime).toISOString().slice(0, 10).replace(/-/g, '');
+    const filenameTime = new Date(session.startTime).toTimeString().slice(0, 5).replace(/:/g, '');
+    link.download = `피출러_연습기록_${filenameDate}_${filenameTime}.png`;
+    link.href = imageDataUrl;
+    link.click();
+    
+    alert("익스포트가 완료되었습니다!");
+    setIsModalOpen(false);
+  } catch (err) {
+    console.error("익스포트 실패:", err);
+    alert("익스포트에 실패했습니다.");
+  }
+};
+
   const handleExportClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 카드 클릭 이벤트와 겹치지 않도록 방지
+    e.stopPropagation();
     try {
       const practiceRecords: PracticeRecord[] = JSON.parse(localStorage.getItem("practiceRecords") || "[]");
       const todayKey = new Date().toISOString().slice(0, 10);
-      
-      // 오늘 날짜의 연습 기록 중 실제 연습 시간(practiceTime)이 0보다 큰 세션만 필터링
+
       const todaySessions = practiceRecords.filter(
         (r: PracticeRecord) => r.date === todayKey && r.practiceTime > 0
       );
-      
+
       if (todaySessions.length === 0) {
         alert("오늘은 아직 연습 기록이 없습니다.");
         return;
       }
-      
-      setSessionsToExport(todaySessions); // 모달에 전달할 세션 목록 설정
-      setIsModalOpen(true); // 세션 선택 모달 열기
+
+      setSessionsToExport(todaySessions);
+      setIsModalOpen(true);
 
     } catch (err) {
       console.error("익스포트 데이터 로딩 실패:", err);
@@ -156,7 +146,10 @@ const StatsCard: React.FC<StatsCardProps> = ({
         }}
         onClick={onClick}
       >
-        <img src={icon} alt={iconAlt} width={iconWidth} height={iconHeight} />
+        <div style={{ color: iconColor || "var(--text-secondary)" }}>
+          <Icon alt={iconAlt} width={iconWidth} height={iconHeight} />
+        </div>
+
         <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
           <span style={{
             fontSize: 14,
@@ -177,34 +170,35 @@ const StatsCard: React.FC<StatsCardProps> = ({
             {value}
           </span>
         </div>
-        {showExportIcon && exportIcon && (
-          <img
-            src={exportIcon}
+        
+        {/* ✅ [수정] ExportIcon 컴포넌트에 onClick을 직접 전달합니다. */}
+        {showExportIcon && ExportIcon && (
+          <ExportIcon
             alt="export"
             width="16"
             height="20"
-            onClick={handleExportClick} // 모달을 여는 핸들러 연결
+            onClick={handleExportClick} 
             style={{
+              color: "var(--text-secondary)",
               cursor: "pointer",
               transition: "var(--transition-fast)",
               opacity: 0.8
             }}
-            onMouseOver={(e) => {
+            onMouseOver={(e: React.MouseEvent<SVGSVGElement>) => {
               e.currentTarget.style.opacity = "1";
             }}
-            onMouseOut={(e) => {
+            onMouseOut={(e: React.MouseEvent<SVGSVGElement>) => {
               e.currentTarget.style.opacity = "0.8";
             }}
           />
         )}
       </div>
 
-      {/* SessionSelectModal 렌더링 */}
       <SessionSelectModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        sessions={sessionsToExport} // 모달에 필터링된 세션 목록 전달
-        onSelectSession={exportSelectedSession} // 사용자님의 모달이 필요로 하는 프롭 전달
+        sessions={sessionsToExport}
+        onSelectSession={exportSelectedSession}
       />
     </>
   );

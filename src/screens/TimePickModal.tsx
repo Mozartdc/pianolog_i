@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import dayjs, { Dayjs } from "dayjs";
-import TimeUpIcon from "../assets/icons/timeup.svg";
-import TimeDownIcon from "../assets/icons/timedown.svg";
+// ✅ [수정] 아이콘을 React 컴포넌트로 불러옵니다.
+import TimeUpIcon from "../assets/icons/timeup.svg?react";
+import TimeDownIcon from "../assets/icons/timedown.svg?react";
 
 interface TimePickModalProps {
   isOpen: boolean;
@@ -65,7 +66,6 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration, actual
       setError("피퇴 시간은 현재 시간보다 이전이거나 같아야 합니다.");
       return;
     }
-    // ✅ 'startDateTime'을 'startTime'으로 수정했습니다.
     if (startTime.isAfter(nowMoment.add(1, 'minute'))) {
         setError("피출 시간은 현재 시간보다 이전이거나 같아야 합니다.");
         return;
@@ -75,44 +75,34 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration, actual
 
   if (!isOpen) return null;
 
+  const iconButtonStyle = {
+    background: "none",
+    border: "none",
+    cursor: "pointer",
+    color: "var(--text-secondary)" // ✅ 아이콘 색상을 버튼에 지정
+  };
+
   return (
     <div
       style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
+        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
         background: "rgba(0, 0, 0, 0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        padding: "20px"
+        display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 1000, padding: "20px"
       }}
       onClick={onClose}
     >
       <div
         style={{
-          background: "var(--bg-primary)",
-          color: "var(--text-primary)",
-          borderRadius: 20,
-          padding: 24,
-          width: "90%",
-          maxWidth: 345,
+          background: "var(--bg-primary)", color: "var(--text-primary)",
+          borderRadius: 20, padding: 24, width: "90%", maxWidth: 345,
           boxShadow: "0 8px 32px rgba(0, 0, 0, 0.2)",
-          maxHeight: "80vh",
-          overflow: "auto",
+          maxHeight: "80vh", overflow: "auto",
           ...commonFontStyle
         }}
         onClick={e => e.stopPropagation()}
       >
-        <h3 style={{
-          fontSize: 18,
-          fontWeight: 600,
-          textAlign: "center",
-          marginBottom: 24
-        }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, textAlign: "center", marginBottom: 24 }}>
           연습 시간 수정
         </h3>
 
@@ -124,15 +114,15 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration, actual
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                <button onClick={() => adjustTime('start', 'hour', 'up')} style={{ background: "none", border: "none", cursor: "pointer" }}><img src={TimeUpIcon} alt="up" width="16" height="16" /></button>
+                <button onClick={() => adjustTime('start', 'hour', 'up')} style={iconButtonStyle}><TimeUpIcon width="16" height="16" /></button>
                 <span style={{ fontSize: 20, fontWeight: 600, minWidth: 30, textAlign: "center" }}>{String(startTime.hour()).padStart(2, '0')}</span>
-                <button onClick={() => adjustTime('start', 'hour', 'down')} style={{ background: "none", border: "none", cursor: "pointer" }}><img src={TimeDownIcon} alt="down" width="16" height="16" /></button>
+                <button onClick={() => adjustTime('start', 'hour', 'down')} style={iconButtonStyle}><TimeDownIcon width="16" height="16" /></button>
               </div>
               <span style={{ fontSize: 20 }}>:</span>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                <button onClick={() => adjustTime('start', 'minute', 'up')} style={{ background: "none", border: "none", cursor: "pointer" }}><img src={TimeUpIcon} alt="up" width="16" height="16" /></button>
+                <button onClick={() => adjustTime('start', 'minute', 'up')} style={iconButtonStyle}><TimeUpIcon width="16" height="16" /></button>
                 <span style={{ fontSize: 20, fontWeight: 600, minWidth: 30, textAlign: "center" }}>{String(startTime.minute()).padStart(2, '0')}</span>
-                <button onClick={() => adjustTime('start', 'minute', 'down')} style={{ background: "none", border: "none", cursor: "pointer" }}><img src={TimeDownIcon} alt="down" width="16" height="16" /></button>
+                <button onClick={() => adjustTime('start', 'minute', 'down')} style={iconButtonStyle}><TimeDownIcon width="16" height="16" /></button>
               </div>
             </div>
           </div>
@@ -143,15 +133,15 @@ export function TimePickModal({ isOpen, onClose, onSave, currentDuration, actual
             </div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12 }}>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                <button onClick={() => adjustTime('end', 'hour', 'up')} style={{ background: "none", border: "none", cursor: "pointer" }}><img src={TimeUpIcon} alt="up" width="16" height="16" /></button>
+                <button onClick={() => adjustTime('end', 'hour', 'up')} style={iconButtonStyle}><TimeUpIcon width="16" height="16" /></button>
                 <span style={{ fontSize: 20, fontWeight: 600, minWidth: 30, textAlign: "center" }}>{String(endTime.hour()).padStart(2, '0')}</span>
-                <button onClick={() => adjustTime('end', 'hour', 'down')} style={{ background: "none", border: "none", cursor: "pointer" }}><img src={TimeDownIcon} alt="down" width="16" height="16" /></button>
+                <button onClick={() => adjustTime('end', 'hour', 'down')} style={iconButtonStyle}><TimeDownIcon width="16" height="16" /></button>
               </div>
               <span style={{ fontSize: 20 }}>:</span>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-                <button onClick={() => adjustTime('end', 'minute', 'up')} style={{ background: "none", border: "none", cursor: "pointer" }}><img src={TimeUpIcon} alt="up" width="16" height="16" /></button>
+                <button onClick={() => adjustTime('end', 'minute', 'up')} style={iconButtonStyle}><TimeUpIcon width="16" height="16" /></button>
                 <span style={{ fontSize: 20, fontWeight: 600, minWidth: 30, textAlign: "center" }}>{String(endTime.minute()).padStart(2, '0')}</span>
-                <button onClick={() => adjustTime('end', 'minute', 'down')} style={{ background: "none", border: "none", cursor: "pointer" }}><img src={TimeDownIcon} alt="down" width="16" height="16" /></button>
+                <button onClick={() => adjustTime('end', 'minute', 'down')} style={iconButtonStyle}><TimeDownIcon width="16" height="16" /></button>
               </div>
             </div>
           </div>
