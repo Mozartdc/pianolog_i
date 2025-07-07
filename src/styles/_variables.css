@@ -23,7 +23,9 @@
   --bg-secondary: var(--PASTEL_TURQUOISE);
   --button-primary-bg: var(--TURQUOISE);
   --button-primary-text: var(--WHITE);
+  --button-secondary-bg: #F3D6CB;
   --error-color: var(--VIVA_MAGENTA);
+  --error-bg: #ffeaea; /* ✅ 추가 */
   --info-bg: #f9f9f9;
 
   /* 그림자 시스템 */
@@ -48,11 +50,11 @@
 }
 
 /* 다크 테마 (<html> 태그에 data-theme="dark" 속성이 있을 때 적용) */
-html[data-theme="dark"] { /* <-- 여기를 body.dark-mode에서 html[data-theme="dark"]로 변경 */
+html[data-theme="dark"] {
   /* 기본 색상 오버라이드 */
-  --WHITE: #1A1A1A; /* 다크 모드에서의 '흰색' (어두운 배경) */
-  --BLACK: #E0E0E0; /* 다크 모드에서의 '검은색' (밝은 텍스트) */
-  --TURQUOISE: #308077; /* 다크 모드에 맞춰 조정 */
+  --WHITE: #1A1A1A;
+  --BLACK: #E0E0E0;
+  --TURQUOISE: #308077;
   --PASTEL_TURQUOISE: #3A4B4A;
   --VERY_PERI: #909BB0;
   --DARK_GRAY: #777777;
@@ -61,13 +63,15 @@ html[data-theme="dark"] { /* <-- 여기를 body.dark-mode에서 html[data-theme=
   --TURQUOISE_GRADIENT: linear-gradient(to right, #308077, #40A097);
 
   /* 의미적 색상 오버라이드 */
-  --text-primary: var(--BLACK); /* 오버라이드된 BLACK 사용 */
+  --text-primary: var(--BLACK);
   --text-secondary: var(--DARK_GRAY);
-  --bg-primary: var(--WHITE); /* 오버라이드된 WHITE 사용 */
+  --bg-primary: var(--WHITE);
   --bg-secondary: #2C2C2C;
   --button-primary-bg: var(--TURQUOISE);
-  --button-primary-text: var(--BLACK); /* 다크모드에서 버튼 텍스트는 밝은색으로 */
+  --button-primary-text: var(--BLACK);
+  --button-secondary-bg: #3a3a3c;
   --error-color: var(--VIVA_MAGENTA);
+  --error-bg: rgba(187, 38, 73, 0.2); /* ✅ 추가 */
   --info-bg: #444444;
 
   /* 다크모드 그림자 시스템 */

@@ -59,7 +59,7 @@ export const generateExportImage = async (
       const starImg = new window.Image();
       starImg.onload = () => {
         if (ctx) {
-          ctx.drawImage(starImg, 30, 30, 24, 24);
+          ctx.drawImage(starImg, 30, 30, 30, 30);
           ctx.fillStyle = '#9E9C98';
           ctx.font = '12px Pretendard';
           ctx.textAlign = 'left';

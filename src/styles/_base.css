@@ -5,31 +5,30 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* 모든 요소가 부모 너비를 넘지 않도록 안전장치 추가 */
+  max-width: 100%; 
 }
 
-/* 통일된 폰트 설정 */
-html, body, #root {
-  font-family: var(--FONT_FAMILY); /* ✅ CSS 변수 사용 */
+/* ✅ 1. HTML: 브라우저 창의 가장 기본 배경. 여기에 테마 색상을 적용합니다. */
+html {
+  font-family: var(--FONT_FAMILY);
+  color: var(--text-primary);
+  background: var(--bg-primary); /* 테마 배경색을 여기에 직접 적용 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: 'kern' 1;
-  text-rendering: optimizeLegibility;
-  color: var(--text-primary);
-  background: var(--bg-primary);
 }
 
+/* ✅ 2. BODY: 실제 콘텐츠가 담기는 영역. 높이를 100% 채우고 가로 스크롤을 막습니다. */
 body {
-  margin: 0;
-  padding: 0;
   min-height: 100vh;
-  overflow-x: hidden; /* ✅ 가로 스크롤 완전 차단 */
-  width: 100%; /* ✅ 명시적 너비 설정 */
+  width: 100%;
+  overflow-x: hidden;
 }
 
+/* ✅ 3. #root: React 앱이 마운트되는 지점. 높이를 100% 채웁니다. */
 #root {
   min-height: 100vh;
-  width: 100%; /* ✅ 명시적 너비 설정 */
-  overflow-x: hidden; /* ✅ 가로 스크롤 완전 차단 */
+  width: 100%;
 }
 
 /* 브라우저별 폰트 렌더링 최적화 */
@@ -39,5 +38,3 @@ body {
     -webkit-text-stroke: 0.01em transparent;
   }
 }
-
-/* ✅ Variable 폰트 설정 제거 (문제 원인 제거) */

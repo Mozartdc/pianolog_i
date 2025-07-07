@@ -12,13 +12,13 @@ interface HomeStartTimerModalProps {
   onEdit: () => void;
 }
 
-export function HomeStartTimerModal({ 
-  timerSeconds, 
-  isRunning, 
-  onPause, 
-  onResume, 
-  onComplete, 
-  onEdit 
+export function HomeStartTimerModal({
+  timerSeconds,
+  isRunning,
+  onPause,
+  onResume,
+  onComplete,
+  onEdit
 }: HomeStartTimerModalProps) {
   const hours = Math.floor(timerSeconds / 3600);
   const minutes = Math.floor((timerSeconds % 3600) / 60);
@@ -45,10 +45,10 @@ export function HomeStartTimerModal({
     }}>
       <div style={{
         width: "calc(100% - 32px)",
-        margin: "0 auto",       // 중앙 정렬 추가
+        margin: "0 auto",
         height: 97,
-        background: "#ffffff",
-        border: "0.5px solid #45b5aa",
+        background: "var(--bg-primary)",
+        border: "0.5px solid var(--TURQUOISE)",
         borderRadius: 16,
         display: "flex",
         alignItems: "center",
@@ -56,6 +56,7 @@ export function HomeStartTimerModal({
         padding: 16,
         gap: 16,
         pointerEvents: "auto"
+        // ✅ boxShadow: "var(--shadow-strong)" <-- 이 줄을 삭제했습니다.
       }}>
         {/* 메트로놈 아이콘 */}
         <button
@@ -83,23 +84,23 @@ export function HomeStartTimerModal({
         }}>
           <span style={{
             fontSize: 14,
-            color: "#bb2649",
+            color: "var(--VIVA_MAGENTA)",
             lineHeight: "20px",
             ...commonFontStyle
           }}>
             {isRunning ? "피출중" : "피 휴"}
           </span>
-          
+
           <div style={{
             display: "flex",
             alignItems: "baseline",
-            gap: 4
+            gap: 4,
+            color: "var(--text-primary)"
           }}>
             {hours > 0 && (
               <>
                 <span style={{
                   fontSize: 32,
-                  color: "#2d2d2a",
                   lineHeight: "32px",
                   ...commonFontStyle
                 }}>
@@ -107,7 +108,6 @@ export function HomeStartTimerModal({
                 </span>
                 <span style={{
                   fontSize: 20,
-                  color: "#2d2d2a",
                   lineHeight: "32px",
                   ...commonFontStyle
                 }}>
@@ -115,10 +115,9 @@ export function HomeStartTimerModal({
                 </span>
               </>
             )}
-            
+
             <span style={{
               fontSize: 32,
-              color: "#2d2d2a",
               lineHeight: "32px",
               ...commonFontStyle
             }}>
@@ -126,16 +125,14 @@ export function HomeStartTimerModal({
             </span>
             <span style={{
               fontSize: 20,
-              color: "#2d2d2a",
               lineHeight: "32px",
               ...commonFontStyle
             }}>
               m
             </span>
-            
+
             <span style={{
               fontSize: 14,
-              color: "#2d2d2a",
               lineHeight: "20px",
               ...commonFontStyle
             }}>
@@ -158,11 +155,11 @@ export function HomeStartTimerModal({
             justifyContent: "center"
           }}
         >
-          <img 
-            src={isRunning ? PauseIcon : ReplayIcon} 
-            alt={isRunning ? "pause" : "replay"} 
-            width="20" 
-            height="20" 
+          <img
+            src={isRunning ? PauseIcon : ReplayIcon}
+            alt={isRunning ? "pause" : "replay"}
+            width="20"
+            height="20"
           />
         </button>
 
@@ -175,12 +172,12 @@ export function HomeStartTimerModal({
           <button
             onClick={onComplete}
             style={{
-              background: "#c7e6df",
+              background: "var(--bg-secondary)",
               border: "none",
               borderRadius: 6,
               padding: "5px 8px",
               fontSize: 12,
-              color: "#2d2d2a",
+              color: "var(--text-primary)",
               lineHeight: "14px",
               cursor: "pointer",
               ...commonFontStyle
@@ -191,12 +188,12 @@ export function HomeStartTimerModal({
           <button
             onClick={onEdit}
             style={{
-              background: "#c7e6df",
+              background: "var(--bg-secondary)",
               border: "none",
               borderRadius: 6,
               padding: "5px 8px",
               fontSize: 12,
-              color: "#2d2d2a",
+              color: "var(--text-primary)",
               lineHeight: "14px",
               cursor: "pointer",
               ...commonFontStyle

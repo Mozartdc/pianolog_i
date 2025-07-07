@@ -1,4 +1,7 @@
+// src/App.tsx
+
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
 import HomeScreen from "./screens/HomeScreen";
 import Today from "./screens/Today";
 import RepeatCountScreen from "./screens/RepeatCountScreen";
@@ -7,11 +10,11 @@ import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';
 import StatsDayDetailScreen from './screens/StatsDayDetailScreen';
-
-// 외부 BottomTabBar 컴포넌트 import
 import BottomTabBar from "./components/BottomTabBar";
 
-// URL을 activeTab으로 변환하는 함수
+// ✅ Theme 타입을 App.tsx에서도 사용
+type Theme = "light" | "dark" | "system";
+
 function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "statistic" | "setting" {
   switch (pathname) {
     case "/": return "home";
@@ -28,15 +31,11 @@ function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "s
 function NavigationBar() {
   const location = useLocation();
   const activeTab = getActiveTabFromPath(location.pathname);
-
-  const handleTabChange = () => {
-    // React Router가 네비게이션을 처리하므로 빈 함수
-  };
-
-  return <BottomTabBar activeTab={activeTab} onTabChange={handleTabChange} />;
+  return <BottomTabBar activeTab={activeTab} onTabChange={() => {}} />;
 }
 
-function AppRoutes() {
+// ✅ props를 전달받도록 AppRoutes 수정
+function AppRoutes({ theme, handleThemeChange }: { theme: Theme, handleThemeChange: (theme: Theme) => void }) {
   return (
     <>
       <Routes>
@@ -45,7 +44,8 @@ function AppRoutes() {
         <Route path="/timer" element={<RepeatCountScreen />} />
         <Route path="/calendar" element={<TodayCalendar />} />
         <Route path="/practice" element={<PracticeSessionScreen />} />
-        <Route path="/settings" element={<SettingsScreen />} />
+        {/* ✅ SettingsScreen에 theme 상태와 핸들러를 props로 전달 */}
+        <Route path="/settings" element={<SettingsScreen theme={theme} handleThemeChange={handleThemeChange} />} />
         <Route path="/stats" element={<StatsScreen />} />
         <Route path="/stats/:date" element={<StatsDayDetailScreen />} />
       </Routes>
@@ -54,20 +54,58 @@ function AppRoutes() {
   );
 }
 
+function isValidTheme(theme: any): theme is Theme {
+    return theme === "light" || theme === "dark" || theme === "system";
+}
+
 function App() {
+  const [theme, setTheme] = useState<Theme>(() => {
+    const savedTheme = localStorage.getItem("theme");
+    return isValidTheme(savedTheme) ? savedTheme : "system";
+  });
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const themeColorMeta = document.querySelector("#theme-color-meta");
+
+    const applyTheme = (themeValue: "light" | "dark") => {
+      root.dataset.theme = themeValue;
+      const newThemeColor = themeValue === 'dark' ? '#1A1A1A' : '#ffffff';
+      themeColorMeta?.setAttribute('content', newThemeColor);
+    };
+
+    if (theme === "system") {
+      const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+      applyTheme(prefersDarkMode.matches ? 'dark' : 'light');
+      const systemThemeListener = (e: MediaQueryListEvent) => {
+        applyTheme(e.matches ? 'dark' : 'light');
+      };
+      prefersDarkMode.addEventListener('change', systemThemeListener);
+      return () => prefersDarkMode.removeEventListener('change', systemThemeListener);
+    } else {
+      applyTheme(theme);
+    }
+  }, [theme]);
+  
+  // ✅ 테마를 변경하는 핸들러 함수를 App 컴포넌트에 정의
+  const handleThemeChange = (selectedTheme: Theme) => {
+    setTheme(selectedTheme);
+    localStorage.setItem("theme", selectedTheme);
+  };
+
   return (
     <BrowserRouter>
-      {/* 🔴 이 div의 maxWidth를 "100%"로 변경하여 앱이 화면 너비에 맞춰 유연하게 확장되도록 합니다. */}
       <div style={{
         width: "100%",
-        maxWidth: "100%", // ⭐ 이 부분을 "100%"로 변경했습니다.
+        maxWidth: "100%",
         margin: "0 auto",
         paddingBottom: 80,
         minHeight: "100vh",
-        background: "white",
+        background: "var(--bg-primary)",
         boxShadow: "none"
       }}>
-        <AppRoutes />
+        {/* ✅ AppRoutes에 props 전달 */}
+        <AppRoutes theme={theme} handleThemeChange={handleThemeChange} />
       </div>
     </BrowserRouter>
   );

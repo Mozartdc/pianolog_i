@@ -15,7 +15,7 @@ function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
-function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
+function AppleScreen() {
   const query = useQuery();
   const trackIdParam = query.get("trackId");
   const trackId = trackIdParam ? Number(trackIdParam) : null;
@@ -31,7 +31,7 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
     MozOsxFontSmoothing: "grayscale" as const
   };
 
-  // 곡 정보 불러오기
+  // 데이터 로드
   useEffect(() => {
     const savedTracks = localStorage.getItem("tracks");
     setTracks(savedTracks ? JSON.parse(savedTracks) : []);
@@ -39,14 +39,8 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
     setPartialCounts(savedCounts ? JSON.parse(savedCounts) : {});
   }, []);
 
-  // 곡 정보 찾기
-  const track = trackId !== null
-    ? tracks.find((t) => t.id === trackId)
-    : null;
-
-  // 곡명: 곡이 있으면 곡명, 없으면 Piano
+  const track = trackId !== null ? tracks.find((t) => t.id === trackId) : null;
   const displayTitle = track ? track.title : "piano";
-  // 카운트 키: trackId 있으면 trackId, 없으면 "Piano"
   const countKey = trackId !== null && track ? String(trackId) : "piano";
 
   // 카운트 동기화
@@ -54,7 +48,7 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
     setCount(partialCounts[countKey] || 0);
   }, [partialCounts, countKey]);
 
-  // +1 (화면 아무데나 클릭)
+  // +1 (화면 클릭)
   const handlePlus = () => {
     const newCount = count + 1;
     setCount(newCount);
@@ -63,7 +57,7 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
     localStorage.setItem("partialCounts", JSON.stringify(updated));
   };
 
-  // -1 (하단 버튼)
+  // -1 (버튼)
   const handleMinus = (e: React.MouseEvent) => {
     e.stopPropagation();
     const newCount = Math.max(count - 1, 0);
@@ -73,7 +67,7 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
     localStorage.setItem("partialCounts", JSON.stringify(updated));
   };
 
-  // 리셋 (하단 버튼)
+  // 리셋 (버튼)
   const handleReset = (e: React.MouseEvent) => {
     e.stopPropagation();
     setCount(0);
@@ -87,9 +81,10 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
       className="apple-screen"
       style={{
         width: "100%",
-        maxWidth: 375, // 최대 너비는 375px로 유지
+        maxWidth: "100%",
         height: "100vh",
-        background: "#FFFFFF",
+        background: "var(--bg-primary)", // ✅ 수정
+        color: "var(--text-primary)", // ✅ 기본 텍스트 색상 추가
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -98,8 +93,8 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
         margin: "0 auto",
         touchAction: "manipulation",
         userSelect: "none",
-        boxSizing: "border-box", // 패딩 적용을 위해 추가
-        padding: "20px 16px" // 상하좌우 패딩 추가 (하단 버튼과 겹치지 않도록 조절 필요)
+        boxSizing: "border-box",
+        padding: "20px 16px"
       }}
       onClick={handlePlus}
     >
@@ -108,9 +103,9 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        flexGrow: 1, // 남은 공간을 차지하여 중앙에 위치하도록 함
-        justifyContent: "center", // 중앙 정렬
-        width: "100%" // 내용이 부모 너비를 따르도록
+        flexGrow: 1,
+        justifyContent: "center",
+        width: "100%"
       }}>
         {/* 곡명 + 아이콘 */}
         <div style={{
@@ -118,12 +113,11 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
           alignItems: "center",
           gap: 8,
           marginBottom: 15,
-          ...commonFontStyle // 폰트 스타일 적용
+          ...commonFontStyle
         }}>
           <img src={AppleSongIcon} alt="apple song" width="24" height="24" />
           <span style={{
             fontSize: 16,
-            color: "#2D2D2A",
             fontWeight: "normal",
             textAlign: "center",
             lineHeight: "24px"
@@ -135,27 +129,26 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
         {/* Practice */}
         <div style={{
           fontSize: 20,
-          color: "#9E9C98",
+          color: "var(--text-secondary)", // ✅ 수정
           fontWeight: "normal",
           textAlign: "center",
           lineHeight: "24px",
           marginBottom: 25,
-          ...commonFontStyle // 폰트 스타일 적용
+          ...commonFontStyle
         }}>
           practice
         </div>
 
-        {/* ✅ 숫자: 폰트 굵기 (fontWeight: 600) 및 폰트 스타일 적용 */}
-        <div 
+        {/* 숫자 */}
+        <div
           className="apple-screen__number"
           style={{
             fontSize: 128,
-            color: "#2D2D2A",
             textAlign: "center",
             lineHeight: "80px",
-            letterSpacing: "0.1em",
-            fontWeight: 600, // ✅ 여기를 600으로 설정하여 굵게 표시
-            ...commonFontStyle // ✅ 폰트 스타일 적용
+            letterSpacing: "0.05em",
+            fontWeight: 600,
+            ...commonFontStyle
           }}
         >
           {count}
@@ -166,13 +159,12 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
       <div style={{
         position: "absolute",
         bottom: 40,
-        // ✅ 수정: 고정된 gap 대신 width 100%와 space-between으로 반응형 레이아웃 구성
-        width: "calc(100% - 32px)", // 좌우 16px 패딩을 제외한 너비 (375px - 32px = 343px)
-        maxWidth: 343, // 최대 너비는 343px로 유지
+        width: "calc(100% - 32px)",
+        maxWidth: "343px",
         display: "flex",
-        justifyContent: "space-between", // 양쪽 끝으로 버튼 배치
+        justifyContent: "space-between",
         alignItems: "center",
-        margin: "0 auto" // 중앙 정렬
+        margin: "0 auto"
       }}>
         {/* Reset 버튼 */}
         <button
@@ -180,7 +172,7 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
           style={{
             width: 85,
             height: 40,
-            background: "#F0EADB",
+            background: "var(--button-secondary-bg)", // ✅ 수정
             border: "none",
             borderRadius: 8,
             display: "flex",
@@ -188,13 +180,13 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
             justifyContent: "center",
             gap: 8,
             cursor: "pointer",
-            ...commonFontStyle // 폰트 스타일 적용
+            ...commonFontStyle
           }}
         >
           <img src={AppleResetIcon} alt="reset" width="16" height="16" />
           <span style={{
             fontSize: 14,
-            color: "#2D2D2A",
+            color: "var(--text-primary)", // ✅ 수정
             fontWeight: "normal",
             lineHeight: "22px"
           }}>
@@ -208,7 +200,7 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
           style={{
             width: 85,
             height: 40,
-            background: "#F0EADB",
+            background: "var(--button-secondary-bg)", // ✅ 수정
             border: "none",
             borderRadius: 8,
             display: "flex",
@@ -216,13 +208,13 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
             justifyContent: "center",
             gap: 8,
             cursor: "pointer",
-            ...commonFontStyle // 폰트 스타일 적용
+            ...commonFontStyle
           }}
         >
           <img src={AppleMinusIcon} alt="minus" width="16" height="16" />
           <span style={{
             fontSize: 14,
-            color: "#2D2D2A",
+            color: "var(--text-primary)", // ✅ 수정
             fontWeight: "normal",
             lineHeight: "22px"
           }}>
@@ -234,4 +226,4 @@ function AppleScreen() { // 컴포넌트 이름은 AppleScreen으로 유지
   );
 }
 
-export default AppleScreen; // 이 부분은 AppleScreen 컴포넌트를 export 하므로 문제 없습니다.
+export default AppleScreen;

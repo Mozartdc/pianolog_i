@@ -21,7 +21,7 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const commonFontStyle = {
-    fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
+    fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 사용
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const,
   };
@@ -47,7 +47,6 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
       setShowCropper(true);
     };
     reader.readAsDataURL(file);
-    // 동일한 파일 재업로드를 위해 value 초기화
     e.target.value = "";
   };
 
@@ -69,8 +68,6 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
     }
   };
 
-  // --- 수정된 부분: 사진 삭제 핸들러 ---
-  // 버튼에서 직접 호출하도록 변경합니다.
   const handleDelete = () => {
     localStorage.removeItem("avatar");
     onAvatarChange("");
@@ -82,7 +79,7 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        gap: 14, // 아바타와 버튼 간의 간격
+        gap: 14,
       }}
     >
       {/* 프로필 이미지 박스 */}
@@ -90,11 +87,8 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
         style={{
           width: size,
           height: size,
-          // --- 수정된 부분: PDF 가이드에 따른 border-radius 값(24px) 적용 ---
           borderRadius: 24,
-          // --- 수정된 부분: 아바타가 없을 때 배경색(#F3D6CB)이 보이도록 수정 ---
-          // 기존 코드에도 있었으나, 명확성을 위해 주석 추가
-          background: avatar ? "transparent" : "#F3D6CB",
+          background: avatar ? "transparent" : "var(--button-secondary-bg)", // ✅ 수정
           overflow: "hidden",
           display: "flex",
           alignItems: "center",
@@ -102,7 +96,6 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
           position: "relative",
           boxSizing: "border-box",
         }}
-        // 사진 등록 버튼의 역할을 하도록 클릭 이벤트 추가
         onClick={() => !avatar && fileRef.current?.click()}
       >
         {avatar ? (
@@ -116,11 +109,9 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
             }}
           />
         ) : (
-          // --- 수정된 부분: 플레이스홀더 텍스트 스타일 ---
-          // 배경색이 보이도록 텍스트만 표시
           <span
             style={{
-              color: "#2D2D2A", // Jet Black
+              color: "var(--text-primary)", // ✅ 수정
               fontSize: 14,
               ...commonFontStyle,
             }}
@@ -130,17 +121,17 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
         )}
       </div>
 
-      {/* --- 수정된 부분: PDF 가이드에 따른 등록/삭제 버튼 --- */}
+      {/* 등록/삭제 버튼 */}
       <div style={{ display: "flex", gap: 14 }}>
         <button
           onClick={() => fileRef.current?.click()}
           style={{
             width: 77,
             height: 40,
-            background: "#F3D6CB", // Pearl Blush
+            background: "var(--button-secondary-bg)", // ✅ 수정
             border: "none",
             borderRadius: 8,
-            color: "#2D2D2A", // Jet Black
+            color: "var(--text-primary)", // ✅ 수정
             fontSize: 14,
             cursor: "pointer",
             ...commonFontStyle,
@@ -148,17 +139,16 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
         >
           {avatar ? "변경" : "등록"}
         </button>
-        {/* avatar가 있을 때만 삭제 버튼 표시 */}
         {avatar && (
           <button
             onClick={handleDelete}
             style={{
               width: 77,
               height: 40,
-              background: "#F3D6CB", // Pearl Blush
+              background: "var(--button-secondary-bg)", // ✅ 수정
               border: "none",
               borderRadius: 8,
-              color: "#2D2D2A", // Jet Black
+              color: "var(--text-primary)", // ✅ 수정
               fontSize: 14,
               cursor: "pointer",
               ...commonFontStyle,
@@ -196,8 +186,8 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
           <div
             style={{
               width: 320,
-              height: 420, // 버튼 공간 확보
-              background: "#fff",
+              height: 420,
+              background: "var(--bg-primary)", // ✅ 수정
               borderRadius: 16,
               display: "flex",
               flexDirection: "column",
@@ -213,9 +203,8 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
                 height: 280,
                 position: "relative",
                 marginBottom: 20,
-                // --- 수정된 부분: 크롭 영역에 둥근 모서리(24px)를 시각적으로 표시 ---
                 borderRadius: 24,
-                overflow: "hidden", // borderRadius를 적용하기 위해 추가
+                overflow: "hidden",
               }}
             >
               <Cropper
@@ -223,7 +212,6 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
                 crop={crop}
                 zoom={zoom}
                 aspect={1}
-                // --- 수정된 부분: 원형(round)에서 사각형(rect)으로 변경 ---
                 cropShape="rect"
                 showGrid={false}
                 onCropChange={setCrop}
@@ -235,7 +223,9 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
               <button
                 onClick={() => setShowCropper(false)}
                 style={{
-                  background: "#F3D6CB", color: "#BB2649", border: "none",
+                  background: "var(--button-secondary-bg)", // ✅ 수정
+                  color: "var(--error-color)", // ✅ 수정
+                  border: "none",
                   borderRadius: 8, padding: "8px 16px", fontSize: 14, cursor: "pointer", ...commonFontStyle
                 }}
               >
@@ -244,7 +234,9 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
               <button
                 onClick={handleCropSave}
                 style={{
-                  background: "#BB2649", color: "#fff", border: "none",
+                  background: "var(--error-color)", // ✅ 수정
+                  color: "var(--button-primary-text)", // ✅ 수정
+                  border: "none",
                   borderRadius: 8, padding: "8px 16px", fontSize: 14, cursor: "pointer", ...commonFontStyle
                 }}
               >
@@ -259,4 +251,3 @@ const AvatarCropper: React.FC<AvatarCropperProps> = ({
 };
 
 export default AvatarCropper;
-

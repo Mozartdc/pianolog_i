@@ -122,7 +122,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
       );
       
       if (todaySessions.length === 0) {
-        alert("오늘 익스포트할 연습 기록이 없습니다.");
+        alert("오늘은 아직 연습 기록이 없습니다.");
         return;
       }
       
