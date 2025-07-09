@@ -247,7 +247,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
                 {date.format("D")}
               </span>
               <span style={{
-                fontSize: 9,
+                fontSize: 12,
                 // ✅ CSS 변수 적용
                 color: isSunday || isHoliday 
                   ? "var(--VIVA_MAGENTA)" 

@@ -637,7 +637,7 @@ function HomeScreen() {
         boxSizing: "border-box",
         ...commonFontStyle
       }}>
-        {displayDate.format("YYYY. MM. DD ddd").toUpperCase()}
+        {displayDate.format("YYYY. MM. DD ddd").toLowerCase()}
       </div>
 
       {/* Profile Section */}

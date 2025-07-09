@@ -362,7 +362,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                 <div
                   style={{
                     position: "absolute",
-                    top: 25,
+                    top: "100%", // 버튼 바로 아래로
                     left: 0,
                     background: "var(--bg-primary)",
                     border: "var(--border-light)",
@@ -371,6 +371,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                     zIndex: 1001,
                     maxHeight: 150,
                     overflowY: "auto",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.15)"
                   }}
                 >
                   {Array.from({ length: 10 }, (_, i) => {

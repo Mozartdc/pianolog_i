@@ -10,6 +10,7 @@ import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';
 import BottomTabBar from "./components/BottomTabBar";
+import { PracticeDataProvider } from "./contexts/PracticeDataContext";
 
 // ✅ Theme 타입을 App.tsx에서도 사용
 type Theme = "light" | "dark" | "system";
@@ -91,20 +92,21 @@ function App() {
     localStorage.setItem("theme", selectedTheme);
   };
 
-  return (
+return (
     <BrowserRouter>
-      <div style={{
-        width: "100%",
-        maxWidth: "100%",
-        margin: "0 auto",
-        paddingBottom: 80,
-        minHeight: "100vh",
-        background: "var(--bg-primary)",
-        boxShadow: "none"
-      }}>
-        {/* ✅ AppRoutes에 props 전달 */}
-        <AppRoutes theme={theme} handleThemeChange={handleThemeChange} />
-      </div>
+      <PracticeDataProvider>
+        <div style={{
+          width: "100%",
+          maxWidth: "100%",
+          margin: "0 auto",
+          paddingBottom: 80,
+          minHeight: "100vh",
+          background: "var(--bg-primary)",
+          boxShadow: "none"
+        }}>
+          <AppRoutes theme={theme} handleThemeChange={handleThemeChange} />
+        </div>
+      </PracticeDataProvider>
     </BrowserRouter>
   );
 }

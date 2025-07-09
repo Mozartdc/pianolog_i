@@ -12,6 +12,7 @@
   --DARK_GRAY: #9e9c98;
   --VIVA_MAGENTA: #bb2649;
   --MIMOSA: #f0c05a;
+  --PASTEL_MIMOSA: #FEF9E7;
   --TURQUOISE_GRADIENT: linear-gradient(to right, #45b5aa, #5ad8cb);
 
   /* 폰트 시스템 */
@@ -62,6 +63,7 @@ html[data-theme="dark"] {
   --DARK_GRAY: #777777;
   --VIVA_MAGENTA: #DD5577;
   --MIMOSA: #D4A237;
+  --PASTEL_MIMOSA: #4D4530;
   --TURQUOISE_GRADIENT: linear-gradient(to right, #308077, #40A097);
 
   /* 의미적 색상 오버라이드 */

@@ -190,7 +190,7 @@ function AppleScreen() {
             fontWeight: "normal",
             lineHeight: "22px"
           }}>
-            Reset
+            reset
           </span>
         </button>
 
