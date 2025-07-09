@@ -681,7 +681,6 @@ function HomeScreen() {
         iconHeight={24}
         title={selectedDate === todayStr ? "오늘의 피출 기록" : `${selectedDateFormatted} 피출 기록`}
         value={`${Math.floor(selectedDateMinutes / 60)}시간 ${selectedDateMinutes % 60}분`}
-        onClick={handleExport}
         showExportIcon={true}
         exportIcon={ExportIcon}
       />
@@ -712,6 +711,7 @@ function HomeScreen() {
         practiceRecords={practiceRecords}
         onDateClick={handleDateClick}
         getKoreanHolidays={getKoreanHolidays}
+        themePastelColor="var(--PASTEL_TURQUOISE)"
       />
 
       {/* Start Button */}

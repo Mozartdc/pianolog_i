@@ -8,6 +8,7 @@
   --TURQUOISE: #45b5aa;
   --PASTEL_TURQUOISE: #e5f6f5;
   --VERY_PERI: #6b778d;
+  --PASTEL_VERY_PERI: #E8EAF0;
   --DARK_GRAY: #9e9c98;
   --VIVA_MAGENTA: #bb2649;
   --MIMOSA: #f0c05a;
@@ -57,9 +58,10 @@ html[data-theme="dark"] {
   --TURQUOISE: #308077;
   --PASTEL_TURQUOISE: #3A4B4A;
   --VERY_PERI: #909BB0;
+  --PASTEL_VERY_PERI: #3D424F; 
   --DARK_GRAY: #777777;
   --VIVA_MAGENTA: #DD5577;
-  --MIMOSA: #E6B84A;
+  --MIMOSA: #D4A237;
   --TURQUOISE_GRADIENT: linear-gradient(to right, #308077, #40A097);
 
   /* 의미적 색상 오버라이드 */

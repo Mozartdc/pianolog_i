@@ -11,13 +11,17 @@ interface WeekCalendarProps {
   practiceRecords: PracticeRecord[];
   onDateClick: (dateStr: string) => void;
   getKoreanHolidays: (year: number) => string[];
+  themeColor?: string;
+  themePastelColor?: string; 
 }
 
 const WeekCalendar: React.FC<WeekCalendarProps> = ({
   selectedDate,
   practiceRecords,
   onDateClick,
-  getKoreanHolidays
+  getKoreanHolidays,
+  themeColor = "var(--TURQUOISE)",
+  themePastelColor = "var(--PASTEL_TURQUOISE)"
 }) => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [startX, setStartX] = useState<number>(0);
@@ -181,9 +185,6 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
       >
         {allDates.map((date, index) => {
           const dateStr = date.format("YYYY-MM-DD");
-          const practiced = Array.isArray(practiceRecords) 
-            ? practiceRecords.some((r: PracticeRecord) => r && r.date === dateStr)
-            : false;
           const isSelected = dateStr === selectedDate;
           const isToday = dateStr === todayStr;
           const isSunday = date.day() === 0;
@@ -217,13 +218,13 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
                 height: 56,
                 // ✅ CSS 변수 적용
                 background: isToday 
-                  ? "var(--PASTEL_TURQUOISE)" 
+                  ? themePastelColor
                   : isSelected 
                     ? "var(--info-bg)" 
                     : "var(--bg-primary)",
-                border: practiced 
-                  ? `0.5px solid var(--TURQUOISE)` 
-                  : "var(--border-light)",
+                border: isSelected && !isToday 
+                  ? `0.8px solid ${themeColor}` 
+                  : `0.8px solid transparent`,
                 borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
                 display: "flex",
                 flexDirection: "column",
@@ -257,7 +258,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
                 textAlign: "center",
                 ...commonFontStyle
               }}>
-                {date.format("ddd").toUpperCase()}
+                {date.format("ddd").toLowerCase()}
               </span>
             </div>
           );

@@ -4,9 +4,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
 // 아이콘 imports
-import AppleSongIcon from "../assets/icons/applesong.svg";
-import AppleResetIcon from "../assets/icons/apple reset.svg";
-import AppleMinusIcon from "../assets/icons/appleminus.svg";
+import AppleSongIcon from "../assets/icons/applesong.svg?react";
+import AppleResetIcon from "../assets/icons/apple reset.svg?react";
+import AppleMinusIcon from "../assets/icons/appleminus.svg?react";
 
 type Track = { id: number; title: string; addedDate: string };
 type PartialCounts = { [key: string]: number };
@@ -83,8 +83,8 @@ function AppleScreen() {
         width: "100%",
         maxWidth: "100%",
         height: "100vh",
-        background: "var(--bg-primary)", // ✅ 수정
-        color: "var(--text-primary)", // ✅ 기본 텍스트 색상 추가
+        background: "var(--bg-primary)",
+        color: "var(--text-primary)",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -115,7 +115,7 @@ function AppleScreen() {
           marginBottom: 15,
           ...commonFontStyle
         }}>
-          <img src={AppleSongIcon} alt="apple song" width="24" height="24" />
+          <AppleSongIcon style={{ color: "var(--text-primary)" }} width="24" height="24" />
           <span style={{
             fontSize: 16,
             fontWeight: "normal",
@@ -129,7 +129,7 @@ function AppleScreen() {
         {/* Practice */}
         <div style={{
           fontSize: 20,
-          color: "var(--text-secondary)", // ✅ 수정
+          color: "var(--text-secondary)",
           fontWeight: "normal",
           textAlign: "center",
           lineHeight: "24px",
@@ -172,7 +172,7 @@ function AppleScreen() {
           style={{
             width: 85,
             height: 40,
-            background: "var(--button-secondary-bg)", // ✅ 수정
+            background: "var(--button-secondary-bg)",
             border: "none",
             borderRadius: 8,
             display: "flex",
@@ -183,10 +183,10 @@ function AppleScreen() {
             ...commonFontStyle
           }}
         >
-          <img src={AppleResetIcon} alt="reset" width="16" height="16" />
+          <AppleResetIcon style={{ color: "var(--text-primary)" }} width="16" height="16" />
           <span style={{
             fontSize: 14,
-            color: "var(--text-primary)", // ✅ 수정
+            color: "var(--text-primary)",
             fontWeight: "normal",
             lineHeight: "22px"
           }}>
@@ -200,7 +200,7 @@ function AppleScreen() {
           style={{
             width: 85,
             height: 40,
-            background: "var(--button-secondary-bg)", // ✅ 수정
+            background: "var(--button-secondary-bg)",
             border: "none",
             borderRadius: 8,
             display: "flex",
@@ -211,12 +211,14 @@ function AppleScreen() {
             ...commonFontStyle
           }}
         >
-          <img src={AppleMinusIcon} alt="minus" width="16" height="16" />
+          <AppleMinusIcon style={{ color: "var(--text-primary)" }} width="16" height="16" />
           <span style={{
             fontSize: 14,
-            color: "var(--text-primary)", // ✅ 수정
+            color: "var(--text-primary)",
             fontWeight: "normal",
-            lineHeight: "22px"
+            lineHeight: "22px",
+            display: 'flex',
+            alignItems: 'center'
           }}>
             minus
           </span>

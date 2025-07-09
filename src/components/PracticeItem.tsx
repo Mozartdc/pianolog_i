@@ -5,7 +5,7 @@ import CheckIcon from "../assets/icons/check.svg?react";
 import UncheckIcon from "../assets/icons/uncheck.svg?react";
 import NumberPlusIcon from "../assets/icons/numberplus.svg?react";
 import NumberMinusIcon from "../assets/icons/numberminus.svg?react";
-import SongNoteIcon from "../assets/icons/song_note.svg";
+import SongNoteIcon from "../assets/icons/song_note.svg?react";
 
 interface PracticeItemProps {
   title: string;
@@ -100,7 +100,8 @@ export default function PracticeItem({
               justifyContent: "center",
               cursor: "pointer",
               marginRight: 12,
-              background: "transparent"
+              background: "transparent",
+              color: checked ? "var(--VERY_PERI)" : "var(--text-secondary)"
             }}
           >
             {checked ? (
@@ -157,7 +158,8 @@ export default function PracticeItem({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: 0
+              padding: 0,
+              color: "var(--VERY_PERI)"
             }}
           >
             <NumberMinusIcon width={16} height={16} />
@@ -195,7 +197,8 @@ export default function PracticeItem({
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: 0
+              padding: 0,
+              color: "var(--VERY_PERI)"
             }}
           >
             <NumberPlusIcon width={16} height={16} />
@@ -311,16 +314,17 @@ export default function PracticeItem({
             onClick={(e) => e.stopPropagation()}
           >
             {/* 헤더: 연습곡 수정 */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
-              <img src={SongNoteIcon} alt="song note" width="16" height="16" />
-              <span style={{
-                fontSize: 15,
-                color: "var(--text-primary)", // ✅ CSS 변수 적용
-                fontFamily: "var(--FONT_FAMILY)" // ✅ CSS 변수 적용
-              }}>
-                연습곡 수정
-              </span>
-            </div>
+<div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
+  {/* 아이콘에만 터쿼이즈 색상 지정 */}
+  <SongNoteIcon style={{ color: "var(--TURQUOISE)" }} width="16" height="16" />
+  <span style={{
+    fontSize: 15,
+    fontFamily: "var(--FONT_FAMILY)",
+    color: "var(--text-primary)" // ✅ 글자색을 여기에 직접 지정
+  }}>
+    연습곡 수정
+  </span>
+</div>
 
             {/* 라인 */}
             <div style={{
@@ -340,6 +344,8 @@ export default function PracticeItem({
                 width: "100%",
                 height: 36,
                 border: "var(--border-light)", // ✅ CSS 변수 적용
+                background: "var(--bg-secondary)", // ✅ 배경색 추가
+                outline: "none", 
                 borderRadius: "var(--border-radius-small)", // ✅ CSS 변수 적용
                 padding: "0 12px",
                 fontSize: 16,
@@ -401,7 +407,7 @@ export default function PracticeItem({
                   border: "none",
                   borderRadius: "var(--border-radius-small)", // ✅ CSS 변수 적용
                   fontSize: 16,
-                  color: "var(--WHITE)", // ✅ CSS 변수 적용
+                  color: "vvar(--button-primary-text)", // ✅ CSS 변수 적용
                   cursor: "pointer",
                   fontFamily: "var(--FONT_FAMILY)" // ✅ CSS 변수 적용
                 }}

@@ -9,7 +9,6 @@ import TodayCalendar from "./screens/TodayCalendar";
 import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';
-import StatsDayDetailScreen from './screens/StatsDayDetailScreen';
 import BottomTabBar from "./components/BottomTabBar";
 
 // ✅ Theme 타입을 App.tsx에서도 사용
@@ -47,7 +46,6 @@ function AppRoutes({ theme, handleThemeChange }: { theme: Theme, handleThemeChan
         {/* ✅ SettingsScreen에 theme 상태와 핸들러를 props로 전달 */}
         <Route path="/settings" element={<SettingsScreen theme={theme} handleThemeChange={handleThemeChange} />} />
         <Route path="/stats" element={<StatsScreen />} />
-        <Route path="/stats/:date" element={<StatsDayDetailScreen />} />
       </Routes>
       <NavigationBar />
     </>

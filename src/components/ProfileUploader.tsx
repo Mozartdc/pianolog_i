@@ -74,13 +74,13 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
         style={{
           width: `${size}px`,
           height: `${size}px`,
-          borderRadius: '25px',
-          backgroundColor: '#f0f0f0',
+          borderRadius: 'var(--border-radius-large)',
+          backgroundColor: 'var(--info-bg)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          border: '1px solid #ddd',
+          border: 'none',
           // ✨ 변경점: 직접 클릭 기능 제거 (cursor: 'pointer' 삭제)
         }}
       >
@@ -100,17 +100,24 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
         style={{ display: 'none' }}
       />
 
-      {/* ✨ 추가: 이미지 자르기 모달 */}
+{/* 이미지 자르기 모달 */}
       {cropModalOpen && (
         <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: 'white', padding: '20px', borderRadius: '8px', width: '90%', maxWidth: '400px' }}>
-            <h3 style={{ marginTop: 0 }}>프로필 사진 편집</h3>
+          <div style={{ 
+            background: 'var(--bg-primary)', 
+            color: 'var(--text-primary)',
+            padding: '20px', 
+            borderRadius: '8px', 
+            width: '90%', 
+            maxWidth: '400px' 
+          }}>
+            <h3 style={{ marginTop: 0, fontFamily: 'var(--FONT_FAMILY)' }}>프로필 사진 편집</h3>
             <div style={{ height: '300px', width: '100%', marginBottom: '20px' }}>
                 <Cropper
                     ref={cropperRef}
                     src={imageToCrop}
                     style={{ height: '100%', width: '100%' }}
-                    aspectRatio={1} // 1:1 비율로 자르기
+                    aspectRatio={1}
                     guides={false}
                     viewMode={1}
                     dragMode='move'
@@ -120,8 +127,30 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
                 />
             </div>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                <button onClick={() => setCropModalOpen(false)} style={{ padding: '8px 16px', borderRadius: '4px', border: '1px solid #ccc' }}>취소</button>
-                <button onClick={handleCrop} style={{ padding: '8px 16px', borderRadius: '4px', border: 'none', background: '#BB2649', color: 'white' }}>저장</button>
+                <button 
+                  onClick={() => setCropModalOpen(false)} 
+                  style={{ 
+                    padding: '8px 16px', 
+                    borderRadius: '4px', 
+                    border: '1px solid var(--border-light)', 
+                    background: 'transparent',
+                    color: 'var(--text-primary)', 
+                    cursor: 'pointer' 
+                  }}>
+                  취소
+                </button>
+                <button 
+                  onClick={handleCrop} 
+                  style={{ 
+                    padding: '8px 16px', 
+                    borderRadius: '4px', 
+                    border: 'none', 
+                    background: 'var(--VIVA_MAGENTA)', 
+                    color: 'var(--button-primary-text)', 
+                    cursor: 'pointer' 
+                  }}>
+                  저장
+                </button>
             </div>
           </div>
         </div>

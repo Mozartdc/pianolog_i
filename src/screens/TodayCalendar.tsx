@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 import "dayjs/locale/ko";
 import Header from "../components/Header";
 import WeekCalendar from "../components/WeekCalendar";
@@ -22,30 +22,46 @@ type PartialCounts = {
   [trackId: number]: number;
 };
 
-function getToday(): string {
-  const now = new Date();
-  return now.toISOString().slice(0, 10);
+// ✅ PracticeRecord 타입을 다른 파일과 일관성 있게 수정
+interface PracticeRecord {
+  date: string;
+  practiceTime: number;
+  startTime: number;
+  endTime: number;
+  id: string;
+  memo?: string;
+  track?: string;
 }
 
-function loadPracticeData(): any[] {
+const getKoreanHolidays = (year: number): string[] => {
+  const holidays = [
+    `${year}-01-01`, `${year}-03-01`, `${year}-05-05`, `${year}-06-06`,
+    `${year}-08-15`, `${year}-10-03`, `${year}-10-09`, `${year}-12-25`,
+  ];
+  if (year === 2025) {
+    holidays.push('2025-01-28', '2025-01-29', '2025-01-30', '2025-05-13', '2025-09-06', '2025-09-07', '2025-09-08');
+  }
+  return holidays;
+};
+
+function getToday(): string {
+  return dayjs().format("YYYY-MM-DD");
+}
+
+function loadPracticeData(): PracticeRecord[] {
   try {
     const data = localStorage.getItem("practiceRecords");
     if (!data) return [];
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed : [];
+    return JSON.parse(data);
   } catch (error) {
     console.error("practiceRecords 로딩 실패:", error);
     return [];
   }
 }
 
-// ✅ savePracticeData 함수 수정: 'data' 파라미터를 올바르게 받아서 저장하도록 변경
-function savePracticeData(data: any): void {
+function savePracticeData(data: PracticeRecord[]): void {
   try {
-    // Array.isArray(data) 체크는 'data'가 배열인지 확인하는 것이므로 유지
-    if (Array.isArray(data)) {
-      localStorage.setItem("practiceRecords", JSON.stringify(data));
-    }
+    localStorage.setItem("practiceRecords", JSON.stringify(data));
   } catch (error) {
     console.error("practiceRecords 저장 실패:", error);
   }
@@ -70,7 +86,6 @@ export function TodayCalendar() {
     return saved ? JSON.parse(saved) : {};
   });
 
-  // 특정 곡만 필터링 (trackId가 있는 경우)
   const selectedTrack = trackId ? tracks.find(t => t.id === Number(trackId)) : null;
   const visibleTracks = selectedTrack ? [selectedTrack] : tracks;
 
@@ -79,47 +94,37 @@ export function TodayCalendar() {
       const dayChecks = prev[selectedDate] ? { ...prev[selectedDate] } : {};
       const checked = !dayChecks[trackId];
       dayChecks[trackId] = checked;
-      const updated = { ...prev, [selectedDate]: dayChecks };
+      const updatedChecks = { ...prev, [selectedDate]: dayChecks };
 
-      try {
-        let practiceRecords = loadPracticeData();
-        if (!Array.isArray(practiceRecords)) {
-          practiceRecords = [];
-        }
-        const track = tracks.find((t) => t.id === trackId);
-        if (checked && track) {
-          practiceRecords = [
-            ...practiceRecords,
-            { date: selectedDate, track: track.title, repeatCount: 1 },
-          ];
-        } else if (!checked && track) {
-          practiceRecords = practiceRecords.filter(
-            (r: any) => !(r.date === selectedDate && r.track === track.title)
-          );
-        }
-        savePracticeData(practiceRecords);
-      } catch (error) {
-        console.error("localStorage 업데이트 실패:", error);
+      let practiceRecords = loadPracticeData();
+      const track = tracks.find((t) => t.id === trackId);
+
+      if (checked && track) {
+        const newRecord: PracticeRecord = {
+          id: `${Date.now()}`,
+          date: selectedDate,
+          track: track.title,
+          practiceTime: 0, // 체크만 한 경우 시간은 0
+          startTime: dayjs(selectedDate).valueOf(),
+          endTime: dayjs(selectedDate).valueOf(),
+        };
+        practiceRecords.push(newRecord);
+      } else if (!checked && track) {
+        practiceRecords = practiceRecords.filter(
+          (r) => !(r.date === selectedDate && r.track === track.title)
+        );
       }
-
-      return updated;
+      savePracticeData(practiceRecords);
+      return updatedChecks;
     });
   };
 
   const incPartial = (trackId: number): void => {
-    setPartialCounts((prev) => ({
-      ...prev,
-      [trackId]: (prev[trackId] || 0) + 1,
-    }));
+    setPartialCounts((prev) => ({ ...prev, [trackId]: (prev[trackId] || 0) + 1 }));
   };
-
   const decPartial = (trackId: number): void => {
-    setPartialCounts((prev) => ({
-      ...prev,
-      [trackId]: Math.max((prev[trackId] || 0) - 1, 0),
-    }));
+    setPartialCounts((prev) => ({ ...prev, [trackId]: Math.max((prev[trackId] || 0) - 1, 0) }));
   };
-
   const handleEdit = (id: number): void => {
     const track = tracks.find(t => t.id === id);
     if (track) {
@@ -131,11 +136,9 @@ export function TodayCalendar() {
       }
     }
   };
-
   const handleDelete = (id: number): void => {
     if (confirm("정말 삭제하시겠습니까?")) {
       const track = tracks.find(t => t.id === id);
-      
       setTracks(tracks.filter((t) => t.id !== id));
       setPartialCounts((prev) => {
         const copy = { ...prev };
@@ -150,69 +153,44 @@ export function TodayCalendar() {
         }
         return copy;
       });
-
       if (track) {
         const prevRecords = loadPracticeData();
-        const updated = prevRecords.filter((r: any) => r.track !== track.title);
+        const updated = prevRecords.filter((r) => r.track !== track.title);
         savePracticeData(updated);
       }
     }
   };
 
-  // localStorage 동기화
-  useEffect(() => {
-    localStorage.setItem("tracks", JSON.stringify(tracks));
-  }, [tracks]);
-
-  useEffect(() => {
-    localStorage.setItem("practiceChecks", JSON.stringify(practiceChecks));
-  }, [practiceChecks]);
-
-  useEffect(() => {
-    localStorage.setItem("partialCounts", JSON.stringify(partialCounts));
-  }, [partialCounts]);
+  useEffect(() => { localStorage.setItem("tracks", JSON.stringify(tracks)); }, [tracks]);
+  useEffect(() => { localStorage.setItem("practiceChecks", JSON.stringify(practiceChecks)); }, [practiceChecks]);
+  useEffect(() => { localStorage.setItem("partialCounts", JSON.stringify(partialCounts)); }, [partialCounts]);
 
   return (
-    <main style={{ maxWidth: 375, margin: "0 auto", paddingBottom: 100 }}>
+    // ✅ [수정] main 태그에 테마 스타일 적용
+    <main style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      paddingTop: 44, margin: "0 auto", width: "100%", maxWidth: "100%",
+      background: "var(--bg-primary)", minHeight: "100vh",
+      paddingBottom: 120, fontFamily: "var(--FONT_FAMILY)"
+    }}>
       <Header 
         title={selectedTrack ? `${selectedTrack.title} 캘린더` : "투데이 캘린더"} 
         topMargin={20}
         showBackButton={true}
         onBack={() => navigate(-1)}
+        color="var(--VERY_PERI)" // ✅ [수정] 헤더 색상 지정
       />
-
-      {/* WeekCalendar에 필요한 모든 props가 이미 잘 전달되고 있습니다. */}
-      <WeekCalendar
-        selectedDate={selectedDate}
-        practiceRecords={loadPracticeData()}
-        onDateClick={setSelectedDate}
-        getKoreanHolidays={(year) => {
-          const holidays = [
-            `${year}-01-01`,
-            `${year}-03-01`,
-            `${year}-05-05`,
-            `${year}-06-06`,
-            `${year}-08-15`,
-            `${year}-10-03`,
-            `${year}-10-09`,
-            `${year}-12-25`,
-          ];
-          if (year === 2025) {
-            holidays.push(
-              "2025-01-28",
-              "2025-01-29",
-              "2025-01-30",
-              "2025-05-13",
-              "2025-09-06",
-              "2025-09-07",
-              "2025-09-08"
-            );
-          }
-          return holidays;
-        }}
-      />
-
-      <div style={{ padding: "0 16px" }}>
+      {/* ✅ [수정] WeekCalendar 컨테이너 스타일 추가 */}
+      <div style={{ width: "100%", maxWidth: "100%", margin: "15px auto 0 auto" }}>
+        <WeekCalendar
+          selectedDate={selectedDate}
+          practiceRecords={loadPracticeData()}
+          onDateClick={setSelectedDate}
+          getKoreanHolidays={getKoreanHolidays}
+        />
+      </div>
+      {/* ✅ [수정] PracticeItem 리스트 컨테이너 스타일 추가 */}
+      <div style={{ width: "100%", marginTop: 27, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
         {visibleTracks.map((track) => {
           const isChecked = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
           const partialCount = partialCounts[track.id] || 0;

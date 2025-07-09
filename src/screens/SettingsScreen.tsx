@@ -10,23 +10,25 @@ dayjs.extend(isSameOrAfter);
 
 import Header from "../components/Header";
 import AvatarCropper, { AvatarCropperHandles } from "../components/ProfileUploader";
-import ExportIcon from "../assets/icons/s_export.svg";
-import ImportIcon from "../assets/icons/s_import.svg";
-import DayIcon from "../assets/icons/day.svg";
-import NightIcon from "../assets/icons/night.svg";
-import SystemIcon from "../assets/icons/system.svg";
-import RadioOn from "../assets/icons/radio_on.svg";
-import RadioOff from "../assets/icons/radiooff.svg";
+// ✅ [수정] 모든 아이콘을 React 컴포넌트로 불러옵니다.
+import ExportIcon from "../assets/icons/s_export.svg?react";
+import ImportIcon from "../assets/icons/s_import.svg?react";
+import DayIcon from "../assets/icons/day.svg?react";
+import NightIcon from "../assets/icons/night.svg?react";
+import SystemIcon from "../assets/icons/system.svg?react";
+import RadioOn from "../assets/icons/radio_on.svg?react";
+import RadioOff from "../assets/icons/radiooff.svg?react";
 import Logo from "../utils/img/logo.png";
 
 type Theme = "light" | "dark" | "system";
-const themeOptions: { value: Theme; label: string; icon: string }[] = [
+// ✅ [수정] icon의 타입을 string에서 React.ElementType으로 변경합니다.
+const themeOptions: { value: Theme; label: string; icon: React.ElementType }[] = [
   { value: "light", label: "light", icon: DayIcon },
   { value: "dark", label: "dark", icon: NightIcon },
   { value: "system", label: "system", icon: SystemIcon },
 ];
 
-// 타입 정의
+// 타입 정의 (변경 없음)
 interface PracticeRecord { id: string; date: string; practiceTime: number; startTime: number; endTime: number; memo?: string; track?: string; }
 type Track = { id: number; title: string; addedDate: string; completedDate?: string; };
 type PracticeChecks = { [date: string]: { [trackId: number]: boolean; }; };
@@ -111,19 +113,14 @@ function fromCSV(csv: string): PracticeRecord[] {
     });
 }
 
-// ✅ props 타입을 정의합니다.
 interface SettingsScreenProps {
   theme: Theme;
   handleThemeChange: (theme: Theme) => void;
 }
 
-// ✅ props를 전달받도록 함수 시그니처를 수정합니다.
 export default function SettingScreen({ theme, handleThemeChange }: SettingsScreenProps) {
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
   const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
-
-  // ✅ SettingsScreen의 로컬 theme 상태와 관련 로직은 모두 삭제합니다.
-  
   const avatarCropperRef = useRef<AvatarCropperHandles>(null);
   const commonFontStyle = {
     WebkitFontSmoothing: "antialiased" as const,
@@ -192,7 +189,7 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
           </div>
         </div>
         <div style={{ width: "100%", textAlign: "center", fontSize: 14, marginTop: 26, ...commonFontStyle }}>닉네임 입력</div>
-        <input value={nickname} onChange={handleNicknameChange} style={{ width: "95%", maxWidth: "100%", height: 40, padding: "8px 16px", borderRadius: 8, border: "var(--border-light)", background: "var(--bg-secondary)", color: "var(--text-primary)", fontSize: 16, marginTop: 15, marginBottom: 16, boxSizing: "border-box", ...commonFontStyle }} />
+        <input value={nickname} onChange={handleNicknameChange} style={{ width: "95%", maxWidth: "100%", height: 40, padding: "8px 16px", borderRadius: 8, border: "var(--border-light)", background: "transparent", color: "var(--text-primary)", fontSize: 16, marginTop: 15, marginBottom: 16, boxSizing: "border-box", ...commonFontStyle }} />
       </div>
 
       <div style={{ width: "90%", maxWidth: 327, display: "flex", alignItems: "center", gap: 8, margin: "24px auto 16px auto" }}>
@@ -201,15 +198,19 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
         <div style={{ flex: 1, height: 0.5, background: "var(--VIVA_MAGENTA)" }} />
       </div>
 
+      {/* ✅ [수정] 내보내기 버튼 아이콘 수정 */}
       <button onClick={handleExport} style={{ width: "90%", maxWidth: 327, height: 40, borderRadius: 8, background: "var(--button-secondary-bg)", border: "none", color: "var(--text-primary)", fontSize: 14, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 8, cursor: "pointer", ...commonFontStyle }}>
-        <img src={ExportIcon} alt="내보내기" width={16} height={20} />
+        <ExportIcon width={16} height={20} />
         연습 기록 내보내기
       </button>
+
+      {/* ✅ [수정] 가져오기 버튼 아이콘 수정 */}
       <label style={{ width: "90%", maxWidth: 327, height: 40, borderRadius: 8, background: "var(--button-secondary-bg)", border: "none", color: "var(--text-primary)", fontSize: 14, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 18, cursor: "pointer", ...commonFontStyle }}>
-        <img src={ImportIcon} alt="가져오기" width={16} height={20} />
+        <ImportIcon width={16} height={20} />
         연습 기록 가져오기
         <input type="file" accept=".csv" hidden onChange={handleImport} />
       </label>
+
       <div style={{ width: "90%", maxWidth: 327, color: "var(--text-secondary)", textAlign: "center", fontSize: 12, lineHeight: "150%", margin: "0 auto 18px auto", ...commonFontStyle }}>
         기기 변경 시 CSV로 백업/복원 가능합니다.
       </div>
@@ -221,14 +222,15 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
       </div>
 
       <div style={{ display: "flex", width: "90%", maxWidth: 320, justifyContent: "center", alignItems: "center", gap: 14, marginBottom: 32 }}>
+        {/* ✅ [수정] 테마 선택 아이콘 렌더링 로직 수정 */}
         {themeOptions.map(opt => {
-          const checked = theme === opt.value; // ✅ props로 받은 theme 사용
+          const checked = theme === opt.value;
+          const Icon = opt.icon;
           return (
-            <label key={opt.value} style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", userSelect: "none" }}>
-              <img src={checked ? RadioOn : RadioOff} alt={opt.label} width={20} height={20} />
-              <img src={opt.icon} alt={opt.label} width={16} height={16} />
-              <span style={{ color: checked ? "var(--text-primary)" : "var(--text-secondary)", fontSize: 12, ...commonFontStyle }}>{opt.label}</span>
-              {/* ✅ props로 받은 handleThemeChange 사용 */}
+            <label key={opt.value} style={{ display: "flex", alignItems: "center", gap: 9, cursor: "pointer", userSelect: "none", color: checked ? "var(--text-primary)" : "var(--text-secondary)" }}>
+              {checked ? <RadioOn style={{color: "var(--VIVA_MAGENTA)"}} width={20} height={20} /> : <RadioOff width={20} height={20} />}
+              <Icon width={16} height={16} />
+              <span style={{ fontSize: 12, ...commonFontStyle }}>{opt.label}</span>
               <input type="radio" name="theme" value={opt.value} checked={checked} onChange={() => handleThemeChange(opt.value)} style={{ display: "none" }} />
             </label>
           );

@@ -7,8 +7,9 @@ import Header from "../components/Header";
 import WeekCalendar from "../components/WeekCalendar";
 import PracticeItem from "../components/PracticeItem";
 import TodayCalendarModal from "./TodayCalendarModal";
-import SongPlusIcon from "../assets/icons/songplus.svg";
-import SongNoteIcon from "../assets/icons/song_note.svg";
+// ✅ [수정] 아이콘을 React 컴포넌트로 불러옵니다.
+import SongPlusIcon from "../assets/icons/songplus.svg?react";
+import SongNoteIcon from "../assets/icons/song_note.svg?react";
 
 type Track = {
   id: number;
@@ -22,7 +23,9 @@ type PracticeChecks = {
 };
 
 type PartialCounts = {
-  [trackId: number]: number;
+  [date: string]: {
+    [trackId: number]: number;
+  };
 };
 
 interface PracticeRecord {
@@ -41,10 +44,7 @@ const getKoreanHolidays = (year: number): string[] => {
     `${year}-08-15`, `${year}-10-03`, `${year}-10-09`, `${year}-12-25`,
   ];
   if (year === 2025) {
-    holidays.push(
-      '2025-01-28', '2025-01-29', '2025-01-30',
-      '2025-05-13', '2025-09-06', '2025-09-07', '2025-09-08'
-    );
+    holidays.push('2025-01-28', '2025-01-29', '2025-01-30', '2025-05-13', '2025-09-06', '2025-09-07', '2025-09-08');
   }
   return holidays;
 };
@@ -167,8 +167,20 @@ export function Today() {
     });
   };
 
-  const incPartial = (trackId: number): void => { setPartialCounts((prev) => ({ ...prev, [trackId]: (prev[trackId] || 0) + 1 })); };
-  const decPartial = (trackId: number): void => { setPartialCounts((prev) => ({ ...prev, [trackId]: Math.max((prev[trackId] || 0) - 1, 0) })); };
+const incPartial = (trackId: number): void => {
+  setPartialCounts((prev) => {
+    const dayCounts = prev[selectedDate] || {};
+    const newCount = (dayCounts[trackId] || 0) + 1;
+    return { ...prev, [selectedDate]: { ...dayCounts, [trackId]: newCount } };
+  });
+};
+const decPartial = (trackId: number): void => {
+  setPartialCounts((prev) => {
+    const dayCounts = prev[selectedDate] || {};
+    const newCount = Math.max((dayCounts[trackId] || 0) - 1, 0);
+    return { ...prev, [selectedDate]: { ...dayCounts, [trackId]: newCount } };
+  });
+};
   const handleEdit = (id: number): void => { alert(`수정: ${id}`); };
   const handleDelete = (id: number): void => { if (confirm("정말 삭제하시겠습니까?")) removeTrack(id); };
   const handleTitleClick = (trackId: number): void => { setSelectedTrackId(trackId); setShowCalendarModal(true); };
@@ -206,18 +218,10 @@ export function Today() {
 
   return (
     <main style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      paddingTop: 44,
-      margin: "0 auto",
-      width: "100%",
-      maxWidth: "100%",
-      background: "var(--bg-primary)",
-      overflow: "hidden",
-      minHeight: "100vh",
-      paddingBottom: 120,
-      fontFamily: "var(--FONT_FAMILY)"
+      display: "flex", flexDirection: "column", alignItems: "center",
+      paddingTop: 44, margin: "0 auto", width: "100%", maxWidth: "100%",
+      background: "var(--bg-primary)", overflow: "hidden", minHeight: "100vh",
+      paddingBottom: 120, fontFamily: "var(--FONT_FAMILY)"
     }}>
       <Header title="today" color="var(--VERY_PERI)" showBackButton={false} />
       <div style={{ width: "100%", maxWidth: "100%", margin: "15px auto 0 auto" }}>
@@ -226,6 +230,8 @@ export function Today() {
           practiceRecords={practiceRecords}
           onDateClick={handleDateClick}
           getKoreanHolidays={getKoreanHolidays}
+          themeColor="var(--VERY_PERI)"
+          themePastelColor="var(--PASTEL_VERY_PERI)"
         />
       </div>
       <div style={{ width: "100%", marginTop: 27, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
@@ -233,15 +239,12 @@ export function Today() {
           const isCheckedFromRecords = practiceRecords.some(r => r.date === selectedDate && r.track === track.title);
           const isCheckedFromChecks = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
           const isChecked = isCheckedFromRecords || isCheckedFromChecks;
-          const partialCount = partialCounts[track.id] || 0;
+          const partialCount = (partialCounts[selectedDate] && partialCounts[selectedDate][track.id]) || 0;
           const daysSince = dayjs().diff(dayjs(track.addedDate), 'day') + 1;
           return (
             <PracticeItem
-              key={track.id}
-              title={track.title}
-              subtitle={`오늘로 ${daysSince}일째`}
-              checked={isChecked}
-              count={partialCount}
+              key={track.id} title={track.title} subtitle={`오늘로 ${daysSince}일째`}
+              checked={isChecked} count={partialCount}
               onCheck={() => toggleCheck(track.id)}
               onInc={() => incPartial(track.id)}
               onDec={() => decPartial(track.id)}
@@ -256,45 +259,31 @@ export function Today() {
       <button
         onClick={() => setShowSongPlusModal(true)}
         style={{
-          position: "fixed",
-          bottom: "103px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "45px",
-          height: "45px",
-          background: "none",
-          border: "none",
-          cursor: "pointer",
-          padding: 0,
-          zIndex: 999
+          position: "fixed", bottom: "103px", left: "50%",
+          transform: "translateX(-50%)", width: "45px", height: "45px",
+          background: "none", border: "none", cursor: "pointer",
+          padding: 0, zIndex: 999
         }}
       >
-        <img src={SongPlusIcon} alt="add song" width="45" height="45" />
+        {/* ✅ [수정] <img>를 컴포넌트로 바꾸고 색상 지정 */}
+        <SongPlusIcon style={{ color: "var(--VERY_PERI)" }} width="45" height="45" />
       </button>
 
       {showSongPlusModal && (
         <div style={{
-          position: "fixed",
-          inset: 0,
-          background: "rgba(0, 0, 0, 0.5)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.5)",
+          display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 1000
         }}>
           <div style={{
-            width: "calc(100% - 32px)",
-            maxWidth: 324,
-            background: "var(--bg-primary)",
-            border: "var(--border-light)",
-            borderRadius: "var(--border-radius-small)",
-            boxSizing: "border-box",
-            padding: 22,
-            display: "flex",
-            flexDirection: "column"
+            width: "calc(100% - 32px)", maxWidth: 324, background: "var(--bg-primary)",
+            border: "var(--border-light)", borderRadius: "var(--border-radius-small)",
+            boxSizing: "border-box", padding: 22,
+            display: "flex", flexDirection: "column"
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
-              <img src={SongNoteIcon} alt="song note" width="16" height="16" />
+              {/* ✅ [수정] <img>를 컴포넌트로 바꾸고 색상 지정 */}
+              <SongNoteIcon style={{ color: "var(--TURQUOISE)" }} width="16" height="16" />
               <span style={{ fontSize: 15, color: "var(--text-primary)", fontFamily: "var(--FONT_FAMILY)" }}>
                 연습곡 추가
               </span>
@@ -304,17 +293,11 @@ export function Today() {
               type="text"
               placeholder="여기에 곡명 입력"
               style={{
-                width: "100%",
-                height: 36,
-                border: "var(--border-light)",
-                borderRadius: "var(--border-radius-small)",
-                padding: "0 12px",
-                fontSize: 16,
-                background: "var(--bg-secondary)", // ✅ 수정: 배경색 추가
-                color: "var(--text-primary)",
-                fontFamily: "var(--FONT_FAMILY)",
-                marginBottom: 15,
-                boxSizing: "border-box"
+                width: "100%", height: 36, border: "var(--border-light)",
+                borderRadius: "var(--border-radius-small)", padding: "0 12px",
+                fontSize: 16, background: "var(--bg-secondary)",
+                color: "var(--text-primary)", fontFamily: "var(--FONT_FAMILY)",
+                marginBottom: 15, boxSizing: "border-box", outline: "none"
               }}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
@@ -350,7 +333,7 @@ export function Today() {
                 style={{
                   flex: 1, height: 43, background: "var(--VERY_PERI)", border: "none",
                   borderRadius: "var(--border-radius-small)", fontSize: 16,
-                  color: "var(--button-primary-text)", // ✅ 수정: var(--WHITE) -> var(--button-primary-text)
+                  color: "var(--button-primary-text)",
                   cursor: "pointer", fontFamily: "var(--FONT_FAMILY)"
                 }}
               >

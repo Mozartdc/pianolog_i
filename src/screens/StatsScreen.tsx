@@ -4,14 +4,15 @@ import dayjs from "dayjs";
 import "dayjs/locale/ko";
 import Header from "../components/Header";
 
-// 아이콘 imports
-import LaurelLeftIcon from "../assets/icons/laurel_L.svg";
-import LaurelRightIcon from "../assets/icons/laurel_R.svg";
-import DoIcon from "../assets/icons/do.svg";
-import HistoryIcon from "../assets/icons/History.svg";
-import CalLeftIcon from "../assets/icons/cal_left.svg";
-import CalRightIcon from "../assets/icons/cal_right.svg";
-import CalDownIcon from "../assets/icons/cal_down.svg";
+// 아이콘 imports (✅ ?react 추가)
+import LaurelLeftIcon from "../assets/icons/laurel_L.svg?react";
+import LaurelRightIcon from "../assets/icons/laurel_R.svg?react";
+import DoIcon from "../assets/icons/do.svg?react";
+import HistoryIcon from "../assets/icons/History.svg?react";
+import CalLeftIcon from "../assets/icons/cal_left.svg?react";
+import CalRightIcon from "../assets/icons/cal_right.svg?react";
+import CalDownIcon from "../assets/icons/cal_down.svg?react";
+import StatsDayDetailModal from "./StatsDayDetailScreen"; // 
 
 // 타입 정의
 type Track = {
@@ -62,6 +63,7 @@ const getKoreanHolidays = (year: number): string[] => {
 function StatsScreen() {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const [currentMonth, setCurrentMonth] = useState<dayjs.Dayjs>(dayjs());
   const [tracks, setTracks] = useState<Track[]>([]);
   const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>([]);
@@ -184,7 +186,7 @@ function StatsScreen() {
     };
   };
 
-  const getDynamicMaxAndTicks = (data: number[], type: 'time' | 'songs') => {
+const getDynamicMaxAndTicks = (data: number[], type: 'time' | 'songs') => {
     const actualMax = Math.max(...data, 0);
     let displayMax;
     const tickCount = 5;
@@ -247,13 +249,18 @@ function StatsScreen() {
   const { maxValue: timeMaxValue, ticks: timeTicks } = getDynamicMaxAndTicks(weekData.timeData, 'time');
   const { maxValue: songMaxValue, ticks: songTicks } = getDynamicMaxAndTicks(weekData.songData, 'songs');
 
+  const handleYearChange = (year: number) => {
+    setCurrentMonth(currentMonth.year(year));
+    setShowMonthYearPicker(false);
+  };
+
   return (
     <div style={{
       width: "100%",
       maxWidth: "100%",
       margin: "0 auto",
-      background: "var(--bg-primary)", // ✅ 수정
-      color: "var(--text-primary)", // ✅ 기본 텍스트 색상 추가
+      background: "var(--bg-primary)",
+      color: "var(--text-primary)",
       minHeight: "100vh",
       padding: "0 clamp(16px, 4vw, 20px)",
       boxSizing: "border-box",
@@ -262,7 +269,7 @@ function StatsScreen() {
       {/* Header */}
       <Header
         title="statistics"
-        color="var(--MIMOSA)" // ✅ 수정
+        color="var(--MIMOSA)"
         topMargin={44}
         showBackButton={true}
       />
@@ -277,17 +284,16 @@ function StatsScreen() {
         justifyContent: "space-between",
         boxSizing: "border-box"
       }}>
-        <img src={LaurelLeftIcon} alt="laurel left" width="13" height="20" />
+        <LaurelLeftIcon style={{ color: "var(--MIMOSA)" }} width="13" height="20" />
         <div style={{
           fontSize: 16,
-          // color는 부모에서 상속
           textAlign: "center",
           lineHeight: "24px",
           flex: 1
         }}>
           지금까지 총 <span style={{ fontWeight: 700, color: "var(--MIMOSA)" }}>{totalHours}</span>시간 피출
         </div>
-        <img src={LaurelRightIcon} alt="laurel right" width="13" height="20" />
+        <LaurelRightIcon style={{ color: "var(--MIMOSA)" }} width="13" height="20" />
       </div>
 
       {/* 캘린더 */}
@@ -295,9 +301,9 @@ function StatsScreen() {
         width: "100%",
         margin: "25px auto 0 auto",
         padding: "16px 0",
-        border: "var(--border-light)", // ✅ 수정
+        border: "var(--border-light)",
         borderRadius: 5,
-        background: "var(--bg-primary)", // ✅ 수정
+        background: "var(--bg-primary)",
         boxSizing: "border-box"
       }}>
         {/* 캘린더 헤더 */}
@@ -306,74 +312,96 @@ function StatsScreen() {
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: 16,
-          padding: "0 16px"
+          padding: "0 16px",
+          position: 'relative'
         }}>
-          <div
+          <button
             onClick={() => setShowMonthYearPicker(!showMonthYearPicker)}
-            style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
+            style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", color: "var(--text-secondary)", background: "none", border: "none" }}
           >
             <span style={{
               fontSize: 16,
-              color: "var(--text-secondary)", // ✅ 수정
+              color: "var(--text-secondary)",
               ...commonFontStyle
             }}>
               {currentMonth.format("YYYY년 MM월")}
             </span>
-            <img
-              src={CalDownIcon}
-              alt="dropdown"
+            <CalDownIcon
               width="9"
               height="6"
-              style={{ transform: showMonthYearPicker ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+              style={{
+                transform: showMonthYearPicker ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s'
+              }}
             />
-          </div>
+          </button>
           <div style={{ display: "flex", gap: 8 }}>
             <button
               onClick={() => {
                 setCurrentMonth(currentMonth.subtract(1, 'month'));
                 setShowMonthYearPicker(false);
               }}
-              style={{ background: "none", border: "none", cursor: "pointer" }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
             >
-              <img src={CalLeftIcon} alt="previous" width="14" height="8" />
+              <CalLeftIcon width="14" height="8" />
             </button>
             <button
               onClick={() => {
                 setCurrentMonth(currentMonth.add(1, 'month'));
                 setShowMonthYearPicker(false);
               }}
-              style={{ background: "none", border: "none", cursor: "pointer" }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-secondary)" }}
             >
-              <img src={CalRightIcon} alt="next" width="14" height="8" />
+              <CalRightIcon width="14" height="8" />
             </button>
           </div>
         </div>
 
         {/* 월/년 선택기 UI */}
-        {showMonthYearPicker && (
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '80%',
-            height: '200px',
-            background: 'var(--bg-secondary)', // ✅ 수정
-            border: 'var(--border-light)', // ✅ 수정
-            borderRadius: '8px',
-            boxShadow: 'var(--shadow-strong)', // ✅ 수정
-            zIndex: 100,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            gap: '10px'
-          }}>
-            <div style={{ fontSize: 20, fontWeight: 'bold', color: 'var(--text-primary)', ...commonFontStyle }}>월/년 선택기</div>
-            <div style={{ fontSize: 14, color: 'var(--text-secondary)', ...commonFontStyle }}>여기에 년도와 월을 선택하는 UI가 들어갈 예정입니다.</div>
-            <button onClick={() => setShowMonthYearPicker(false)} style={{ padding: '8px 16px', background: 'var(--button-primary-bg)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>닫기</button>
-          </div>
-        )}
+      {showMonthYearPicker && (
+        <div style={{
+          // --- 위치 및 크기 ---
+          position: 'absolute',
+          top: '100%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '120px',
+          marginTop: '8px',
+          maxHeight: '200px',
+          overflowY: 'auto',
+          
+          // --- 배경 및 테두리 ---
+          background: 'var(--bg-secondary)',
+          border: 'var(--border-light)',
+          borderRadius: '8px',
+          boxShadow: 'var(--shadow-light)',
+          zIndex: 100,
+
+          // ✅ [추가] 내부 콘텐츠 정렬을 위한 스타일
+          display: 'flex',
+          flexDirection: 'column'
+        }}>
+          {Array.from({ length: 10 }, (_, i) => {
+            const year = dayjs().year() - 5 + i;
+            return (
+              <div
+                key={year}
+                onClick={() => handleYearChange(year)}
+                style={{
+                  padding: "8px 12px",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  textAlign: 'center',
+                  color: 'var(--text-primary)',
+                  flexShrink: 0 // 아이템이 줄어들지 않도록 추가
+                }}
+              >
+                {year}년
+              </div>
+            );
+          })}
+        </div>
+      )}
 
         {/* 요일 헤더 */}
         <div style={{
@@ -388,7 +416,7 @@ function StatsScreen() {
               key={index}
               style={{
                 fontSize: 16,
-                color: index === 5 ? "var(--VERY_PERI)" : index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)", // ✅ 수정
+                color: index === 5 ? "var(--VERY_PERI)" : index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)",
                 textAlign: "center",
                 ...commonFontStyle
               }}
@@ -428,6 +456,7 @@ function StatsScreen() {
                     setSelectedDate(dateStr);
                     setExpandedSessionId(null);
                     setShowMonthYearPicker(false);
+                    setShowDetailModal(true);
                   }}
                   style={{
                     aspectRatio: "1",
@@ -443,10 +472,9 @@ function StatsScreen() {
                   }}
                 >
                   {practiced && isCurrentMonth && (
-                    <img
-                      src={DoIcon}
-                      alt="practiced"
+                    <DoIcon
                       style={{
+                        color: "var(--MIMOSA)",
                         width: "100%", height: "100%", maxWidth: 32, maxHeight: 32,
                         position: "absolute", top: '50%', left: '50%',
                         transform: 'translate(-50%, -50%)', zIndex: 1
@@ -456,11 +484,11 @@ function StatsScreen() {
 
                   <span style={{
                     fontSize: "clamp(12px, 4vw, 16px)",
-                    color: dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-primary)", // ✅ 수정
+                    color: dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-primary)",
                     textDecoration: !practiced && isCurrentMonth && !isFuture ? "line-through" : "none",
                     zIndex: 2,
                     position: "relative",
-                    border: isSelected ? "1px solid var(--VIVA_MAGENTA)" : "none", // ✅ 수정
+                    border: isSelected ? "1px solid var(--VIVA_MAGENTA)" : "none",
                     borderRadius: isSelected ? "50%" : "0",
                     width: isSelected ? "100%" : "auto",
                     height: isSelected ? "100%" : "auto",
@@ -492,17 +520,18 @@ function StatsScreen() {
                       width: "100%", height: 32,
                       margin: index === 0 ? "0 auto" : "10px auto 0 auto",
                       padding: "6px 10px",
-                      border: "0.5px solid #F0EAD6", // ✅ 수정 필요 (변수화)
+                      border: "0.5px solid var(--MIMOSA)", // ✅ 변수로 변경
                       borderRadius: 5,
                       display: "flex", alignItems: "center", gap: 8,
-                      background: "var(--bg-primary)", // ✅ 수정
-                      boxSizing: "border-box", cursor: "pointer", position: 'relative'
+                      background: "var(--bg-primary)",
+                      boxSizing: "border-box", cursor: "pointer", position: 'relative',
+                      color: "var(--MIMOSA)", // 아이콘 색상 상속
                     }}
                   >
-                    <img src={HistoryIcon} alt="history" width="16" height="16" />
+                    <HistoryIcon width="16" height="16" />
                     <div style={{
                       fontSize: 14,
-                      color: "var(--text-primary)", // ✅ 수정
+                      color: "var(--text-primary)",
                       flex: 1, overflow: "hidden", ...commonFontStyle
                     }}>
                       <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
@@ -510,9 +539,7 @@ function StatsScreen() {
                       </span>{" "}
                       {session.duration} ({session.timeRange})
                     </div>
-                    <img
-                      src={CalDownIcon}
-                      alt="toggle"
+                    <CalDownIcon
                       width="9"
                       height="6"
                       style={{
@@ -525,11 +552,11 @@ function StatsScreen() {
                   {isExpanded && (
                       <div style={{
                           width: "100%", padding: "10px 15px",
-                          background: "var(--info-bg)", // ✅ 수정
-                          border: "var(--border-light)", // ✅ 수정
+                          background: "var(--info-bg)",
+                          border: "var(--border-light)",
                           borderRadius: 5, marginTop: 5, marginBottom: 5,
                           boxSizing: "border-box", fontSize: 13,
-                          color: "var(--text-secondary)", // ✅ 수정
+                          color: "var(--text-secondary)",
                           ...commonFontStyle
                       }}>
                           메모: {session.memo || "작성된 메모가 없습니다."}
@@ -552,21 +579,21 @@ function StatsScreen() {
         <div style={{
           flex: 1, minWidth: "calc(50% - min(12px, 3vw) / 2)",
           height: 161, padding: 10,
-          border: "var(--border-light)", // ✅ 수정
+          border: "var(--border-light)",
           borderRadius: 5,
-          background: "var(--bg-primary)", // ✅ 수정
+          background: "var(--bg-primary)",
           boxSizing: "border-box"
         }}>
           <div style={{
             fontSize: 12,
-            color: "var(--text-primary)", // ✅ 수정
+            color: "var(--text-primary)",
             marginBottom: 4, ...commonFontStyle
           }}>
             주간 피출 시간
           </div>
           <div style={{
             fontSize: 12,
-            color: "var(--text-primary)", // ✅ 수정
+            color: "var(--text-primary)",
             marginBottom: 12, ...commonFontStyle
           }}>
             {weekData.dateRange}
@@ -579,7 +606,7 @@ function StatsScreen() {
               {timeTicks.map((hour, index) => (
                 <div key={index} style={{
                   position: "absolute", top: `${index * (100 / (timeTicks.length - 1))}%`, transform: 'translateY(-50%)', left: 0,
-                  fontSize: 10, color: "var(--text-secondary)", // ✅ 수정
+                  fontSize: 10, color: "var(--text-secondary)",
                   lineHeight: 1, fontWeight: "normal", ...commonFontStyle
                 }}>
                   {hour}h
@@ -596,7 +623,7 @@ function StatsScreen() {
                 return (
                   <div key={index} style={{
                     flex: "1 1 0", height: height,
-                    backgroundColor: isToday ? "var(--MIMOSA)" : "#F0EAD6", // ✅ 수정 필요 (변수화)
+                    backgroundColor: isToday ? "var(--MIMOSA)" : "var(--bg-secondary)", // ✅ 변수로 변경
                     borderRadius: 2, marginRight: index < 6 ? 2 : 0, minWidth: 0
                   }} />
                 );
@@ -609,7 +636,7 @@ function StatsScreen() {
               {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
                 <div key={index} style={{
                   flex: "1 1 0", textAlign: "center",
-                  color: index === 5 ? "var(--VERY_PERI)" : index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)", // ✅ 수정
+                  color: index === 5 ? "var(--VERY_PERI)" : index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)",
                   marginRight: index < 6 ? 2 : 0, minWidth: 0
                 }}>
                   {day}
@@ -623,21 +650,21 @@ function StatsScreen() {
         <div style={{
           flex: 1, minWidth: "calc(50% - min(12px, 3vw) / 2)",
           height: 161, padding: 10,
-          border: "var(--border-light)", // ✅ 수정
+          border: "var(--border-light)",
           borderRadius: 5,
-          background: "var(--bg-primary)", // ✅ 수정
+          background: "var(--bg-primary)",
           boxSizing: "border-box"
         }}>
           <div style={{
             fontSize: 12,
-            color: "var(--text-primary)", // ✅ 수정
+            color: "var(--text-primary)",
             marginBottom: 4, ...commonFontStyle
           }}>
             주간 연습 곡
           </div>
           <div style={{
             fontSize: 12,
-            color: "var(--text-primary)", // ✅ 수정
+            color: "var(--text-primary)",
             marginBottom: 12, ...commonFontStyle
           }}>
             {weekData.dateRange}
@@ -650,7 +677,7 @@ function StatsScreen() {
               {songTicks.map((songs, index) => (
                 <div key={index} style={{
                   position: "absolute", top: `${index * (100 / (songTicks.length - 1))}%`, transform: 'translateY(-50%)', left: 0,
-                  fontSize: 10, color: "var(--text-secondary)", // ✅ 수정
+                  fontSize: 10, color: "var(--text-secondary)",
                   lineHeight: 1, fontWeight: "normal", ...commonFontStyle
                 }}>
                   {songs}
@@ -667,7 +694,7 @@ function StatsScreen() {
                 return (
                   <div key={index} style={{
                     flex: "1 1 0", height: height,
-                    backgroundColor: isToday ? "var(--MIMOSA)" : "#F0EAD6", // ✅ 수정 필요 (변수화)
+                    backgroundColor: isToday ? "var(--MIMOSA)" : "var(--bg-secondary)", // ✅ 변수로 변경
                     borderRadius: 2, marginRight: index < 6 ? 2 : 0, minWidth: 0
                   }} />
                 );
@@ -680,12 +707,17 @@ function StatsScreen() {
               {["M", "T", "W", "T", "F", "S", "S"].map((day, index) => (
                 <div key={index} style={{
                   flex: "1 1 0", textAlign: "center",
-                  color: index === 5 ? "var(--VERY_PERI)" : index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)", // ✅ 수정
+                  color: index === 5 ? "var(--VERY_PERI)" : index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)",
                   marginRight: index < 6 ? 2 : 0, minWidth: 0
                 }}>
                   {day}
                 </div>
               ))}
+              <StatsDayDetailModal 
+      isOpen={showDetailModal}
+      onClose={() => setShowDetailModal(false)}
+      date={selectedDate}
+    />
             </div>
           </div>
         </div>
