@@ -1,5 +1,7 @@
+// src/screens/Today.tsx
+
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
@@ -10,7 +12,7 @@ import TodayCalendarModal from "./TodayCalendarModal";
 import SongPlusIcon from "../assets/icons/songplus.svg?react";
 import SongNoteIcon from "../assets/icons/song_note.svg?react";
 // ✅ [추가] 중앙 데이터 관리소를 사용하기 위한 import
-import { usePracticeData } from "../contexts/PracticeDataContext";
+import { usePracticeData, Track } from "../contexts/PracticeDataContext";
 
 const getKoreanHolidays = (year: number): string[] => {
   const holidays = [
@@ -34,29 +36,30 @@ export function Today() {
     partialCounts,
     addTrack,
     removeTrack,
+    updateTrackTitle, // ✅ [추가] 제목 수정 함수
     toggleCheck,
     incPartial,
     decPartial,
   } = usePracticeData();
 
-  // ✅ [삭제] Today.tsx가 자체적으로 관리하던 모든 데이터 관련 useState와 useEffect가 삭제되었습니다.
-  
   // UI 상태 관리는 그대로 유지합니다.
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [showSongPlusModal, setShowSongPlusModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
 
-  // ✅ [유지] 기존 핸들러 함수들은 이제 중앙 관리소의 함수를 호출합니다.
-  const handleEdit = (id: number) => { alert(`수정: ${id}`); };
+  // ✅ [수정] handleEdit 함수가 중앙 관리소의 updateTrackTitle을 호출하도록 변경
+  const handleEdit = (id: number, newTitle: string) => {
+    updateTrackTitle(id, newTitle);
+  };
+
   const handleDelete = (id: number) => { if (confirm("정말 삭제하시겠습니까?")) removeTrack(id); };
   const handleTitleClick = (trackId: number) => { setSelectedTrackId(trackId); setShowCalendarModal(true); };
   const handleCountClick = (trackId: number) => { navigate(`/timer?trackId=${trackId}`); };
   const handleDateClick = (dateStr: string) => { setSelectedDate(dateStr); };
   
-  // ✅ [유지] onPracticeUpdate는 이제 필요 없으므로 빈 함수로 두거나 삭제할 수 있습니다.
   const handlePracticeUpdate = () => {
-    // Context를 사용하므로 실시간으로 데이터가 동기화되어 이 함수는 더 이상 필요 없습니다.
+    // Context 사용으로 더 이상 필요 없음
   };
 
   const visibleTracks = tracks.filter(
@@ -84,7 +87,6 @@ export function Today() {
       </div>
       <div style={{ width: "100%", marginTop: 27, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
         {visibleTracks.map((track) => {
-          // ✅ [수정] 중앙 관리소의 데이터를 사용하도록 변경
           const isChecked = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
           const partialCount = (partialCounts[selectedDate] && partialCounts[selectedDate][track.id]) || 0;
           const daysSince = dayjs().diff(dayjs(track.addedDate), 'day') + 1;
@@ -92,11 +94,10 @@ export function Today() {
             <PracticeItem
               key={track.id} title={track.title} subtitle={`오늘로 ${daysSince}일째`}
               checked={isChecked} count={partialCount}
-              // ✅ [수정] 핸들러 함수에 selectedDate를 전달
               onCheck={() => toggleCheck(selectedDate, track.id)}
               onInc={() => incPartial(selectedDate, track.id)}
               onDec={() => decPartial(selectedDate, track.id)}
-              onEdit={() => handleEdit(track.id)}
+              onEdit={(newTitle) => handleEdit(track.id, newTitle)} // ✅ [수정]
               onDelete={() => handleDelete(track.id)}
               onTitleClick={() => handleTitleClick(track.id)}
               onCountClick={() => handleCountClick(track.id)}

@@ -41,9 +41,12 @@ interface PracticeDataContextType {
   setPartialCounts: React.Dispatch<React.SetStateAction<PartialCounts>>;
   addTrack: (title: string) => void;
   removeTrack: (id: number) => void;
+  updateTrackTitle: (id: number, newTitle: string) => void;
   toggleCheck: (date: string, trackId: number) => void;
   incPartial: (date: string, trackId: number) => void;
   decPartial: (date: string, trackId: number) => void;
+  markTrackComplete: (trackId: number, date: string) => void; // ✅ 추가
+  unmarkTrackComplete: (trackId: number) => void; // ✅ 추가
 }
 
 // --- Context 생성 ---
@@ -51,19 +54,16 @@ const PracticeDataContext = createContext<PracticeDataContextType | undefined>(u
 
 // --- Provider 컴포넌트 생성 ---
 export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  // 모든 데이터 상태를 여기서 관리
   const [tracks, setTracks] = useState<Track[]>(() => JSON.parse(localStorage.getItem("tracks") || "[]"));
   const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>(() => JSON.parse(localStorage.getItem("practiceRecords") || "[]"));
   const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>(() => JSON.parse(localStorage.getItem("practiceChecks") || "{}"));
   const [partialCounts, setPartialCounts] = useState<PartialCounts>(() => JSON.parse(localStorage.getItem("partialCounts") || "{}"));
 
-  // 각 데이터가 변경될 때마다 localStorage에 저장
   useEffect(() => { localStorage.setItem("tracks", JSON.stringify(tracks)); }, [tracks]);
   useEffect(() => { localStorage.setItem("practiceRecords", JSON.stringify(practiceRecords)); }, [practiceRecords]);
   useEffect(() => { localStorage.setItem("practiceChecks", JSON.stringify(practiceChecks)); }, [practiceChecks]);
   useEffect(() => { localStorage.setItem("partialCounts", JSON.stringify(partialCounts)); }, [partialCounts]);
 
-  // 데이터 수정 함수들
   const addTrack = (title: string) => {
     if (!title.trim()) return;
     const newTrack: Track = { id: Date.now(), title: title.trim(), addedDate: dayjs().format("YYYY-MM-DD") };
@@ -72,6 +72,10 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
 
   const removeTrack = (id: number) => {
     setTracks(prev => prev.filter(t => t.id !== id));
+  };
+  
+  const updateTrackTitle = (id: number, newTitle: string) => {
+    setTracks(prev => prev.map(t => t.id === id ? { ...t, title: newTitle } : t));
   };
 
   const toggleCheck = (date: string, trackId: number) => {
@@ -98,31 +102,32 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     });
   };
 
+  // ✅ [추가] 곡 완성 함수
   const markTrackComplete = (trackId: number, date: string) => {
-  setTracks(prev =>
-    prev.map(t =>
-      t.id === trackId ? { ...t, completedDate: date } : t
-    )
-  );
-};
-
-const unmarkTrackComplete = (trackId: number) => {
-  setTracks(prev =>
-    prev.map(t =>
-      t.id === trackId ? { ...t, completedDate: undefined } : t
-    )
-  );
-};
+    setTracks(prev =>
+      prev.map(t =>
+        t.id === trackId ? { ...t, completedDate: date } : t
+      )
+    );
+  };
+  
+  // ✅ [추가] 곡 완성 해제 함수
+  const unmarkTrackComplete = (trackId: number) => {
+    setTracks(prev =>
+      prev.map(t =>
+        t.id === trackId ? { ...t, completedDate: undefined } : t
+      )
+    );
+  };
 
   const value = {
     tracks, setTracks,
     practiceRecords, setPracticeRecords,
     practiceChecks, setPracticeChecks,
     partialCounts, setPartialCounts,
-    addTrack, removeTrack,
+    addTrack, removeTrack, updateTrackTitle,
     toggleCheck, incPartial, decPartial,
-    markTrackComplete,
-    unmarkTrackComplete,
+    markTrackComplete, unmarkTrackComplete // ✅ 추가
   };
 
   return (

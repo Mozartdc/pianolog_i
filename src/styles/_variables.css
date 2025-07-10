@@ -62,8 +62,8 @@ html[data-theme="dark"] {
   --PASTEL_VERY_PERI: #3D424F; 
   --DARK_GRAY: #777777;
   --VIVA_MAGENTA: #DD5577;
-  --MIMOSA: #D4A237;
-  --PASTEL_MIMOSA: #4D4530;
+  --MIMOSA: #B0876F;
+  --PASTEL_MIMOSA: #5A5245;
   --TURQUOISE_GRADIENT: linear-gradient(to right, #308077, #40A097);
 
   /* 의미적 색상 오버라이드 */

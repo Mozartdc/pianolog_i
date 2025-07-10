@@ -233,7 +233,7 @@ function StatsScreen() {
                 top: '100%',
                 left: 0, // ✅ 버튼 바로 아래, 왼쪽에 정렬됩니다.
                 width: '120px',
-                background: 'var(--bg-secondary)',
+                background: 'var(--PASTEL_MIMOSA)',
                 border: 'var(--border-light)',
                 borderRadius: '8px',
                 boxShadow: 'var(--shadow-light)',
