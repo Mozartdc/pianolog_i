@@ -19,13 +19,16 @@
     "html2canvas": "^1.4.1",
     "react": "^19.1.0",
     "react-calendar": "^5.1.0",
+    "react-cropper": "^2.3.3",
     "react-dom": "^19.1.0",
+    "react-easy-crop": "^5.4.2",
     "react-router-dom": "^7.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
     "@types/html2canvas": "^0.5.35",
     "@types/react": "^19.1.4",
+    "@types/react-cropper": "^1.3.7",
     "@types/react-dom": "^19.1.5",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.4.1",
