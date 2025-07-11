@@ -64,7 +64,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         width: "100%",
         maxWidth: "100%",
         // ✅ 높이와 패딩을 안전 영역을 고려하여 동적으로 조정합니다.
-        height: `calc(88px + env(safe-area-inset-bottom))`,
+        height: `calc(75px + env(safe-area-inset-bottom))`,
         padding: "0 16px",
         paddingBottom: `env(safe-area-inset-bottom)`,
         // --- 기존 스타일 유지 ---
