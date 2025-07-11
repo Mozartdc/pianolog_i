@@ -95,8 +95,8 @@ function AppleScreen() {
     userSelect: "none",
     boxSizing: "border-box",
     padding: "0 16px",
-    paddingTop: "5px", // ✅ 추가
-    paddingBottom: 90
+    paddingTop: "calc(env(safe-area-inset-top, 0px) + 5px)", // ✅ 추가
+    paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)"
   }}
   onClick={handlePlus}
 >
