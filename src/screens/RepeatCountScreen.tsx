@@ -82,7 +82,7 @@ function AppleScreen() {
   style={{
     width: "100%",
     maxWidth: "100%",
-    height: "100dvh", // ✅ 변경
+    minHeight: "100dvh", // ✅ 변경
     background: "var(--bg-primary)",
     color: "var(--text-primary)",
     display: "flex",
