@@ -88,6 +88,7 @@ function AppleScreen() {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
+    justifyContent: "center",
     position: "relative",
     margin: "0 auto",
     touchAction: "manipulation",
