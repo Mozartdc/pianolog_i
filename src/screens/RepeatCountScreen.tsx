@@ -100,7 +100,6 @@ function AppleScreen() {
   }}
   onClick={handlePlus}
 >
-<div style={{ color: "red", fontSize: 20 }}>🚨 최신 코드 적용됨</div>
       <div style={{
         display: "flex", flexDirection: "column", alignItems: "center",
         flexGrow: 1, justifyContent: "center", width: "100%"
