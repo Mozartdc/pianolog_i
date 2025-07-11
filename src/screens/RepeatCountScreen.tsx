@@ -11,7 +11,7 @@ import AppleResetIcon from "../assets/icons/apple reset.svg?react";
 import AppleMinusIcon from "../assets/icons/appleminus.svg?react";
 // ✅ [수정] 중앙 데이터 관리소에서 필요한 함수들을 추가로 가져옵니다.
 import { usePracticeData } from "../contexts/PracticeDataContext";
-
+<div style={{ color: "red", fontSize: 20 }}>🚨 최신 코드 적용됨</div>
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
@@ -170,6 +170,7 @@ function AppleScreen() {
         </button>
       </div>
     </div>
+    
   );
 }
 
