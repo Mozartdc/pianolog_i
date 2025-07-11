@@ -171,7 +171,7 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
 
   return (
     <div style={{
-      width: "100%", minHeight: "100vh",
+      width: "100%", minHeight: "100dvh",
       background: "var(--bg-primary)",
       fontFamily: "var(--FONT_FAMILY)",
       display: "flex", flexDirection: "column", alignItems: "center",
