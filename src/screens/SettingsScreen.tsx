@@ -180,7 +180,7 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
     }}>
       <Header title="app setting" color="var(--VIVA_MAGENTA)" />
       
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 5, width: "90%", maxWidth: 343 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 25, width: "90%", maxWidth: 343 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", justifyContent: "flex-start" }}>
           <AvatarCropper ref={avatarCropperRef} onAvatarChange={setAvatar} size={80} />
           <div style={{ display: "flex", gap: 8 }}>
@@ -188,7 +188,7 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
             <button onClick={handleAvatarDelete} style={{ width: 77, height: 40, background: "var(--button-secondary-bg)", border: "none", borderRadius: 8, color: "var(--text-primary)", fontSize: 14, cursor: "pointer", ...commonFontStyle }}>삭제</button>
           </div>
         </div>
-        <div style={{ width: "100%", textAlign: "center", fontSize: 14, marginTop: 40, ...commonFontStyle }}>닉네임 입력</div>
+        <div style={{ width: "100%", textAlign: "center", fontSize: 14, marginTop: 26, ...commonFontStyle }}>닉네임 입력</div>
         <input value={nickname} onChange={handleNicknameChange} style={{ width: "95%", maxWidth: "100%", height: 40, padding: "8px 16px", borderRadius: 8, border: "var(--border-light)", background: "transparent", color: "var(--text-primary)", fontSize: 16, marginTop: 15, marginBottom: 16, boxSizing: "border-box", ...commonFontStyle }} />
       </div>
 
