@@ -57,25 +57,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
   return (
     <nav
       style={{
-        position: "fixed",
-        bottom: 0,
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "100%",
-        maxWidth: "100%",
-        // ✅ 높이와 패딩을 안전 영역을 고려하여 동적으로 조정합니다.
-        height: `calc(88px + env(safe-area-inset-bottom))`,
-        padding: "0 16px",
-        paddingBottom: `env(safe-area-inset-bottom)`,
-        // --- 기존 스타일 유지 ---
-        background: "var(--bg-primary)",
-        boxShadow: "0px -4px 12px rgba(0, 0, 0, 0.05)",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start", // ✅ 아이콘을 위쪽에 정렬하기 위해 center -> flex-start
-        paddingTop: '15px', // ✅ 아이콘의 상단 여백
-        boxSizing: "border-box",
-        zIndex: 100,
+       height: `calc(93px + env(safe-area-inset-bottom))`
       }}
     >
       {tabOrder.map((tab) => {
