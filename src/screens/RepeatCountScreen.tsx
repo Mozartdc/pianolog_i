@@ -88,21 +88,20 @@ function AppleScreen() {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center",
     position: "relative",
     margin: "0 auto",
     touchAction: "manipulation",
     userSelect: "none",
     boxSizing: "border-box",
     padding: "0 16px",
-    paddingTop: "55", // ✅ 추가
+    paddingTop: "calc(env(safe-area-inset-top, 0px) + 5px)", // ✅ 추가
     paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)"
   }}
   onClick={handlePlus}
 >
       <div style={{
         display: "flex", flexDirection: "column", alignItems: "center",
-        flexGrow: 1, width: "100%"
+        flexGrow: 1, justifyContent: "center", width: "100%"
       }}>
         <div style={{
           display: "flex", alignItems: "center", gap: 8,
