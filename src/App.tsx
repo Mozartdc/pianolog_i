@@ -100,7 +100,7 @@ return (
           maxWidth: "100%",
           margin: "0 auto",
           paddingBottom: 80,
-          minHeight: "100vh",
+          minHeight: "calc(var(--vh, 1vh) * 100)",
           background: "var(--bg-primary)",
           boxShadow: "none"
         }}>
