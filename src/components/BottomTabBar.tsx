@@ -57,7 +57,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
   return (
     <nav
       style={{
-       height: `calc(93px + env(safe-area-inset-bottom))`
+       height: `calc(65px + env(safe-area-inset-bottom))`
       }}
     >
       {tabOrder.map((tab) => {
