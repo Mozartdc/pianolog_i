@@ -621,6 +621,7 @@ function HomeScreen() {
       <Header 
         title="digital piano gallery 피출앱"
         color="var(--TURQUOISE)" // ✅ CSS 변수 적용
+        topMargin={0}
       />
 
       {/* Date Display */}
