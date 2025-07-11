@@ -4,7 +4,7 @@ import TodayIcon from "../assets/icons/today.svg?react";
 import AppleIcon from "../assets/icons/apple.svg?react";
 import StatisticIcon from "../assets/icons/statistic.svg?react";
 import SettingIcon from "../assets/icons/setting.svg?react";
-import "./BottomTabBar.css"; // ✅ CSS 파일 임포트
+import "./BottomTabBar.css";
 
 interface BottomTabBarProps {
   activeTab: "home" | "today" | "apple" | "statistic" | "setting";
@@ -22,7 +22,7 @@ const labels = {
 const activeColors = {
   home: "var(--TURQUOISE)",
   today: "var(--VERY_PERI)",
-  apple: "var(--text-primary)", // ✅ --BLACK 대신 의미적 변수 사용
+  apple: "var(--text-primary)",
   statistic: "var(--MIMOSA)",
   setting: "var(--VIVA_MAGENTA)"
 };
@@ -63,15 +63,19 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         transform: "translateX(-50%)",
         width: "100%",
         maxWidth: "100%",
-        height: 78,
+        // ✅ 높이와 패딩을 안전 영역을 고려하여 동적으로 조정합니다.
+        height: `calc(78px + env(safe-area-inset-bottom))`,
+        padding: "0 16px",
+        paddingBottom: `env(safe-area-inset-bottom)`,
+        // --- 기존 스타일 유지 ---
         background: "var(--bg-primary)",
-        boxShadow: "0px -4px 12px rgba(0, 0, 0, 0.05)", // 상단 그림자 효과
+        boxShadow: "0px -4px 12px rgba(0, 0, 0, 0.05)",
         display: "flex",
         justifyContent: "space-between",
-        alignItems: "center",
-        zIndex: 100,
-        padding: "0 16px",
+        alignItems: "flex-start", // ✅ 아이콘을 위쪽에 정렬하기 위해 center -> flex-start
+        paddingTop: '10px', // ✅ 아이콘의 상단 여백
         boxSizing: "border-box",
+        zIndex: 100,
       }}
     >
       {tabOrder.map((tab) => {
@@ -83,14 +87,12 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
           <button
             key={tab}
             onClick={() => handleTabChange(tab)}
-            className="tab-button" // ✅ CSS 클래스 적용
-            style={{ color: color }} // ✅ 글자색과 아이콘 색상을 여기서 한번에 제어
+            className="tab-button"
+            style={{ color: color }}
             aria-current={isActive ? "page" : undefined}
             aria-label={labels[tab]}
           >
-            <Icon className="tab-icon" /> {/* ✅ 아이콘 크기는 CSS로 제어 */}
-            
-            {/* ✅ 아이콘 아래에 텍스트 라벨 추가 */}
+            <Icon className="tab-icon" />
             <span style={{ fontSize: 10 }}> 
               {labels[tab]}
             </span>
