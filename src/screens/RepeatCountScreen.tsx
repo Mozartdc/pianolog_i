@@ -82,7 +82,7 @@ function AppleScreen() {
   style={{
     width: "100%",
     maxWidth: "100%",
-    minHeight: "100dvh", // ✅ 변경
+    minHeight: "100vh", // ✅ 변경
     background: "var(--bg-primary)",
     color: "var(--text-primary)",
     display: "flex",
@@ -96,7 +96,7 @@ function AppleScreen() {
     boxSizing: "border-box",
     padding: "0 16px",
     paddingTop: "5px", // ✅ 추가
-    paddingBottom: 40
+    paddingBottom: 90
   }}
   onClick={handlePlus}
 >
