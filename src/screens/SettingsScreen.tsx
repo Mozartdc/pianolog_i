@@ -180,7 +180,7 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
     }}>
       <Header title="app setting" color="var(--VIVA_MAGENTA)" />
       
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 32, width: "90%", maxWidth: 343 }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 5, width: "90%", maxWidth: 343 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", justifyContent: "flex-start" }}>
           <AvatarCropper ref={avatarCropperRef} onAvatarChange={setAvatar} size={80} />
           <div style={{ display: "flex", gap: 8 }}>
