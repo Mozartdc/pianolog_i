@@ -70,7 +70,7 @@ export function Today() {
   return (
     <main style={{
       display: "flex", flexDirection: "column", alignItems: "center",
-      paddingTop: 20, margin: "0 auto", width: "100%", maxWidth: "100%",
+      paddingTop: 5, margin: "0 auto", width: "100%", maxWidth: "100%",
       background: "var(--bg-primary)", minHeight: "100vh",
       paddingBottom: 120, fontFamily: "var(--FONT_FAMILY)"
     }}>

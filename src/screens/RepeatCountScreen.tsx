@@ -77,18 +77,30 @@ function AppleScreen() {
   };
 
   return (
-    <div
-      className="apple-screen"
-      style={{
-        width: "100%", maxWidth: "100%", height: "100vh",
-        background: "var(--bg-primary)", color: "var(--text-primary)",
-        display: "flex", flexDirection: "column", alignItems: "center",
-        justifyContent: "center", position: "relative", margin: "0 auto",
-        touchAction: "manipulation", userSelect: "none",
-        boxSizing: "border-box", padding: "20px 16px"
-      }}
-      onClick={handlePlus}
-    >
+<div
+  className="apple-screen"
+  style={{
+    width: "100%",
+    maxWidth: "100%",
+    height: "100dvh", // ✅ 변경
+    background: "var(--bg-primary)",
+    color: "var(--text-primary)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    margin: "0 auto",
+    touchAction: "manipulation",
+    userSelect: "none",
+    boxSizing: "border-box",
+    padding: "0 16px",
+    paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)", // ✅ 추가
+    paddingBottom: 40
+  }}
+  onClick={handlePlus}
+>
+
       <div style={{
         display: "flex", flexDirection: "column", alignItems: "center",
         flexGrow: 1, justifyContent: "center", width: "100%"
