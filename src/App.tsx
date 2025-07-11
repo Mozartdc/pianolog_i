@@ -85,6 +85,16 @@ function App() {
       applyTheme(theme);
     }
   }, [theme]);
+
+  useEffect(() => {
+    const setRealHeight = () => {
+      const vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    };
+    setRealHeight();
+    window.addEventListener('resize', setRealHeight);
+    return () => window.removeEventListener('resize', setRealHeight);
+  }, []);
   
   // ✅ 테마를 변경하는 핸들러 함수를 App 컴포넌트에 정의
   const handleThemeChange = (selectedTheme: Theme) => {
