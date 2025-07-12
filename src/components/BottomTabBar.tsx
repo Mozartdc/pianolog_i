@@ -64,7 +64,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         width: "100%",
         maxWidth: "100%",
         // ✅ 높이와 패딩을 안전 영역을 고려하여 동적으로 조정합니다.
-        height: `calc(75px + env(safe-area-inset-bottom))`,
+        height: `calc(60px + env(safe-area-inset-bottom))`,
         padding: "0 16px",
         paddingBottom: `env(safe-area-inset-bottom)`,
         // --- 기존 스타일 유지 ---
@@ -73,7 +73,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "flex-start", // ✅ 아이콘을 위쪽에 정렬하기 위해 center -> flex-start
-        paddingTop: '20px', // ✅ 아이콘의 상단 여백
+        paddingTop: '10px', // ✅ 아이콘의 상단 여백
         boxSizing: "border-box",
         zIndex: 100,
       }}
