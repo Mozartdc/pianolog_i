@@ -91,66 +91,64 @@ return (
     className="apple-screen"
     style={{
       width: "100%",
-      height: "100dvh",
+      height: "100dvh", // ✅ 스크롤 제거
       background: "var(--bg-primary)",
       color: "var(--text-primary)",
       display: "flex",
       flexDirection: "column",
+      justifyContent: "space-between", // ✅ 위: 중앙 덩어리 / 아래: 버튼
       alignItems: "center",
-      justifyContent: "space-between",
-      position: "relative",
-      margin: "0 auto",
+      padding: "0 16px",
+      paddingTop: "calc(env(safe-area-inset-top, 0px) + 5px)",
+      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
+      overflow: "hidden", // ✅ 스크롤 제거
       touchAction: "manipulation",
       userSelect: "none",
       boxSizing: "border-box",
-      overflow: "hidden", // 스크롤 방지
-      paddingTop: "env(safe-area-inset-top)",
-      paddingBottom: "env(safe-area-inset-bottom)",
     }}
     onClick={handlePlus}
   >
-    {/* 중앙 콘텐츠 */}
+    {/* 중앙 덩어리 */}
     <div style={{
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      width: "100%",
+      flex: 1, // ✅ 위 아래 사이에서 공간 균등 확보
+      textAlign: "center",
+      width: "100%"
     }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 8,
         marginBottom: 15, ...commonFontStyle
       }}>
         <AppleSongIcon style={{ color: "var(--text-primary)" }} width="24" height="24" />
-        <span style={{ fontSize: 16, fontWeight: "normal", textAlign: "center", lineHeight: "24px" }}>
-          {displayTitle}
-        </span>
+        <span style={{ fontSize: 16, fontWeight: "normal", lineHeight: "24px" }}>{displayTitle}</span>
       </div>
+
       <div style={{
         fontSize: 20, color: "var(--text-secondary)", fontWeight: "normal",
-        textAlign: "center", lineHeight: "24px", marginBottom: 25,
-        ...commonFontStyle
+        lineHeight: "24px", marginBottom: 25, ...commonFontStyle
       }}>
         practice
       </div>
+
       <div style={{
-        fontSize: 128, textAlign: "center", lineHeight: "80px",
-        letterSpacing: "0.05em", fontWeight: 600, ...commonFontStyle
+        fontSize: 128, fontWeight: 600, lineHeight: "80px",
+        letterSpacing: "0.05em", ...commonFontStyle
       }}>
         {count}
       </div>
     </div>
 
-    {/* 하단 버튼들 */}
-<div style={{
-  width: "100%",
-  maxWidth: "343px",
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)", // ✅ 안전영역 고려
-}}>
-
+    {/* 하단 버튼 */}
+    <div style={{
+      width: "100%",
+      maxWidth: "343px",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center"
+    }}>
       <button
         onClick={handleReset}
         style={{
@@ -161,9 +159,7 @@ return (
         }}
       >
         <AppleResetIcon style={{ color: "var(--text-secondary)" }} width="16" height="16" />
-        <span style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: "normal", lineHeight: "22px", display: 'flex', alignItems: 'center' }}>
-          Reset
-        </span>
+        <span style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: "22px" }}>Reset</span>
       </button>
 
       <button
@@ -176,9 +172,7 @@ return (
         }}
       >
         <AppleMinusIcon style={{ color: "var(--text-secondary)" }} width="16" height="16" />
-        <span style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: "normal", lineHeight: "22px", display: 'flex', alignItems: 'center' }}>
-          minus
-        </span>
+        <span style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: "22px" }}>minus</span>
       </button>
     </div>
   </div>
