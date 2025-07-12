@@ -557,7 +557,7 @@ function HomeScreen() {
       minHeight: "100vh",
       background: "var(--bg-primary)",
       overflowX: "hidden",
-      overflowY: "auto",
+      overflowY: "hidden",
       margin: "0 auto",
       padding: "0",
       boxSizing: "border-box",

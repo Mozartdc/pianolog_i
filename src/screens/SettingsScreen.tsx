@@ -122,6 +122,17 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
   const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
   const avatarCropperRef = useRef<AvatarCropperHandles>(null);
+  
+  // 스크롤 방지
+useEffect(() => {
+  const original = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+  return () => {
+    document.body.style.overflow = original;
+  };
+}, []);
+
+  
   const commonFontStyle = {
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const
@@ -176,7 +187,7 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
       fontFamily: "var(--FONT_FAMILY)",
       display: "flex", flexDirection: "column", alignItems: "center",
       paddingBottom: 34, paddingTop: 5,
-      color: "var(--text-primary)", overflowY: "hidden",
+      color: "var(--text-primary)", overflow: "hidden",  position: "fixed",
     }}>
       <Header title="app setting" color="var(--VIVA_MAGENTA)" />
       
