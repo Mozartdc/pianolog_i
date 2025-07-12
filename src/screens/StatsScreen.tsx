@@ -169,10 +169,10 @@ function StatsScreen() {
   return (
     <div style={{
       width: "100%", maxWidth: "100%", margin: "0 auto", background: "var(--bg-primary)",
-      color: "var(--text-primary)", minHeight: "100dvh", padding: "0 clamp(16px, 4vw, 20px) 100px",
+      color: "var(--text-primary)", minHeight: "100vh", padding: "0 clamp(16px, 4vw, 20px) 100px",
       boxSizing: "border-box", ...commonFontStyle
     }}>
-      <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
+      <Header title="statistics" color="var(--MIMOSA)" topMargin={44} showBackButton={false} />
 
       {/* 총 연습 시간 */}
       <div style={{
