@@ -32,7 +32,7 @@ function AppleScreen() {
   };
 
   const track = trackId !== null ? tracks.find((t) => t.id === trackId) : null;
-  const displayTitle = track ? track.title : "연습";
+  const displayTitle = track ? track.title : "practice";
   const today = dayjs().format("YYYY-MM-DD");
 
   useEffect(() => {

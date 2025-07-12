@@ -73,7 +73,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "flex-start", // ✅ 아이콘을 위쪽에 정렬하기 위해 center -> flex-start
-        paddingTop: '10px', // ✅ 아이콘의 상단 여백
+        paddingTop: '20px', // ✅ 아이콘의 상단 여백
         boxSizing: "border-box",
         zIndex: 100,
       }}
