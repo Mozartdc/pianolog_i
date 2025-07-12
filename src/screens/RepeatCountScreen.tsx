@@ -67,10 +67,9 @@ function AppleScreen() {
     }
   };
 
-  return (
-    // ✅ 1. 전체 화면을 클릭 가능하게 하고, Flexbox 레이아웃의 기준이 됩니다.
+return (
+    // 1. 가장 바깥 div에서는 onClick을 삭제합니다.
     <div
-      onClick={handlePlus}
       style={{
         width: "100%",
         height: "100vh",
@@ -84,8 +83,10 @@ function AppleScreen() {
         ...commonFontStyle
       }}
     >
-      {/* ✅ 2. 중앙 콘텐츠 영역: flex-grow: 1로 남는 공간을 모두 차지하여 버튼을 아래로 밀어냅니다. */}
-      <div style={{
+      {/* 2. 중앙 콘텐츠 영역 div에 onClick={handlePlus}를 적용합니다. */}
+      <div
+        onClick={handlePlus}
+        style={{
           flexGrow: 1,
           display: "flex",
           flexDirection: "column",
@@ -95,7 +96,6 @@ function AppleScreen() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 15 }}>
-          {/* ✅ 아이콘 크기(width, height)를 지정하여 보이도록 수정했습니다. */}
           <AppleSongIcon style={{ color: "var(--text-primary)", width: 24, height: 24 }} />
           <span style={{ fontSize: 16, fontWeight: "normal" }}>{displayTitle}</span>
         </div>
@@ -109,7 +109,7 @@ function AppleScreen() {
         </div>
       </div>
 
-      {/* ✅ 3. 하단 버튼 영역: 페이지 흐름의 가장 아래에 위치하며, 하단에 충분한 여백을 가집니다. */}
+      {/* 3. 하단 버튼 영역 */}
       <div style={{
         width: "100%",
         display: "flex",
