@@ -121,6 +121,17 @@ function HomeScreen() {
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
 
+  // 스크롤 방지
+  useEffect(() => {
+  const originalOverflow = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+  return () => {
+    document.body.style.overflow = originalOverflow;
+  };
+}, []);
+
+
+
   // 타이머 상태
   const [timerActive, setTimerActive] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
