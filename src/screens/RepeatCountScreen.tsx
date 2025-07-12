@@ -8,7 +8,8 @@ import AppleSongIcon from "../assets/icons/applesong.svg?react";
 import AppleResetIcon from "../assets/icons/apple reset.svg?react";
 import AppleMinusIcon from "../assets/icons/appleminus.svg?react";
 import { usePracticeData } from "../contexts/PracticeDataContext";
-import Header from "../components/Header";
+// Header는 이 페이지에서 사용하지 않으므로 import 문을 제거해도 됩니다.
+// import Header from "../components/Header";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -58,33 +59,34 @@ function AppleScreen() {
     e.stopPropagation();
     if (trackId === null) return;
     if (confirm("카운트를 초기화하시겠습니까?")) {
-      setPartialCounts(prev => {
-        const dayCounts = prev[today] || {};
-        const updatedDayCounts = { ...dayCounts, [trackId]: 0 };
-        return { ...prev, [today]: updatedDayCounts };
-      });
+        setPartialCounts(prev => {
+            const dayCounts = prev[today] || {};
+            const updatedDayCounts = { ...dayCounts, [trackId]: 0 };
+            return { ...prev, [today]: updatedDayCounts };
+        });
     }
   };
 
   return (
-    // ✅ 1. 기준이 되는 부모 컨테이너
+    // ✅ 1. 전체 화면을 클릭 가능하게 하고, Flexbox 레이아웃의 기준이 됩니다.
     <div
+      onClick={handlePlus}
       style={{
         width: "100%",
-        height: "100vh", // 화면 전체 높이 고정
-        overflow: "hidden", // 스크롤 방지
+        height: "100vh",
+        overflow: "hidden",
         background: "var(--bg-primary)",
         color: "var(--text-primary)",
-        position: "relative", // 버튼 위치의 기준점이 됨
+        display: "flex",
+        flexDirection: "column",
+        userSelect: "none",
+        touchAction: "manipulation",
         ...commonFontStyle
       }}
     >
-      {/* ✅ 2. 중앙 콘텐츠 영역: 화면 전체를 차지하고 내용을 중앙 정렬 */}
-      <div 
-        onClick={handlePlus}
-        style={{
-          width: "100%",
-          height: "100%",
+      {/* ✅ 2. 중앙 콘텐츠 영역: flex-grow: 1로 남는 공간을 모두 차지하여 버튼을 아래로 밀어냅니다. */}
+      <div style={{
+          flexGrow: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -93,7 +95,8 @@ function AppleScreen() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 15 }}>
-          <AppleSongIcon style={{ color: "var(--text-primary)" }} />
+          {/* ✅ 아이콘 크기(width, height)를 지정하여 보이도록 수정했습니다. */}
+          <AppleSongIcon style={{ color: "var(--text-primary)", width: 24, height: 24 }} />
           <span style={{ fontSize: 16, fontWeight: "normal" }}>{displayTitle}</span>
         </div>
 
@@ -106,17 +109,16 @@ function AppleScreen() {
         </div>
       </div>
 
-      {/* ✅ 3. 하단 버튼 영역: 화면 하단에 고정 */}
+      {/* ✅ 3. 하단 버튼 영역: 페이지 흐름의 가장 아래에 위치하며, 하단에 충분한 여백을 가집니다. */}
       <div style={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
+        width: "100%",
         display: "flex",
         justifyContent: "space-between",
+        alignItems: "center",
         padding: "20px 24px",
-        // 하단 탭 바(60px)와 안전 영역을 고려한 충분한 여백 확보
         paddingBottom: `calc(60px + env(safe-area-inset-bottom, 0px) + 20px)`,
+        boxSizing: "border-box",
+        flexShrink: 0
       }}>
         <button
           onClick={handleReset}
@@ -127,7 +129,6 @@ function AppleScreen() {
             cursor: "pointer", padding: "10px 16px", ...commonFontStyle
           }}
         >
-          {/* ✅ 아이콘 크기 지정 */}
           <AppleResetIcon style={{ color: "var(--text-primary)", width: 16, height: 16 }} />
           <span style={{ fontSize: 14, color: "var(--text-primary)" }}>Reset</span>
         </button>
@@ -141,7 +142,6 @@ function AppleScreen() {
             cursor: "pointer", padding: "10px 16px", ...commonFontStyle
           }}
         >
-          {/* ✅ 아이콘 크기 지정 */}
           <AppleMinusIcon style={{ color: "var(--text-primary)", width: 16, height: 16 }} />
           <span style={{ fontSize: 14, color: "var(--text-primary)" }}>minus</span>
         </button>
