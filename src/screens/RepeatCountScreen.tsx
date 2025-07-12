@@ -97,7 +97,7 @@ return (
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
-      justifyContent: "center",
+      justifyContent: "space-between",
       position: "relative",
       margin: "0 auto",
       touchAction: "manipulation",
