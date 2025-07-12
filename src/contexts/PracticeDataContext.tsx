@@ -1,5 +1,3 @@
-// src/contexts/PracticeDataContext.tsx
-
 import React, { createContext, useContext, useState, useEffect, PropsWithChildren } from 'react';
 import dayjs from 'dayjs';
 
@@ -26,7 +24,7 @@ export type PracticeChecks = {
 };
 
 export type PartialCounts = {
-  [date: string]: { [trackId: number]: number };
+  [date: string]: { [key: string]: number }; // ✅ trackId (number)와 'practice' (string)를 모두 키로 사용
 };
 
 // --- Context가 제공할 값들의 타입 정의 ---
@@ -43,16 +41,15 @@ interface PracticeDataContextType {
   removeTrack: (id: number) => void;
   updateTrackTitle: (id: number, newTitle: string) => void;
   toggleCheck: (date: string, trackId: number) => void;
-  incPartial: (date: string, trackId: number) => void;
-  decPartial: (date: string, trackId: number) => void;
-  markTrackComplete: (trackId: number, date: string) => void; // ✅ 추가
-  unmarkTrackComplete: (trackId: number) => void; // ✅ 추가
+  // ✅ key의 타입을 number | string으로 변경
+  incPartial: (date: string, key: number | string) => void;
+  decPartial: (date: string, key: number | string) => void;
+  markTrackComplete: (trackId: number, date: string) => void;
+  unmarkTrackComplete: (trackId: number) => void;
 }
 
-// --- Context 생성 ---
 const PracticeDataContext = createContext<PracticeDataContextType | undefined>(undefined);
 
-// --- Provider 컴포넌트 생성 ---
 export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>(() => JSON.parse(localStorage.getItem("tracks") || "[]"));
   const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>(() => JSON.parse(localStorage.getItem("practiceRecords") || "[]"));
@@ -86,39 +83,59 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     });
   };
 
-  const incPartial = (date: string, trackId: number) => {
+  // ✅ key 타입을 number | string으로 수정
+  const incPartial = (date: string, key: number | string) => {
     setPartialCounts(prev => {
       const dayCounts = prev[date] || {};
-      const newCount = (dayCounts[trackId] || 0) + 1;
-      return { ...prev, [date]: { ...dayCounts, [trackId]: newCount } };
+      const newCount = (dayCounts[key] || 0) + 1;
+      return { ...prev, [date]: { ...dayCounts, [key]: newCount } };
     });
   };
 
-  const decPartial = (date: string, trackId: number) => {
+  // ✅ key 타입을 number | string으로 수정
+  const decPartial = (date: string, key: number | string) => {
     setPartialCounts(prev => {
       const dayCounts = prev[date] || {};
-      const newCount = Math.max((dayCounts[trackId] || 0) - 1, 0);
-      return { ...prev, [date]: { ...dayCounts, [trackId]: newCount } };
+      const newCount = Math.max((dayCounts[key] || 0) - 1, 0);
+      return { ...prev, [date]: { ...dayCounts, [key]: newCount } };
     });
   };
 
-  // ✅ [추가] 곡 완성 함수
   const markTrackComplete = (trackId: number, date: string) => {
-    setTracks(prev =>
-      prev.map(t =>
-        t.id === trackId ? { ...t, completedDate: date } : t
-      )
-    );
+    setTracks(prev => prev.map(t => t.id === trackId ? { ...t, completedDate: date } : t));
   };
   
-  // ✅ [추가] 곡 완성 해제 함수
   const unmarkTrackComplete = (trackId: number) => {
-    setTracks(prev =>
-      prev.map(t =>
-        t.id === trackId ? { ...t, completedDate: undefined } : t
-      )
-    );
+    setTracks(prev => prev.map(t => t.id === trackId ? { ...t, completedDate: undefined } : t));
   };
+
+  // ✅ [추가] localStorage 변경을 감지하고 모든 상태를 동기화하는 로직
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      console.log('Storage event fired:', event.key);
+      if (event.key === "practiceRecords" && event.newValue) {
+        setPracticeRecords(JSON.parse(event.newValue));
+      }
+      if (event.key === "tracks" && event.newValue) {
+        setTracks(JSON.parse(event.newValue));
+      }
+      if (event.key === "practiceChecks" && event.newValue) {
+        setPracticeChecks(JSON.parse(event.newValue));
+      }
+      if (event.key === "partialCounts" && event.newValue) {
+        setPartialCounts(JSON.parse(event.newValue));
+      }
+    };
+
+    // 이벤트 리스너 등록
+    window.addEventListener("storage", handleStorageChange);
+
+    // 컴포넌트 언마운트 시 이벤트 리스너 제거
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []); // 이 useEffect는 앱이 시작될 때 딱 한 번만 실행됩니다.
+
 
   const value = {
     tracks, setTracks,
@@ -127,7 +144,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     partialCounts, setPartialCounts,
     addTrack, removeTrack, updateTrackTitle,
     toggleCheck, incPartial, decPartial,
-    markTrackComplete, unmarkTrackComplete // ✅ 추가
+    markTrackComplete, unmarkTrackComplete
   };
 
   return (
