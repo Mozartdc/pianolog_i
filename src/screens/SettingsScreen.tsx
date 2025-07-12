@@ -176,7 +176,7 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
       fontFamily: "var(--FONT_FAMILY)",
       display: "flex", flexDirection: "column", alignItems: "center",
       paddingBottom: 34, paddingTop: 5,
-      color: "var(--text-primary)",
+      color: "var(--text-primary)", overflowY: "hidden",
     }}>
       <Header title="app setting" color="var(--VIVA_MAGENTA)" />
       
