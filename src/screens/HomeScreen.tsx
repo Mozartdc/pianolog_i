@@ -1,18 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { getTodayCheer } from "../utils/cheers";
-import { HomeStartTimerModal} from "./HomeStartTimerModal";
+import { HomeStartTimerModal } from "./HomeStartTimerModal";
 import { TimePickModal } from "./TimePickModal";
 import { HomeStopModal } from "./HomeStopModal";
 import { ExportCardModal } from "./ExportCardModal";
+import { usePracticeData } from "../contexts/PracticeDataContext"; // ✅ Context 훅을 불러옵니다.
 import Header from "../components/Header";
 import ProfileSection from "../components/ProfileSection";
 import StatsCard from "../components/StatsCard";
 import WeekCalendar from "../components/WeekCalendar";
 import './Home.css';
 
-// 실제 SVG/이미지 파일들 import
-// 수정할 내용
 import KeyboardIcon from "../assets/icons/keyboard.svg?react";
 import StaffIcon from "../assets/icons/staff.svg?react";
 import TrophyIcon from "../assets/icons/trophy.svg?react";
@@ -28,7 +27,7 @@ interface PracticeRecord {
   endTime: number;
   id: string;
   memo?: string;
-  track?: string; // StatsCard와 Total.tsx와 일관성을 위해 추가
+  track?: string;
 }
 
 type Track = {
@@ -67,13 +66,11 @@ const getKoreanHolidays = (year: number): string[] => {
   return holidays;
 };
 
-// 특별 치어스 (현재 비어있음)
 const specialCheers: CheerData[] = [];
 
-// 치어스 데이터 가져오기
 function getTodayCheerData(): CheerData {
   const today = new Date().toISOString().slice(0, 10);
-  
+
   const savedCheers = localStorage.getItem('temporaryCheers');
   if (savedCheers) {
     try {
@@ -84,10 +81,10 @@ function getTodayCheerData(): CheerData {
       console.error('Failed to parse temporary cheers:', e);
     }
   }
-  
+
   const specialCheer = specialCheers.find(cheer => cheer.date === today);
   if (specialCheer) return specialCheer;
-  
+
   try {
     const cheerMessage = getTodayCheer();
     if (typeof cheerMessage === 'string' && cheerMessage.trim()) {
@@ -96,7 +93,7 @@ function getTodayCheerData(): CheerData {
   } catch (e) {
     console.error('getTodayCheer error:', e);
   }
-  
+
   const fallbackMessages = [
     "오늘도 화이팅!",
     "꾸준히 연습하는 당신이 멋져요",
@@ -115,23 +112,19 @@ function getTodayCheerData(): CheerData {
 }
 
 function HomeScreen() {
-  // 상태 관리
+  // ✅ Context에서 연습 기록, 곡 목록, 체크 데이터를 가져옵니다.
+  const { practiceRecords, setPracticeRecords, tracks, practiceChecks } = usePracticeData();
+
+  // 로컬 상태
   const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
-  const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>([]);
-  const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>({});
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
-  
-  const [tracks, setTracks] = useState<Track[]>(() => {
-    const saved = localStorage.getItem("tracks");
-    return saved ? JSON.parse(saved) : [];
-  });
-  
+
   // 타이머 상태
   const [timerActive, setTimerActive] = useState(false);
   const [timerRunning, setTimerRunning] = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState(0); 
+  const [timerSeconds, setTimerSeconds] = useState(0);
   const [showTimePickModal, setShowTimePickModal] = useState(false);
   const [showHomeStopModal, setShowHomeStopModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -141,42 +134,6 @@ function HomeScreen() {
   const [pausedDuration, setPausedDuration] = useState<number>(0);
   const [isCompleting, setIsCompleting] = useState(false);
 
-  // 데이터 로딩
-  useEffect(() => {
-    try {
-      const savedRecords = localStorage.getItem("practiceRecords");
-      if (savedRecords) {
-        const parsed = JSON.parse(savedRecords);
-        if (Array.isArray(parsed)) {
-          const recordsWithIds = parsed.map((record: PracticeRecord) => ({
-            ...record,
-            id: record.id || dayjs(record.startTime || record.date).valueOf().toString() + Math.random().toString(36).substring(2, 8)
-          }));
-          setPracticeRecords(recordsWithIds);
-        } else if (parsed && typeof parsed === 'object') {
-          setPracticeRecords([{ 
-            ...parsed, 
-            id: parsed.id || dayjs(parsed.startTime || parsed.date).valueOf().toString() + Math.random().toString(36).substring(2, 8)
-          }]);
-        }
-      }
-
-      const savedChecks = localStorage.getItem("practiceChecks");
-      if (savedChecks) {
-        setPracticeChecks(JSON.parse(savedChecks));
-      }
-
-      const savedTracks = localStorage.getItem("tracks");
-      if (savedTracks) {
-        setTracks(JSON.parse(savedTracks));
-      }
-    } catch (error) {
-      console.error("데이터 로딩 실패:", error);
-    }
-    
-    setCheerData(getTodayCheerData());
-  }, []);
-
   // 타이머 상태 복원
   useEffect(() => {
     const restoreTimer = () => {
@@ -184,28 +141,26 @@ function HomeScreen() {
       if (timerState) {
         try {
           const { isRunning, startTime, pausedTime = 0, pausedAt, sessionId, memo } = JSON.parse(timerState);
-          
+
           let currentPausedDuration = pausedTime;
           if (!isRunning && pausedAt) {
             currentPausedDuration += (Date.now() - pausedAt);
           }
-          
+
           const elapsedSeconds = Math.floor((Date.now() - startTime - currentPausedDuration) / 1000);
-          
+
           setTimerSeconds(Math.max(0, elapsedSeconds));
           setTimerActive(true);
           setTimerRunning(isRunning);
           setActualStartTime(startTime);
           setPausedDuration(currentPausedDuration);
-          
+
           if (isRunning) {
             if (timerRef.current) clearInterval(timerRef.current);
             timerRef.current = window.setInterval(() => {
               setTimerSeconds(Math.floor((Date.now() - startTime - currentPausedDuration) / 1000));
             }, 1000);
           }
-          
-          console.log('타이머 복원됨:', { elapsedSeconds, isRunning, sessionId, startTime, currentPausedDuration, memo });
         } catch (error) {
           console.error('타이머 복원 실패:', error);
           localStorage.removeItem('timerState');
@@ -213,7 +168,7 @@ function HomeScreen() {
         }
       }
     };
-    
+
     restoreTimer();
   }, []);
 
@@ -222,17 +177,14 @@ function HomeScreen() {
     const handleStorageChange = () => {
       const savedTracks = localStorage.getItem("tracks");
       if (savedTracks) {
-        setTracks(JSON.parse(savedTracks));
+        // Context에서 tracks를 관리하므로 별도 setTracks 불필요
       }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
+
     const interval = setInterval(() => {
-      const currentTracks = localStorage.getItem("tracks");
-      if (currentTracks && currentTracks !== JSON.stringify(tracks)) {
-        setTracks(JSON.parse(currentTracks));
-      }
+      // Context에서 tracks를 관리하므로 별도 setTracks 불필요
     }, 1000);
 
     return () => {
@@ -247,29 +199,27 @@ function HomeScreen() {
       const existingTrackIds = new Set(tracks.map(t => t.id.toString()));
       let needsUpdate = false;
       const cleanedChecks = { ...practiceChecks };
-      
+
       Object.keys(cleanedChecks).forEach(date => {
         const dayChecks = cleanedChecks[date];
         Object.keys(dayChecks).forEach(trackId => {
           if (!existingTrackIds.has(trackId)) {
             delete cleanedChecks[date][trackId];
             needsUpdate = true;
-            console.log(`삭제된 곡 ID ${trackId} 제거됨`);
           }
         });
       });
-      
+
       if (needsUpdate) {
-        setPracticeChecks(cleanedChecks);
+        // Context에서 practiceChecks를 관리하므로 setPracticeChecks 호출 필요시 Context에서 처리
         localStorage.setItem("practiceChecks", JSON.stringify(cleanedChecks));
-        console.log("practiceChecks 정리 완료");
       }
     };
-    
+
     if (tracks.length > 0) {
       cleanupPracticeChecks();
     }
-  }, [tracks]);
+  }, [tracks, practiceChecks]);
 
   // 치어스 롤링
   useEffect(() => {
@@ -289,7 +239,7 @@ function HomeScreen() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
+
     const interval = setInterval(() => {
       const currentAvatar = localStorage.getItem("avatar") || "";
       const currentNickname = localStorage.getItem("nickname") || "디붕이";
@@ -329,7 +279,7 @@ function HomeScreen() {
   const todayStr = today.format("YYYY-MM-DD");
   const displayDate = dayjs(selectedDate);
   const selectedDateFormatted = displayDate.format("YYYY년 MM월 DD일");
-  
+
   const selectedDateRecords = Array.isArray(practiceRecords)
     ? practiceRecords.filter((r: PracticeRecord) => r.date === selectedDate)
     : [];
@@ -339,15 +289,15 @@ function HomeScreen() {
     try {
       const checks = practiceChecks[selectedDate];
       if (!checks) return { numerator: 0, denominator: tracks.length };
-      
+
       const existingTrackIds = new Set(tracks.map(t => t.id.toString()));
-      const validChecks = Object.entries(checks).filter(([trackId]) => 
+      const validChecks = Object.entries(checks).filter(([trackId]) =>
         existingTrackIds.has(trackId)
       );
-      
+
       const numerator = validChecks.filter(([, checked]) => checked).length;
       const denominator = tracks.length;
-      
+
       return { numerator, denominator };
     } catch (error) {
       console.error("practiceChecks 읽기 실패:", error);
@@ -358,7 +308,7 @@ function HomeScreen() {
   const todayRecords = Array.isArray(practiceRecords)
     ? practiceRecords.filter((r: PracticeRecord) => r.date === todayStr)
     : [];
-    
+
   const totalMinutes = Array.isArray(practiceRecords)
     ? practiceRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0)
     : 0;
@@ -370,13 +320,13 @@ function HomeScreen() {
     if (!Array.isArray(practiceRecords)) {
       return 0;
     }
-    
+
     let streak = 0;
     let day = dayjs();
-    
+
     try {
       const todayPracticed = practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"));
-      
+
       if (todayPracticed) {
         while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
           streak++;
@@ -395,7 +345,7 @@ function HomeScreen() {
       console.error("getStreak 계산 실패:", error);
       return 0;
     }
-    
+
     return streak;
   };
 
@@ -420,7 +370,7 @@ function HomeScreen() {
       sessionId: sessionId,
       memo: ""
     }));
-    
+
     setTimerActive(true);
     setTimerRunning(true);
     setTimerSeconds(0);
@@ -436,7 +386,7 @@ function HomeScreen() {
   const pauseTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setTimerRunning(false);
-    
+
     const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
     const newPausedDuration = (pausedDuration || 0) + (Date.now() - (timerState.pausedAt || Date.now()));
     setPausedDuration(newPausedDuration);
@@ -460,7 +410,7 @@ function HomeScreen() {
       pausedAt: undefined,
       pausedTime: newPausedDuration
     }));
-    
+
     setTimerRunning(true);
     if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
@@ -482,9 +432,9 @@ function HomeScreen() {
     const today = dayjs();
     const startMoment = today.hour(Number(startInput.split(':')[0])).minute(Number(startInput.split(':')[1]));
     const endMoment = today.hour(Number(endInput.split(':')[0])).minute(Number(endInput.split(':')[1]));
-    
+
     let newDurationSeconds = endMoment.diff(startMoment, 'second');
-    
+
     if (newDurationSeconds < 0) {
       newDurationSeconds += 24 * 60 * 60;
     }
@@ -493,17 +443,17 @@ function HomeScreen() {
       alert("연습 시간은 1분 이상이어야 합니다.");
       return;
     }
-    
+
     const recordStartTime = startMoment.valueOf();
     const recordEndTime = endMoment.valueOf();
 
     const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
-    const sessionId = timerState.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8); 
+    const sessionId = timerState.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
 
     const newRecord: PracticeRecord = {
-      id: sessionId, 
+      id: sessionId,
       date: today.format("YYYY-MM-DD"),
-      practiceTime: Math.floor(newDurationSeconds / 60), 
+      practiceTime: Math.floor(newDurationSeconds / 60),
       startTime: recordStartTime,
       endTime: recordEndTime,
       memo: timerState.memo || ""
@@ -518,11 +468,9 @@ function HomeScreen() {
     } else {
       updatedRecords = [...practiceRecords, newRecord];
     }
-    
-    setPracticeRecords(updatedRecords);
-    localStorage.setItem("practiceRecords", JSON.stringify(updatedRecords));
 
-    setActualStartTime(recordStartTime); 
+    setPracticeRecords(updatedRecords); // ✅ Context가 저장을 담당
+    setActualStartTime(recordStartTime);
     setTimerSeconds(newDurationSeconds);
 
     localStorage.setItem('timerState', JSON.stringify({
@@ -539,7 +487,7 @@ function HomeScreen() {
         setTimerSeconds(Math.floor((Date.now() - recordStartTime - 0) / 1000));
       }, 1000);
     }
-    
+
     setTimerActive(true);
     setShowTimePickModal(false);
   };
@@ -550,7 +498,7 @@ function HomeScreen() {
 
     try {
       const addMinutes = Math.floor(timerSeconds / 60);
-      
+
       if (addMinutes > 0) {
         const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
         const recordedStartTime = timerState.startTime;
@@ -575,10 +523,9 @@ function HomeScreen() {
           updatedRecords = [...practiceRecords, newRecord];
         }
 
-        setPracticeRecords(updatedRecords);
-        localStorage.setItem("practiceRecords", JSON.stringify(updatedRecords));
+        setPracticeRecords(updatedRecords); // ✅ Context가 저장을 담당
       }
-      
+
       localStorage.removeItem('timerState');
       if (timerRef.current) clearInterval(timerRef.current);
       setTimerActive(false);
@@ -598,7 +545,7 @@ function HomeScreen() {
   };
 
   const commonFontStyle = {
-    fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
+    fontFamily: "var(--FONT_FAMILY)",
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const
   };
@@ -606,34 +553,34 @@ function HomeScreen() {
   return (
     <div style={{
       width: "100%",
-      maxWidth: "100%", // ⭐ 이 부분을 "100%"로 변경했습니다.
-      minHeight: "100vh", 
-      background: "var(--bg-primary)", // ✅ CSS 변수 적용
+      maxWidth: "100%",
+      minHeight: "100vh",
+      background: "var(--bg-primary)",
       overflowX: "hidden",
-      overflowY: "auto", 
+      overflowY: "auto",
       margin: "0 auto",
       padding: "0",
-      boxSizing: "border-box", 
+      boxSizing: "border-box",
       ...commonFontStyle
     }}>
-      
+
       {/* Header */}
-      <Header 
+      <Header
         title="digital piano gallery 피출앱"
-        color="var(--TURQUOISE)" // ✅ CSS 변수 적용
+        color="var(--TURQUOISE)"
         topMargin={5}
       />
 
       {/* Date Display */}
       <div style={{
-        width: "100%", 
+        width: "100%",
         height: 20,
         fontSize: 14,
-        color: "var(--text-primary)", // ✅ CSS 변수 적용
+        color: "var(--text-primary)",
         textAlign: "center",
         lineHeight: "20px",
-        marginTop: "15px", 
-        padding: "0 16px", 
+        marginTop: "15px",
+        padding: "0 16px",
         boxSizing: "border-box",
         ...commonFontStyle
       }}>
@@ -641,7 +588,7 @@ function HomeScreen() {
       </div>
 
       {/* Profile Section */}
-      <ProfileSection 
+      <ProfileSection
         avatar={avatar}
         nickname={nickname}
         cheerData={cheerData}
@@ -649,22 +596,21 @@ function HomeScreen() {
 
       {/* Total Achievement Card */}
       <div style={{
-        // ✅ 완전 반응형: 고정 maxWidth 제거
-        width: "calc(100% - 32px)", // 좌우 16px 패딩 고려
+        width: "calc(100% - 32px)",
         height: 60,
-        background: "var(--PASTEL_TURQUOISE)", // ✅ CSS 변수 적용
-        borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
+        background: "var(--PASTEL_TURQUOISE)",
+        borderRadius: "var(--border-radius-large)",
         display: "flex",
         alignItems: "center",
-        padding: "16px", // ✅ 패딩 통일
+        padding: "16px",
         gap: 12,
-        margin: "23px auto 0 auto", // 중앙 정렬
+        margin: "23px auto 0 auto",
         boxSizing: "border-box"
       }}>
         <FlameIcon width={25} height={25} />
         <span style={{
           fontSize: 20,
-          color: "var(--text-primary)", // ✅ CSS 변수 적용
+          color: "var(--text-primary)",
           lineHeight: "20px",
           ...commonFontStyle
         }}>
@@ -675,7 +621,7 @@ function HomeScreen() {
       {/* Stats Cards */}
       <StatsCard
         icon={KeyboardIcon}
-        iconColor="var(--TURQUOISE)" // ✅ 이 줄을 추가해주세요
+        iconColor="var(--TURQUOISE)"
         iconAlt="keyboard"
         iconWidth={24}
         iconHeight={24}
@@ -687,7 +633,7 @@ function HomeScreen() {
 
       <StatsCard
         icon={StaffIcon}
-        iconColor="var(--TURQUOISE)" // ✅ 이 줄을 추가해주세요
+        iconColor="var(--TURQUOISE)"
         iconAlt="staff"
         iconWidth={24}
         iconHeight={24}
@@ -697,7 +643,7 @@ function HomeScreen() {
 
       <StatsCard
         icon={TrophyIcon}
-        iconColor="var(--TURQUOISE)" // ✅ 이 줄을 추가해주세요
+        iconColor="var(--TURQUOISE)"
         iconAlt="trophy"
         iconWidth={21}
         iconHeight={21}
@@ -723,23 +669,23 @@ function HomeScreen() {
           alignItems: "center",
           margin: "43px auto 0 auto"
         }}>
-<button
-  onClick={startTimer}
-  style={{
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    padding: 0,
-    transition: "var(--transition-fast)"
-  }}
->
-  <PlayIcon style={{ color: "var(--TURQUOISE)" }} width={50} height={50} />
-</button>
-          
+          <button
+            onClick={startTimer}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: 0,
+              transition: "var(--transition-fast)"
+            }}
+          >
+            <PlayIcon style={{ color: "var(--TURQUOISE)" }} width={50} height={50} />
+          </button>
+
           <span style={{
             marginTop: 1,
             fontSize: 14,
-            color: "var(--TURQUOISE)", // ✅ CSS 변수 적용
+            color: "var(--TURQUOISE)",
             lineHeight: "32px",
             pointerEvents: "none",
             ...commonFontStyle
@@ -798,7 +744,7 @@ function HomeScreen() {
 export function addTemporaryCheer(cheerData: CheerData) {
   const savedCheers = localStorage.getItem('temporaryCheers');
   let cheers: CheerData[] = [];
-  
+
   if (savedCheers) {
     try {
       cheers = JSON.parse(savedCheers);
@@ -806,14 +752,14 @@ export function addTemporaryCheer(cheerData: CheerData) {
       console.error('Failed to parse temporary cheers:', e);
     }
   }
-  
+
   const existingIndex = cheers.findIndex(cheer => cheer.date === cheerData.date);
   if (existingIndex >= 0) {
     cheers[existingIndex] = cheerData;
   } else {
     cheers.push(cheerData);
   }
-  
+
   localStorage.setItem('temporaryCheers', JSON.stringify(cheers));
 }
 
