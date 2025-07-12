@@ -87,98 +87,103 @@ return { ...prev, [today]: updatedDayCounts };
 };
 
 return (
-<div
-className="apple-screen"
-style={{
-width: "100%",
-maxWidth: "100%",
-minHeight: "100vh", // ✅ 변경
-background: "var(--bg-primary)",
-color: "var(--text-primary)",
-display: "flex",
-flexDirection: "column",
-alignItems: "center",
-justifyContent: "center",
-position: "relative",
-margin: "0 auto",
-touchAction: "manipulation",
-userSelect: "none",
-boxSizing: "border-box",
-padding: "0 16px",
-paddingTop: "calc(env(safe-area-inset-top, 0px) + 5px)", // ✅ 추가
-paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)"
-}}
-onClick={handlePlus}
->
-<div style={{
-display: "flex", flexDirection: "column", alignItems: "center",
-flexGrow: 1, justifyContent: "center", width: "100%"
-}}>
-<div style={{
-display: "flex", alignItems: "center", gap: 8,
-marginBottom: 15, ...commonFontStyle
-}}>
-<AppleSongIcon style={{ color: "var(--text-primary)" }} width="24" height="24" />
-<span style={{ fontSize: 16, fontWeight: "normal", textAlign: "center", lineHeight: "24px" }}>
-{displayTitle}
-</span>
-</div>
+  <div
+    className="apple-screen"
+    style={{
+      width: "100%",
+      height: "100dvh",
+      background: "var(--bg-primary)",
+      color: "var(--text-primary)",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      position: "relative",
+      margin: "0 auto",
+      touchAction: "manipulation",
+      userSelect: "none",
+      boxSizing: "border-box",
+      overflow: "hidden", // 스크롤 방지
+      paddingTop: "env(safe-area-inset-top)",
+      paddingBottom: "env(safe-area-inset-bottom)",
+    }}
+    onClick={handlePlus}
+  >
+    {/* 중앙 콘텐츠 */}
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      flex: 1,
+      width: "100%",
+    }}>
+      <div style={{
+        display: "flex", alignItems: "center", gap: 8,
+        marginBottom: 15, ...commonFontStyle
+      }}>
+        <AppleSongIcon style={{ color: "var(--text-primary)" }} width="24" height="24" />
+        <span style={{ fontSize: 16, fontWeight: "normal", textAlign: "center", lineHeight: "24px" }}>
+          {displayTitle}
+        </span>
+      </div>
+      <div style={{
+        fontSize: 20, color: "var(--text-secondary)", fontWeight: "normal",
+        textAlign: "center", lineHeight: "24px", marginBottom: 25,
+        ...commonFontStyle
+      }}>
+        practice
+      </div>
+      <div style={{
+        fontSize: 128, textAlign: "center", lineHeight: "80px",
+        letterSpacing: "0.05em", fontWeight: 600, ...commonFontStyle
+      }}>
+        {count}
+      </div>
+    </div>
 
-<div style={{
-fontSize: 20, color: "var(--text-secondary)", fontWeight: "normal",
-textAlign: "center", lineHeight: "24px", marginBottom: 25,
-...commonFontStyle
-}}>
-practice
-</div>
+    {/* 하단 버튼들 */}
+    <div style={{
+      position: "absolute",
+      bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
+      width: "calc(100% - 32px)",
+      maxWidth: "343px",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      margin: "0 auto",
+    }}>
+      <button
+        onClick={handleReset}
+        style={{
+          width: 85, height: 40, background: "var(--bg-secondary)",
+          border: "none", borderRadius: 8, display: "flex",
+          alignItems: "center", justifyContent: "center", gap: 8,
+          cursor: "pointer", ...commonFontStyle
+        }}
+      >
+        <AppleResetIcon style={{ color: "var(--text-secondary)" }} width="16" height="16" />
+        <span style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: "normal", lineHeight: "22px", display: 'flex', alignItems: 'center' }}>
+          Reset
+        </span>
+      </button>
 
-<div
-className="apple-screen__number"
-style={{
-fontSize: 128, textAlign: "center", lineHeight: "80px",
-letterSpacing: "0.05em", fontWeight: 600, ...commonFontStyle
-}}
->
-{count}
-</div>
-</div>
-
-<div style={{
-position: "absolute", bottom: 40, width: "calc(100% - 32px)",
-maxWidth: "343px", display: "flex", justifyContent: "space-between",
-alignItems: "center", margin: "0 auto"
-}}>
-<button
-onClick={handleReset}
-style={{
-width: 85, height: 40, background: "var(--bg-secondary)",
-border: "none", borderRadius: 8, display: "flex",
-alignItems: "center", justifyContent: "center", gap: 8,
-cursor: "pointer", ...commonFontStyle
-}}
->
-<AppleResetIcon style={{ color: "var(--text-secondary)" }} width="16" height="16" />
-<span style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: "normal", lineHeight: "22px", display: 'flex', alignItems: 'center' }}>
-Reset
-</span>
-</button>
-
-<button
-onClick={handleMinus}
-style={{
-width: 85, height: 40, background: "var(--bg-secondary)",
-border: "none", borderRadius: 8, display: "flex",
-alignItems: "center", justifyContent: "center", gap: 8,
-cursor: "pointer", ...commonFontStyle
-}}
->
-<AppleMinusIcon style={{ color: "var(--text-secondary)" }} width="16" height="16" />
-<span style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: "normal", lineHeight: "22px", display: 'flex', alignItems: 'center' }}>
-minus
-</span>
-</button>
-</div>
-</div>
+      <button
+        onClick={handleMinus}
+        style={{
+          width: 85, height: 40, background: "var(--bg-secondary)",
+          border: "none", borderRadius: 8, display: "flex",
+          alignItems: "center", justifyContent: "center", gap: 8,
+          cursor: "pointer", ...commonFontStyle
+        }}
+      >
+        <AppleMinusIcon style={{ color: "var(--text-secondary)" }} width="16" height="16" />
+        <span style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: "normal", lineHeight: "22px", display: 'flex', alignItems: 'center' }}>
+          minus
+        </span>
+      </button>
+    </div>
+  </div>
 );
 }
 
