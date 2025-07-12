@@ -110,7 +110,11 @@ return (
       touchAction: "manipulation",
       userSelect: "none"
     }}
-    onClick={handlePlus}
+    onClick={(e) => {
+  // 버튼 내부 클릭이면 무시 (숫자 올라가지 않게)
+  if ((e.target as HTMLElement).closest("button")) return;
+  handlePlus();
+}}
   >
 
     {/* 중앙 덩어리 */}
