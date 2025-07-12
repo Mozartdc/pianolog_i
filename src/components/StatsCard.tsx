@@ -89,7 +89,7 @@ const exportSelectedSession = async (session: PracticeRecord) => {
     const link = document.createElement("a");
     const filenameDate = new Date(session.startTime).toISOString().slice(0, 10).replace(/-/g, '');
     const filenameTime = new Date(session.startTime).toTimeString().slice(0, 5).replace(/:/g, '');
-    link.download = `피출러_연습기록_${filenameDate}_${filenameTime}.png`;
+    link.download = `피출 기록_${filenameDate}_${filenameTime}.png`;
     link.href = imageDataUrl;
     link.click();
     
