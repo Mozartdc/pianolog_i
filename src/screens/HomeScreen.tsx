@@ -122,13 +122,19 @@ function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
 
   // 스크롤 방지
-  useEffect(() => {
-  const originalOverflow = document.body.style.overflow;
+useEffect(() => {
+  const originalHtmlOverflow = document.documentElement.style.overflow;
+  const originalBodyOverflow = document.body.style.overflow;
+
+  document.documentElement.style.overflow = "hidden";
   document.body.style.overflow = "hidden";
+
   return () => {
-    document.body.style.overflow = originalOverflow;
+    document.documentElement.style.overflow = originalHtmlOverflow;
+    document.body.style.overflow = originalBodyOverflow;
   };
 }, []);
+
 
 
 
