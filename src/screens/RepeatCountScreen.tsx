@@ -68,23 +68,41 @@ useEffect(() => {
   };
 
 const handleMinus = (e: React.MouseEvent) => {
-e.stopPropagation();
-if (trackId === null) return;
-const newCount = Math.max(count - 1, 0);
-setCount(newCount);
-decPartial(today, trackId);
+  e.stopPropagation();
+  const newCount = Math.max(count - 1, 0);
+  setCount(newCount);
+
+  if (trackId !== null) {
+    decPartial(today, trackId);
+  } else {
+    setPartialCounts((prev) => {
+      const todayCounts = prev[today] || {};
+      const updatedDayCounts = { ...todayCounts, practice: newCount };
+      return { ...prev, [today]: updatedDayCounts };
+    });
+  }
 };
 
+
 const handleReset = (e: React.MouseEvent) => {
-e.stopPropagation();
-if (trackId === null) return;
-setCount(0);
-setPartialCounts(prev => {
-const dayCounts = prev[today] || {};
-const updatedDayCounts = { ...dayCounts, [trackId]: 0 };
-return { ...prev, [today]: updatedDayCounts };
-});
+  e.stopPropagation();
+  setCount(0);
+
+  if (trackId !== null) {
+    setPartialCounts((prev) => {
+      const dayCounts = prev[today] || {};
+      const updatedDayCounts = { ...dayCounts, [trackId]: 0 };
+      return { ...prev, [today]: updatedDayCounts };
+    });
+  } else {
+    setPartialCounts((prev) => {
+      const dayCounts = prev[today] || {};
+      const updatedDayCounts = { ...dayCounts, practice: 0 };
+      return { ...prev, [today]: updatedDayCounts };
+    });
+  }
 };
+
 
 return (
   <div
