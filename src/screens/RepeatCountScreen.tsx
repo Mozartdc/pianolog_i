@@ -34,26 +34,38 @@ const displayTitle = track ? track.title : "practice";
 const today = dayjs().format("YYYY-MM-DD");
 
 useEffect(() => {
-if (trackId !== null) {
-const todayCounts = partialCounts[today] || {};
-setCount(todayCounts[trackId] || 0);
-}
+  const todayCounts = partialCounts[today] || {};
+  // ✅ trackId가 있으면 해당 곡의 카운트를, 없으면 'practice'의 카운트를 가져옴
+  const key = trackId !== null ? trackId : 'practice';
+  setCount(todayCounts[key] || 0);
 }, [partialCounts, trackId, today]);
 
 // ✅ [수정] +1 핸들러에 체크박스 연동 로직 추가
-const handlePlus = () => {
-if (trackId === null) return;
+// ✅ [수정] +1 핸들러에 체크박스 연동 로직 추가
+  const handlePlus = () => {
+    // UI에 즉시 반영되도록 count 상태를 먼저 업데이트합니다.
+    const newCount = count + 1;
+    setCount(newCount);
 
-// 만약 카운트가 0에서 1로 올라가는 순간이고, 아직 체크가 안되어 있다면 체크 실행
-const isChecked = !!(practiceChecks[today] && practiceChecks[today][trackId]);
-if (count === 0 && !isChecked) {
-toggleCheck(today, trackId);
-}
-
-const newCount = count + 1;
-setCount(newCount);
-incPartial(today, trackId);
-};
+    if (trackId !== null) {
+      // --- 특정 곡이 선택된 경우 ---
+      // 체크박스 연동 로직
+      const isChecked = !!(practiceChecks[today] && practiceChecks[today][trackId]);
+      if (count === 0 && !isChecked) {
+        toggleCheck(today, trackId);
+      }
+      // 중앙 관리 데이터 업데이트
+      incPartial(today, trackId);
+    } else {
+      // --- 특정 곡이 선택되지 않은 경우 (일반 practice) ---
+      // 중앙 관리 데이터를 직접 수정하여 'practice' 키의 카운트를 올립니다.
+      setPartialCounts(prev => {
+        const todayCounts = prev[today] || {};
+        const updatedDayCounts = { ...todayCounts, practice: newCount };
+        return { ...prev, [today]: updatedDayCounts };
+      });
+    }
+  };
 
 const handleMinus = (e: React.MouseEvent) => {
 e.stopPropagation();
