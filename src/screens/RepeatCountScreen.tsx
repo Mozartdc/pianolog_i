@@ -90,24 +90,29 @@ return (
   <div
     className="apple-screen"
     style={{
-      width: "100%",
-      height: "100dvh", // ✅ 스크롤 제거
+      position: "fixed", // ✅ 고정
+      top: 0,
+      left: 0,
+      width: "100vw",
+      height: "100dvh",
       background: "var(--bg-primary)",
       color: "var(--text-primary)",
       display: "flex",
       flexDirection: "column",
-      justifyContent: "space-between", // ✅ 위: 중앙 덩어리 / 아래: 버튼
+      justifyContent: "space-between",
       alignItems: "center",
       padding: "0 16px",
       paddingTop: "calc(env(safe-area-inset-top, 0px) + 5px)",
-      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 40px)",
-      overflow: "hidden", // ✅ 스크롤 제거
-      touchAction: "manipulation",
-      userSelect: "none",
+      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)", // ✅ 여유있게 버튼 띄움
+      overflow: "hidden", // ✅ 스크롤 완전 차단
       boxSizing: "border-box",
+      zIndex: 99,
+      touchAction: "manipulation",
+      userSelect: "none"
     }}
     onClick={handlePlus}
   >
+
     {/* 중앙 덩어리 */}
     <div style={{
       display: "flex",
