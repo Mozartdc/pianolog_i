@@ -115,7 +115,6 @@ return (
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      flex: 1,
       width: "100%",
     }}>
       <div style={{
@@ -143,16 +142,15 @@ return (
     </div>
 
     {/* 하단 버튼들 */}
-    <div style={{
-      position: "absolute",
-      bottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)",
-      width: "calc(100% - 32px)",
-      maxWidth: "343px",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      margin: "0 auto",
-    }}>
+<div style={{
+  width: "100%",
+  maxWidth: "343px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 20px)", // ✅ 안전영역 고려
+}}>
+
       <button
         onClick={handleReset}
         style={{
