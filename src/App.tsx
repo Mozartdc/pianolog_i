@@ -103,22 +103,19 @@ function App() {
   };
 
 return (
-    <BrowserRouter>
-    <ScrollRestoration />
-      <PracticeDataProvider>
-        <div style={{
-          width: "100%",
-          maxWidth: "100%",
-          margin: "0 auto",
-          paddingBottom: 80,
-          minHeight: "100dvh",
-          background: "var(--bg-primary)",
-          boxShadow: "none"
-        }}>
-          <AppRoutes theme={theme} handleThemeChange={handleThemeChange} />
-        </div>
-      </PracticeDataProvider>
-    </BrowserRouter>
+    <PracticeDataProvider>
+      <div style={{
+        width: "100%",
+        maxWidth: "100%",
+        margin: "0 auto",
+        paddingBottom: 80,
+        minHeight: "100dvh",
+        background: "var(--bg-primary)",
+        boxShadow: "none"
+      }}>
+        <AppRoutes theme={theme} handleThemeChange={handleThemeChange} />
+      </div>
+    </PracticeDataProvider>
   );
 }
 
