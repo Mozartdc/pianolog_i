@@ -115,44 +115,31 @@ function getTodayCheerData(): CheerData {
 function HomeScreen() {
   const location = useLocation();
 
+  // ✅ 기존의 모든 스크롤 관련 useEffect를 삭제하고 아래 코드로 교체합니다.
   useEffect(() => {
-    const isHome = location.pathname === "/home";
-    document.body.style.overflow = isHome ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [location.pathname]);
+    // 현재 경로가 홈일 때만 스크롤 잠금 스타일을 적용합니다.
+    if (location.pathname === '/' || location.pathname === '/home') {
+      const originalHtmlStyle = document.documentElement.style.cssText;
+      const originalBodyStyle = document.body.style.cssText;
+      const scrollY = window.scrollY; // 현재 스크롤 위치 저장
 
-  useEffect(() => {
-    const handleFocus = () => {
-      if (window.location.pathname === "/home") {
-        document.body.style.overflow = "hidden";
-      }
-    };
-    window.addEventListener("focusin", handleFocus);
-    return () => window.removeEventListener("focusin", handleFocus);
-  }, []);
-
-  // 1. 홈 진입 시 scrollTop 0 + overflow hidden 보정
-  useEffect(() => {
-    if (location.pathname === "/home") {
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-
-      setTimeout(() => {
-        document.body.style.overflow = "hidden";
-      }, 50);
+      // 스크롤 잠금 스타일 적용
+      document.documentElement.style.height = "100%";
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.height = "100%";
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed"; // 스크롤을 원천적으로 막는 핵심
+      document.body.style.top = `-${scrollY}px`; // 스크롤 위치 고정
+      document.body.style.width = "100%";
+      
+      // 컴포넌트가 사라지거나 다른 페이지로 이동할 때 원래 스타일로 복원합니다.
+      return () => {
+        document.documentElement.style.cssText = originalHtmlStyle;
+        document.body.style.cssText = originalBodyStyle;
+        window.scrollTo(0, scrollY); // 원래 스크롤 위치로 복원
+      };
     }
-  }, [location.pathname]);
-
-  // 2. 홈 진입 시 다시 한 번 scrollTo 보정
-  useEffect(() => {
-    if (location.pathname === "/home") {
-      requestAnimationFrame(() => {
-        window.scrollTo(0, 0);
-      });
-    }
-  }, [location.pathname]);
+  }, [location.pathname]); // 경로가 변경될 때마다 이 효과를 재평가합니다.
 
   // ✅ Context에서 연습 기록, 곡 목록, 체크 데이터를 가져옵니다.
   const { practiceRecords, setPracticeRecords, tracks, practiceChecks } = usePracticeData();
@@ -162,20 +149,6 @@ function HomeScreen() {
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
-
-  // 스크롤 방지
-  useEffect(() => {
-    const originalHtmlOverflow = document.documentElement.style.overflow;
-    const originalBodyOverflow = document.body.style.overflow;
-
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.documentElement.style.overflow = originalHtmlOverflow;
-      document.body.style.overflow = originalBodyOverflow;
-    };
-  }, []);
 
   // 타이머 상태
   const [timerActive, setTimerActive] = useState(false);
