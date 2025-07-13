@@ -167,12 +167,19 @@ function StatsScreen() {
   console.log("현재 선택된 날짜:", selectedDate);
 
   return (
-    <div style={{
-      width: "100%", maxWidth: "100%", margin: "0 auto", background: "var(--bg-primary)",
-      color: "var(--text-primary)", minHeight: "100vh", padding: "0 clamp(16px, 4vw, 20px) 100px",
-      boxSizing: "border-box", ...commonFontStyle
-    }}>
-      <Header title="statistics" color="var(--MIMOSA)" topMargin={44} showBackButton={false} />
+<div style={{
+  width: "100%",
+  maxWidth: "100%",
+  margin: "0 auto",
+  background: "var(--bg-primary)",
+  color: "var(--text-primary)",
+  minHeight: "100dvh",
+  padding: "clamp(16px, 4vw, 20px) 100px", // 👈 상단 padding 제거
+  boxSizing: "border-box",
+  marginTop: 5, // 👈 명시적 상단 마진 추가
+  ...commonFontStyle
+}}>
+  <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
 
       {/* 총 연습 시간 */}
       <div style={{
@@ -327,7 +334,7 @@ function StatsScreen() {
     : (isSelected ? "var(--BLACK)" : (dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-primary)")),
   fontWeight: isToday ? 700 : 400,
   zIndex: 2, position: "relative",
-  border: isSelected && !isToday ? "3px solid var(--VIVA_MAGENTA)" : "none",
+  border: isSelected ? "3px solid var(--VIVA_MAGENTA)" : "none",
   background: "transparent",
   borderRadius: "50%",
   width: isToday || isSelected ? "100%" : "auto",
@@ -376,6 +383,8 @@ function StatsScreen() {
             </span>
           </div>
           
+        
+
           {/* 연습한 곡 목록 */}
           <div style={{
             borderTop: "1px solid var(--border-light)",
