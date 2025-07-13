@@ -637,7 +637,7 @@ useEffect(() => {
 
       {/* Stats Cards */}
       <StatsCard
-        icon={KeyboardIcon}
+        Icon={KeyboardIcon}
         iconColor="var(--TURQUOISE)"
         iconAlt="keyboard"
         iconWidth={24}
@@ -645,11 +645,11 @@ useEffect(() => {
         title={selectedDate === todayStr ? "오늘의 피출 기록" : `${selectedDateFormatted} 피출 기록`}
         value={`${Math.floor(selectedDateMinutes / 60)}시간 ${selectedDateMinutes % 60}분`}
         showExportIcon={true}
-        exportIcon={ExportIcon}
+        ExportIcon={ExportIcon}
       />
 
       <StatsCard
-        icon={StaffIcon}
+        Icon={StaffIcon}
         iconColor="var(--TURQUOISE)"
         iconAlt="staff"
         iconWidth={24}
@@ -659,7 +659,7 @@ useEffect(() => {
       />
 
       <StatsCard
-        icon={TrophyIcon}
+        Icon={TrophyIcon}
         iconColor="var(--TURQUOISE)"
         iconAlt="trophy"
         iconWidth={21}
