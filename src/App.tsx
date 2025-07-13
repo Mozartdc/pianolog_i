@@ -1,6 +1,6 @@
 // src/App.tsx
 
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, ScrollRestoration } from "react-router-dom";
 import { useState, useEffect } from "react";
 import HomeScreen from "./screens/HomeScreen";
 import Today from "./screens/Today";
@@ -104,6 +104,7 @@ function App() {
 
 return (
     <BrowserRouter>
+    <ScrollRestoration />
       <PracticeDataProvider>
         <div style={{
           width: "100%",
