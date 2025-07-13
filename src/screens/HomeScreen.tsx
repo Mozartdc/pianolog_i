@@ -133,6 +133,27 @@ function HomeScreen() {
     return () => window.removeEventListener("focusin", handleFocus);
   }, []);
 
+  // 1. 홈 진입 시 scrollTop 0 + overflow hidden 보정
+  useEffect(() => {
+    if (location.pathname === "/home") {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+
+      setTimeout(() => {
+        document.body.style.overflow = "hidden";
+      }, 50);
+    }
+  }, [location.pathname]);
+
+  // 2. 홈 진입 시 다시 한 번 scrollTo 보정
+  useEffect(() => {
+    if (location.pathname === "/home") {
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
+    }
+  }, [location.pathname]);
+
   // ✅ Context에서 연습 기록, 곡 목록, 체크 데이터를 가져옵니다.
   const { practiceRecords, setPracticeRecords, tracks, practiceChecks } = usePracticeData();
 
