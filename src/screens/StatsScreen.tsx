@@ -172,7 +172,15 @@ function StatsScreen() {
       color: "var(--text-primary)", minHeight: "100dvh", padding: "0 clamp(0px, 4vw, 20px) 100px",
       boxSizing: "border-box", ...commonFontStyle
     }}>
-      <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
+      {/* ✅ 헤더를 감싸는 div를 추가하고 sticky 관련 스타일을 적용합니다. */}
+      <div style={{ 
+        position: "sticky", 
+        top: 0, 
+        zIndex: 10, 
+        background: "var(--bg-primary)" 
+      }}>
+        <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
+      </div>
 
       {/* 총 연습 시간 */}
       <div style={{

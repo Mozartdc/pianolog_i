@@ -1,4 +1,3 @@
-// src/components/Header.tsx
 "use client";
 
 interface HeaderProps {
@@ -23,34 +22,28 @@ function Header({
   };
 
   return (
-    // ✅ 1. 가장 바깥 div는 패딩과 위쪽 마진만 담당합니다.
+    // ✅ 하나의 div로 구조를 단순화하고, 여기에 모든 스타일을 적용합니다.
     <div style={{
       width: "100%",
-      maxWidth: "100%",
-      padding: "0 16px", // 좌우 패딩을 여기서 줍니다.
+      height: 42,
+      background: "var(--bg-primary)",
+      borderBottom: "var(--border-light)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: `0 16px`, // ✅ 헤더 자체에 좌우 패딩을 줍니다.
       marginTop: `${topMargin}px`,
-      background: "var(--bg-primary)", // 배경색은 그대로 유지
-      boxSizing: "border-box"
+      boxSizing: "border-box" // 패딩이 크기에 영향을 주도록 설정
     }}>
-      {/* ✅ 2. 실제 콘텐츠와 밑줄은 안쪽 div에서 처리합니다. */}
-      <div style={{
-        width: "100%",
-        height: 42,
-        borderBottom: "var(--border-light)", // 패딩이 적용된 공간 안에서 밑줄이 그어짐
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center"
+      <span style={{
+        fontSize: 17,
+        color: color,
+        lineHeight: "140%",
+        textAlign: "center",
+        ...commonFontStyle
       }}>
-        <span style={{
-          fontSize: 17,
-          color: color,
-          lineHeight: "140%",
-          textAlign: "center",
-          ...commonFontStyle
-        }}>
-          {title}
-        </span>
-      </div>
+        {title}
+      </span>
     </div>
   );
 }
