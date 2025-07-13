@@ -1,7 +1,5 @@
-// src/screens/Today.tsx
-
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
@@ -11,7 +9,6 @@ import PracticeItem from "../components/PracticeItem";
 import TodayCalendarModal from "./TodayCalendarModal";
 import SongPlusIcon from "../assets/icons/songplus.svg?react";
 import SongNoteIcon from "../assets/icons/song_note.svg?react";
-// ✅ [추가] 중앙 데이터 관리소를 사용하기 위한 import
 import { usePracticeData, Track } from "../contexts/PracticeDataContext";
 
 const getKoreanHolidays = (year: number): string[] => {
@@ -28,7 +25,6 @@ const getKoreanHolidays = (year: number): string[] => {
 export function Today() {
   const navigate = useNavigate();
 
-  // ✅ [수정] 중앙 데이터 관리소에서 모든 데이터와 함수를 가져옵니다.
   const {
     tracks,
     practiceRecords,
@@ -36,65 +32,83 @@ export function Today() {
     partialCounts,
     addTrack,
     removeTrack,
-    updateTrackTitle, // ✅ [추가] 제목 수정 함수
+    updateTrackTitle,
     toggleCheck,
     incPartial,
     decPartial,
   } = usePracticeData();
 
-  // UI 상태 관리는 그대로 유지합니다.
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [showSongPlusModal, setShowSongPlusModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
 
-  // ✅ [수정] handleEdit 함수가 중앙 관리소의 updateTrackTitle을 호출하도록 변경
   const handleEdit = (id: number, newTitle: string) => {
     updateTrackTitle(id, newTitle);
   };
 
-  const handleDelete = (id: number) => { if (confirm("정말 삭제하시겠습니까?")) removeTrack(id); };
-  const handleTitleClick = (trackId: number) => { setSelectedTrackId(trackId); setShowCalendarModal(true); };
-  const handleCountClick = (trackId: number) => { navigate(`/timer?trackId=${trackId}`); };
-  const handleDateClick = (dateStr: string) => { setSelectedDate(dateStr); };
-  
+  const handleDelete = (id: number) => {
+    if (confirm("정말 삭제하시겠습니까?")) removeTrack(id);
+  };
+  const handleTitleClick = (trackId: number) => {
+    setSelectedTrackId(trackId);
+    setShowCalendarModal(true);
+  };
+  const handleCountClick = (trackId: number) => {
+    navigate(`/timer?trackId=${trackId}`);
+  };
+  const handleDateClick = (dateStr: string) => {
+    setSelectedDate(dateStr);
+  };
+
   const handlePracticeUpdate = () => {
     // Context 사용으로 더 이상 필요 없음
   };
 
   const visibleTracks = tracks.filter(
-    (track) => dayjs(track.addedDate).isSameOrBefore(selectedDate, 'day') && 
-              (!track.completedDate || dayjs(track.completedDate).isSameOrAfter(selectedDate, 'day'))
+    (track) =>
+      dayjs(track.addedDate).isSameOrBefore(selectedDate, "day") &&
+      (!track.completedDate || dayjs(track.completedDate).isSameOrAfter(selectedDate, "day"))
   );
 
+  // ====== 수정된 return 문 시작 ======
   return (
-    <main style={{
-      display: "flex", flexDirection: "column", alignItems: "center",
-      paddingTop: 5, margin: "0 auto", width: "100%", maxWidth: "100%",
-      background: "var(--bg-primary)", minHeight: "100vh",
-      paddingBottom: 120, fontFamily: "var(--FONT_FAMILY)"
-    }}>
-      {/* 헤더를 고정하는 div */}
-      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--bg-primary)" }}>
+    <main
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        margin: "0 auto",
+        width: "100%",
+        maxWidth: "100%",
+        background: "var(--bg-primary)",
+        minHeight: "100vh",
+        paddingBottom: 120,
+        fontFamily: "var(--FONT_FAMILY)",
+      }}
+    >
+      {/* ✅ 헤더 고정 섹션 */}
+      <div style={{ position: "sticky", top: 0, zIndex: 10, width: "100%" }}>
         <Header
           title="today"
           color="var(--VERY_PERI)"
           showBackButton={false}
+          topMargin={5} // Header의 prop으로 마진 전달
         />
       </div>
 
-      {/* WeekCalendar를 고정하는 div */}
-      <div style={{ 
-        position: "sticky", 
-        top: "47px", // ✅ 헤더 높이(42px) + 마진(5px) 만큼 아래에 위치
-        zIndex: 9, // 헤더보다는 한 칸 아래
-        background: "var(--bg-primary)"
-      }}>
-        <div style={{
+      {/* ✅ 캘린더 고정 섹션 */}
+      <div
+        style={{
+          position: "sticky",
+          top: "47px", // 헤더 높이(42px) + 마진(5px)
+          zIndex: 9,
+          background: "var(--bg-primary)",
           width: "100%",
-          maxWidth: "100%",
-          margin: "5px auto 0 auto"
-        }}>
+          borderBottom: "var(--border-light)",
+        }}
+      >
+        <div style={{ padding: "5px 0" }}>
           <WeekCalendar
             selectedDate={selectedDate}
             practiceRecords={practiceRecords}
@@ -106,19 +120,34 @@ export function Today() {
         </div>
       </div>
 
-      <div style={{ width: "100%", marginTop: 27, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+      {/* ✅ 스크롤되는 콘텐츠 영역 */}
+      <div
+        style={{
+          width: "100%",
+          marginTop: 27,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
         {visibleTracks.map((track) => {
-          const isChecked = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
-          const partialCount = (partialCounts[selectedDate] && partialCounts[selectedDate][track.id]) || 0;
-          const daysSince = dayjs().diff(dayjs(track.addedDate), 'day') + 1;
+          const isChecked =
+            !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
+          const partialCount =
+            (partialCounts[selectedDate] && partialCounts[selectedDate][track.id]) || 0;
+          const daysSince = dayjs().diff(dayjs(track.addedDate), "day") + 1;
           return (
             <PracticeItem
-              key={track.id} title={track.title} subtitle={`오늘로 ${daysSince}일째`}
-              checked={isChecked} count={partialCount}
+              key={track.id}
+              title={track.title}
+              subtitle={`오늘로 ${daysSince}일째`}
+              checked={isChecked}
+              count={partialCount}
               onCheck={() => toggleCheck(selectedDate, track.id)}
               onInc={() => incPartial(selectedDate, track.id)}
               onDec={() => decPartial(selectedDate, track.id)}
-              onEdit={(newTitle) => handleEdit(track.id, newTitle)} // ✅ [수정]
+              onEdit={(newTitle) => handleEdit(track.id, newTitle)}
               onDelete={() => handleDelete(track.id)}
               onTitleClick={() => handleTitleClick(track.id)}
               onCountClick={() => handleCountClick(track.id)}
@@ -126,76 +155,143 @@ export function Today() {
           );
         })}
       </div>
+
       <button
         onClick={() => setShowSongPlusModal(true)}
         style={{
-          position: "fixed", bottom: "103px", left: "50%",
-          transform: "translateX(-50%)", width: "45px", height: "45px",
-          background: "none", border: "none", cursor: "pointer",
-          padding: 0, zIndex: 999
+          position: "fixed",
+          bottom: "103px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "45px",
+          height: "45px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+          zIndex: 999,
         }}
       >
         <SongPlusIcon style={{ color: "var(--VERY_PERI)" }} width="45" height="45" />
       </button>
 
       {showSongPlusModal && (
-        <div style={{
-          position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.5)",
-          display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
-        }}>
-          <div style={{
-            width: "calc(100% - 32px)", maxWidth: 324, background: "var(--bg-primary)",
-            border: "var(--border-light)", borderRadius: "var(--border-radius-small)",
-            boxSizing: "border-box", padding: 22, display: "flex", flexDirection: "column"
-          }}>
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              width: "calc(100% - 32px)",
+              maxWidth: 324,
+              background: "var(--bg-primary)",
+              border: "var(--border-light)",
+              borderRadius: "var(--border-radius-small)",
+              boxSizing: "border-box",
+              padding: 22,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
               <SongNoteIcon style={{ color: "var(--TURQUOISE)" }} width="16" height="16" />
-              <span style={{ fontSize: 15, color: "var(--text-primary)", fontFamily: "var(--FONT_FAMILY)" }}>
+              <span
+                style={{
+                  fontSize: 15,
+                  color: "var(--text-primary)",
+                  fontFamily: "var(--FONT_FAMILY)",
+                }}
+              >
                 연습곡 추가
               </span>
             </div>
-            <div style={{ width: "100%", height: "0.5px", background: "var(--text-secondary)", marginBottom: 15 }} />
-            <input
-              type="text" placeholder="여기에 곡명 입력"
+            <div
               style={{
-                width: "100%", height: 36, border: "var(--border-light)",
-                borderRadius: "var(--border-radius-small)", padding: "0 12px",
-                fontSize: 16, background: "var(--bg-secondary)",
-                color: "var(--text-primary)", fontFamily: "var(--FONT_FAMILY)",
-                marginBottom: 15, boxSizing: "border-box", outline: "none"
+                width: "100%",
+                height: "0.5px",
+                background: "var(--text-secondary)",
+                marginBottom: 15,
+              }}
+            />
+            <input
+              type="text"
+              placeholder="여기에 곡명 입력"
+              style={{
+                width: "100%",
+                height: 36,
+                border: "var(--border-light)",
+                borderRadius: "var(--border-radius-small)",
+                padding: "0 12px",
+                fontSize: 16,
+                background: "var(--bg-secondary)",
+                color: "var(--text-primary)",
+                fontFamily: "var(--FONT_FAMILY)",
+                marginBottom: 15,
+                boxSizing: "border-box",
+                outline: "none",
               }}
               onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                   addTrack((e.target as HTMLInputElement).value);
-                  (e.target as HTMLInputElement).value = '';
+                  (e.target as HTMLInputElement).value = "";
                   setShowSongPlusModal(false);
                 }
               }}
             />
-            <div style={{ fontSize: 14, color: "var(--text-secondary)", fontFamily: "var(--FONT_FAMILY)", marginBottom: 33 }}>
+            <div
+              style={{
+                fontSize: 14,
+                color: "var(--text-secondary)",
+                fontFamily: "var(--FONT_FAMILY)",
+                marginBottom: 33,
+              }}
+            >
               새로운 연습곡을 추가할 수 있습니다.
             </div>
             <div style={{ display: "flex", gap: 8, width: "100%" }}>
               <button
                 onClick={() => setShowSongPlusModal(false)}
                 style={{
-                  flex: 1, height: 43, background: "transparent", border: "none",
-                  fontSize: 16, color: "var(--VERY_PERI)", cursor: "pointer",
-                  fontFamily: "var(--FONT_FAMILY)"
+                  flex: 1,
+                  height: 43,
+                  background: "transparent",
+                  border: "none",
+                  fontSize: 16,
+                  color: "var(--VERY_PERI)",
+                  cursor: "pointer",
+                  fontFamily: "var(--FONT_FAMILY)",
                 }}
               >
                 Cancel
               </button>
               <button
                 onClick={() => {
-                  const input = document.querySelector('input[placeholder="여기에 곡명 입력"]') as HTMLInputElement;
-                  if (input) { addTrack(input.value); input.value = ''; setShowSongPlusModal(false); }
+                  const input = document.querySelector(
+                    'input[placeholder="여기에 곡명 입력"]'
+                  ) as HTMLInputElement;
+                  if (input) {
+                    addTrack(input.value);
+                    input.value = "";
+                    setShowSongPlusModal(false);
+                  }
                 }}
                 style={{
-                  flex: 1, height: 43, background: "var(--VERY_PERI)", border: "none",
-                  borderRadius: "var(--border-radius-small)", fontSize: 16,
-                  color: "var(--button-primary-text)", cursor: "pointer",
-                  fontFamily: "var(--FONT_FAMILY)"
+                  flex: 1,
+                  height: 43,
+                  background: "var(--VERY_PERI)",
+                  border: "none",
+                  borderRadius: "var(--border-radius-small)",
+                  fontSize: 16,
+                  color: "var(--button-primary-text)",
+                  cursor: "pointer",
+                  fontFamily: "var(--FONT_FAMILY)",
                 }}
               >
                 추가완료
@@ -215,6 +311,7 @@ export function Today() {
       )}
     </main>
   );
+  // ====== 수정된 return 문 끝 ======
 }
 
 export default Today;
