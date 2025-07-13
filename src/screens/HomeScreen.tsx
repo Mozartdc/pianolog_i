@@ -18,6 +18,39 @@ import TrophyIcon from "../assets/icons/trophy.svg?react";
 import FlameIcon from "../assets/icons/flame.svg?react";
 import ExportIcon from "../assets/icons/export.svg?react";
 import PlayIcon from "../assets/icons/play.svg?react";
+import { useLocation } from "react-router-dom";
+
+  const location = useLocation();
+
+  // 📌 첫 번째 useEffect: 페이지 진입 시 overflow 제어
+  useEffect(() => {
+    const isHome = location.pathname === "/home";
+
+    if (isHome) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [location.pathname]);
+
+  // 📌 두 번째 useEffect: 텍스트 입력 등으로 스크롤 풀릴 때 복원
+  useEffect(() => {
+    const handleFocus = () => {
+      if (window.location.pathname === "/home") {
+        document.body.style.overflow = "hidden";
+      }
+    };
+
+    window.addEventListener("focusin", handleFocus);
+    return () => window.removeEventListener("focusin", handleFocus);
+  }, []);
+
+  // ✅ 여기부터 기존 상태, 렌더링 등...
+
 
 // 타입 정의
 interface PracticeRecord {
