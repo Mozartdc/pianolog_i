@@ -117,21 +117,25 @@ function HomeScreen() {
 
   // ✅ 기존의 모든 스크롤 관련 useEffect를 삭제하고 아래 코드로 교체합니다.
   useEffect(() => {
-    // 현재 경로가 홈일 때만 이 로직을 실행합니다.
-    if (location.pathname === '/' || location.pathname === '/home') {
-      
-      // 1. 스크롤 위치를 강제로 맨 위로 초기화합니다.
-      window.scrollTo(0, 0);
-      
-      // 2. 스크롤을 막습니다.
-      document.body.style.overflow = 'hidden';
+  // 현재 경로가 홈일 때만 이 로직을 실행합니다.
+  if (location.pathname === '/' || location.pathname === '/home') {
 
-      // 3. 다른 페이지로 이동할 때 원래대로 복원합니다.
-      return () => {
-        document.body.style.overflow = 'auto';
-      };
-    }
-  }, [location.pathname]); // 경로가 바뀔 때마다 실행되어야 합니다.
+    // 다른 페이지로 이동할 때 복원하기 위해 원래 body 스타일을 저장합니다.
+    const originalBodyStyle = document.body.style.cssText;
+
+    // 스크롤을 막기 위한 스타일들을 적용합니다.
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = '0';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+
+    // 컴포넌트가 사라질 때 (다른 페이지로 이동 시) 원래 스타일로 완벽하게 복원합니다.
+    return () => {
+      document.body.style.cssText = originalBodyStyle;
+    };
+  }
+}, [location.pathname]); // 경로가 바뀔 때마다 이 효과를 재평가합니다.
 
   // Context에서 연습 기록, 곡 목록, 체크 데이터를 가져옵니다.
   const { practiceRecords, setPracticeRecords, tracks, practiceChecks } = usePracticeData();
