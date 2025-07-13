@@ -13,22 +13,15 @@ devOptions: {
 enabled: false
 },
 includeAssets: [
-'favicon.svg',
-'favicon.ico',
 'robots.txt',
 'apple-touch-icon.png'
 ],
 manifest: {
 name: 'pianolog',
 short_name: 'pianolog',
-description: 'A piano practice app',
+description: '디지털 피아노 갤러리 피출앱',
 theme_color: '#ffffff',
 icons: [
-{
-src: 'pwa-192x192.png',
-sizes: '192x192',
-type: 'image/png'
-},
 {
 src: 'pwa-512x512.png',
 sizes: '512x512',

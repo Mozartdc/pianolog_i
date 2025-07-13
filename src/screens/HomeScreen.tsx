@@ -5,7 +5,7 @@ import { HomeStartTimerModal } from "./HomeStartTimerModal";
 import { TimePickModal } from "./TimePickModal";
 import { HomeStopModal } from "./HomeStopModal";
 import { ExportCardModal } from "./ExportCardModal";
-import { usePracticeData } from "../contexts/PracticeDataContext"; // ✅ Context 훅을 불러옵니다.
+import { usePracticeData } from "../contexts/PracticeDataContext";
 import Header from "../components/Header";
 import ProfileSection from "../components/ProfileSection";
 import StatsCard from "../components/StatsCard";
@@ -19,38 +19,6 @@ import FlameIcon from "../assets/icons/flame.svg?react";
 import ExportIcon from "../assets/icons/export.svg?react";
 import PlayIcon from "../assets/icons/play.svg?react";
 import { useLocation } from "react-router-dom";
-
-  const location = useLocation();
-
-  // 📌 첫 번째 useEffect: 페이지 진입 시 overflow 제어
-  useEffect(() => {
-    const isHome = location.pathname === "/home";
-
-    if (isHome) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [location.pathname]);
-
-  // 📌 두 번째 useEffect: 텍스트 입력 등으로 스크롤 풀릴 때 복원
-  useEffect(() => {
-    const handleFocus = () => {
-      if (window.location.pathname === "/home") {
-        document.body.style.overflow = "hidden";
-      }
-    };
-
-    window.addEventListener("focusin", handleFocus);
-    return () => window.removeEventListener("focusin", handleFocus);
-  }, []);
-
-  // ✅ 여기부터 기존 상태, 렌더링 등...
-
 
 // 타입 정의
 interface PracticeRecord {
@@ -145,6 +113,26 @@ function getTodayCheerData(): CheerData {
 }
 
 function HomeScreen() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const isHome = location.pathname === "/home";
+    document.body.style.overflow = isHome ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (window.location.pathname === "/home") {
+        document.body.style.overflow = "hidden";
+      }
+    };
+    window.addEventListener("focusin", handleFocus);
+    return () => window.removeEventListener("focusin", handleFocus);
+  }, []);
+
   // ✅ Context에서 연습 기록, 곡 목록, 체크 데이터를 가져옵니다.
   const { practiceRecords, setPracticeRecords, tracks, practiceChecks } = usePracticeData();
 
@@ -155,21 +143,18 @@ function HomeScreen() {
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
 
   // 스크롤 방지
-useEffect(() => {
-  const originalHtmlOverflow = document.documentElement.style.overflow;
-  const originalBodyOverflow = document.body.style.overflow;
+  useEffect(() => {
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
 
-  document.documentElement.style.overflow = "hidden";
-  document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
 
-  return () => {
-    document.documentElement.style.overflow = originalHtmlOverflow;
-    document.body.style.overflow = originalBodyOverflow;
-  };
-}, []);
-
-
-
+    return () => {
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+    };
+  }, []);
 
   // 타이머 상태
   const [timerActive, setTimerActive] = useState(false);
@@ -519,7 +504,7 @@ useEffect(() => {
       updatedRecords = [...practiceRecords, newRecord];
     }
 
-    setPracticeRecords(updatedRecords); // ✅ Context가 저장을 담당
+    setPracticeRecords(updatedRecords);
     setActualStartTime(recordStartTime);
     setTimerSeconds(newDurationSeconds);
 
@@ -573,7 +558,7 @@ useEffect(() => {
           updatedRecords = [...practiceRecords, newRecord];
         }
 
-        setPracticeRecords(updatedRecords); // ✅ Context가 저장을 담당
+        setPracticeRecords(updatedRecords);
       }
 
       localStorage.removeItem('timerState');
