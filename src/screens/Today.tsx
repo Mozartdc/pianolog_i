@@ -74,17 +74,38 @@ export function Today() {
       background: "var(--bg-primary)", minHeight: "100vh",
       paddingBottom: 120, fontFamily: "var(--FONT_FAMILY)"
     }}>
-      <Header title="today" color="var(--VERY_PERI)" showBackButton={false} />
-      <div style={{ width: "100%", maxWidth: "100%", margin: "15px auto 0 auto" }}>
-        <WeekCalendar
-          selectedDate={selectedDate}
-          practiceRecords={practiceRecords}
-          onDateClick={handleDateClick}
-          getKoreanHolidays={getKoreanHolidays}
-          themeColor="var(--VERY_PERI)"
-          themePastelColor="var(--PASTEL_VERY_PERI)"
+      {/* 헤더를 고정하는 div */}
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--bg-primary)" }}>
+        <Header
+          title="today"
+          color="var(--VERY_PERI)"
+          showBackButton={false}
         />
       </div>
+
+      {/* WeekCalendar를 고정하는 div */}
+      <div style={{ 
+        position: "sticky", 
+        top: "47px", // ✅ 헤더 높이(42px) + 마진(5px) 만큼 아래에 위치
+        zIndex: 9, // 헤더보다는 한 칸 아래
+        background: "var(--bg-primary)"
+      }}>
+        <div style={{
+          width: "100%",
+          maxWidth: "100%",
+          margin: "5px auto 0 auto"
+        }}>
+          <WeekCalendar
+            selectedDate={selectedDate}
+            practiceRecords={practiceRecords}
+            onDateClick={handleDateClick}
+            getKoreanHolidays={getKoreanHolidays}
+            themeColor="var(--VERY_PERI)"
+            themePastelColor="var(--PASTEL_VERY_PERI)"
+          />
+        </div>
+      </div>
+
       <div style={{ width: "100%", marginTop: 27, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
         {visibleTracks.map((track) => {
           const isChecked = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
