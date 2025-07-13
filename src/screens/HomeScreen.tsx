@@ -115,15 +115,23 @@ function getTodayCheerData(): CheerData {
 function HomeScreen() {
   const location = useLocation();
 
-  // 스크롤 관련 useEffect - 요청하신 코드로 교체
+  // ✅ 기존의 모든 스크롤 관련 useEffect를 삭제하고 아래 코드로 교체합니다.
   useEffect(() => {
-    if (location.pathname === "/home") {
-      document.body.style.overflow = "hidden";
+    // 현재 경로가 홈일 때만 이 로직을 실행합니다.
+    if (location.pathname === '/' || location.pathname === '/home') {
+      
+      // 1. 스크롤 위치를 강제로 맨 위로 초기화합니다.
+      window.scrollTo(0, 0);
+      
+      // 2. 스크롤을 막습니다.
+      document.body.style.overflow = 'hidden';
+
+      // 3. 다른 페이지로 이동할 때 원래대로 복원합니다.
+      return () => {
+        document.body.style.overflow = 'auto';
+      };
     }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [location.pathname]);
+  }, [location.pathname]); // 경로가 바뀔 때마다 실행되어야 합니다.
 
   // Context에서 연습 기록, 곡 목록, 체크 데이터를 가져옵니다.
   const { practiceRecords, setPracticeRecords, tracks, practiceChecks } = usePracticeData();
