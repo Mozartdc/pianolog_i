@@ -115,121 +115,42 @@ function getTodayCheerData(): CheerData {
 function HomeScreen() {
   const location = useLocation();
 
-  // 강화된 스크롤 방지 로직
   useEffect(() => {
-    const preventScroll = (e: TouchEvent) => {
-      e.preventDefault();
+    const isHome = location.pathname === "/home";
+    document.body.style.overflow = isHome ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
     };
+  }, [location.pathname]);
 
-    const resetScrollPosition = () => {
+  useEffect(() => {
+    const handleFocus = () => {
+      if (window.location.pathname === "/home") {
+        document.body.style.overflow = "hidden";
+      }
+    };
+    window.addEventListener("focusin", handleFocus);
+    return () => window.removeEventListener("focusin", handleFocus);
+  }, []);
+
+  // 1. 홈 진입 시 scrollTop 0 + overflow hidden 보정
+  useEffect(() => {
+    if (location.pathname === "/home") {
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-      window.scrollTo(0, 0);
-    };
 
-    if (location.pathname === "/home") {
-      // 즉시 스크롤 위치 리셋
-      resetScrollPosition();
-      
-      // 스타일 적용
-      document.documentElement.style.overflow = "hidden";
-      document.body.style.overflow = "hidden";
-      document.documentElement.style.position = "fixed";
-      document.body.style.position = "fixed";
-      document.documentElement.style.width = "100%";
-      document.body.style.width = "100%";
-      document.documentElement.style.height = "100%";
-      document.body.style.height = "100%";
-      
-      // 터치 이벤트 차단
-      document.addEventListener('touchmove', preventScroll, { passive: false });
-      
-      // 주기적으로 스크롤 위치 강제 리셋
-      const scrollResetInterval = setInterval(resetScrollPosition, 100);
-      
-      return () => {
-        // 정리
-        document.documentElement.style.overflow = "";
-        document.body.style.overflow = "";
-        document.documentElement.style.position = "";
-        document.body.style.position = "";
-        document.documentElement.style.width = "";
-        document.body.style.width = "";
-        document.documentElement.style.height = "";
-        document.body.style.height = "";
-        document.removeEventListener('touchmove', preventScroll);
-        clearInterval(scrollResetInterval);
-      };
+      setTimeout(() => {
+        document.body.style.overflow = "hidden";
+      }, 50);
     }
   }, [location.pathname]);
 
-  // 키보드 관련 이벤트 처리 강화
-  useEffect(() => {
-    const handleResize = () => {
-      if (location.pathname === "/home") {
-        setTimeout(() => {
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          window.scrollTo(0, 0);
-          document.body.style.overflow = "hidden";
-          document.documentElement.style.overflow = "hidden";
-        }, 50);
-      }
-    };
-
-    const handleFocusIn = () => {
-      if (location.pathname === "/home") {
-        setTimeout(() => {
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          window.scrollTo(0, 0);
-          document.body.style.overflow = "hidden";
-          document.documentElement.style.overflow = "hidden";
-        }, 100);
-      }
-    };
-
-    const handleFocusOut = () => {
-      if (location.pathname === "/home") {
-        setTimeout(() => {
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          window.scrollTo(0, 0);
-          document.body.style.overflow = "hidden";
-          document.documentElement.style.overflow = "hidden";
-        }, 100);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    window.addEventListener('focusin', handleFocusIn);
-    window.addEventListener('focusout', handleFocusOut);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('focusin', handleFocusIn);
-      window.removeEventListener('focusout', handleFocusOut);
-    };
-  }, [location.pathname]);
-
-  // 스크롤 감지 및 강제 리셋
+  // 2. 홈 진입 시 다시 한 번 scrollTo 보정
   useEffect(() => {
     if (location.pathname === "/home") {
-      const handleScroll = () => {
-        if (window.scrollY !== 0 || document.documentElement.scrollTop !== 0) {
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          window.scrollTo(0, 0);
-        }
-      };
-
-      window.addEventListener('scroll', handleScroll, { passive: false });
-      document.addEventListener('scroll', handleScroll, { passive: false });
-
-      return () => {
-        window.removeEventListener('scroll', handleScroll);
-        document.removeEventListener('scroll', handleScroll);
-      };
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+      });
     }
   }, [location.pathname]);
 
@@ -241,6 +162,20 @@ function HomeScreen() {
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
+
+  // 스크롤 방지
+  useEffect(() => {
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    const originalBodyOverflow = document.body.style.overflow;
+
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.documentElement.style.overflow = originalHtmlOverflow;
+      document.body.style.overflow = originalBodyOverflow;
+    };
+  }, []);
 
   // 타이머 상태
   const [timerActive, setTimerActive] = useState(false);
