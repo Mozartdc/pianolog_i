@@ -7,6 +7,7 @@ import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import Header from "../components/Header";
 import StatsCheckIcon from "../assets/icons/check_s.svg?react";
 import StatsUncheckIcon from "../assets/icons/uncheck.svg?react";
+import isoWeek from "dayjs/plugin/isoWeek";
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
@@ -105,7 +106,7 @@ function StatsScreen() {
   
   const getWeekData = (dateStr: string) => {
     const date = dayjs(dateStr);
-    const startOfWeek = date.startOf('week');
+    const startOfWeek = date.startOf('isoWeek');
     const weekDates = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
     const timeData = weekDates.map(d => {
       const dayRecords = practiceRecords.filter(r => r.date === d.format("YYYY-MM-DD"));
@@ -138,8 +139,7 @@ function StatsScreen() {
   };
 
   const generateCalendarDays = () => {
-    const startOfMonth = currentMonth.startOf('month');
-    const calendarStart = startOfMonth.startOf('isoWeek' as any);
+    const startOfMonth = currentMonth.startOf('month').startOf('isoWeek');
     const days = [];
     for(let i=0; i<42; i++) {
         days.push(startOfMonth.add(i, 'day'));
