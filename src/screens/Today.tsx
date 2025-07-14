@@ -239,13 +239,18 @@ return (
                 boxSizing: "border-box",
                 outline: "none",
               }}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  addTrack((e.target as HTMLInputElement).value);
-                  (e.target as HTMLInputElement).value = "";
-                  setShowSongPlusModal(false);
-                }
-              }}
+onKeyPress={(e) => {
+  if (e.key === "Enter") {
+    addTrack((e.target as HTMLInputElement).value);
+    (e.target as HTMLInputElement).value = "";
+    setShowSongPlusModal(false);
+    // ✅ 추가: Enter로 곡 추가 후 맨 위로 스크롤
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 100);
+  }
+}}
+
             />
             <div
               style={{
@@ -258,46 +263,58 @@ return (
               새로운 연습곡을 추가할 수 있습니다.
             </div>
             <div style={{ display: "flex", gap: 8, width: "100%" }}>
-              <button
-                onClick={() => setShowSongPlusModal(false)}
-                style={{
-                  flex: 1,
-                  height: 43,
-                  background: "transparent",
-                  border: "none",
-                  fontSize: 16,
-                  color: "var(--VERY_PERI)",
-                  cursor: "pointer",
-                  fontFamily: "var(--FONT_FAMILY)",
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  const input = document.querySelector(
-                    'input[placeholder="여기에 곡명 입력"]'
-                  ) as HTMLInputElement;
-                  if (input) {
-                    addTrack(input.value);
-                    input.value = "";
-                    setShowSongPlusModal(false);
-                  }
-                }}
-                style={{
-                  flex: 1,
-                  height: 43,
-                  background: "var(--VERY_PERI)",
-                  border: "none",
-                  borderRadius: "var(--border-radius-small)",
-                  fontSize: 16,
-                  color: "var(--button-primary-text)",
-                  cursor: "pointer",
-                  fontFamily: "var(--FONT_FAMILY)",
-                }}
-              >
-                추가완료
-              </button>
+<button
+  onClick={() => {
+    setShowSongPlusModal(false);
+    // ✅ 추가: 모달 닫을 때 맨 위로 스크롤
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+    }, 100);
+  }}
+  style={{
+    flex: 1,
+    height: 43,
+    background: "transparent",
+    border: "none",
+    fontSize: 16,
+    color: "var(--VERY_PERI)",
+    cursor: "pointer",
+    fontFamily: "var(--FONT_FAMILY)",
+  }}
+>
+  Cancel
+</button>
+
+<button
+  onClick={() => {
+    const input = document.querySelector(
+      'input[placeholder="여기에 곡명 입력"]'
+    ) as HTMLInputElement;
+    if (input) {
+      addTrack(input.value);
+      input.value = "";
+      setShowSongPlusModal(false);
+      // ✅ 추가: 곡 추가 후 맨 위로 스크롤
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+    }
+  }}
+  style={{
+    flex: 1,
+    height: 43,
+    background: "var(--VERY_PERI)",
+    border: "none",
+    borderRadius: "var(--border-radius-small)",
+    fontSize: 16,
+    color: "var(--button-primary-text)",
+    cursor: "pointer",
+    fontFamily: "var(--FONT_FAMILY)",
+  }}
+>
+  추가완료
+</button>
+
             </div>
           </div>
         </div>
