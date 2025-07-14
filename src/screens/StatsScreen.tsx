@@ -380,7 +380,7 @@ const generateCalendarDays = () => {
           padding: "16px",
           width: "calc(100% - 36px)",
           background: "transparent",
-          border: "0.5px solid var(--MIMOSA)",
+          border: "0.7px solid var(--MIMOSA)",
           borderRadius: 8,
           ...commonFontStyle
         }}>
@@ -442,7 +442,7 @@ const generateCalendarDays = () => {
                 <div onClick={() => handleSessionClick(session.id)}
                   style={{
                     width: "100%", height: 32, margin: index === 0 ? "0 auto" : "10px auto 0 auto",
-                    padding: "6px 10px", border: "1px solid var(--MIMOSA)", borderRadius: 5,
+                    padding: "6px 10px", border: "0.7px solid var(--MIMOSA)", borderRadius: 5,
                     display: "flex", alignItems: "center", gap: 8, background: "var(--bg-primary)",
                     boxSizing: "border-box", cursor: "pointer", position: 'relative',
                     color: "var(--MIMOSA)"
