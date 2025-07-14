@@ -138,7 +138,7 @@ function StatsScreen() {
   };
 
   const generateCalendarDays = () => {
-    const startOfMonth = currentMonth.startOf('month').startOf('week');
+    const startOfMonth = currentMonth.startOf('isoWeek' as any);
     const days = [];
     for(let i=0; i<42; i++) {
         days.push(startOfMonth.add(i, 'day'));
@@ -331,7 +331,7 @@ function StatsScreen() {
 <span style={{
   fontSize: "clamp(12px, 4vw, 16px)",
   color: isToday
-    ? "var(--VIVA_MAGENTA)"
+    ? "var(--BLACK)"
     : (isSelected ? "var(--BLACK)" : (dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-primary)")),
   fontWeight: isToday ? 700 : 400,
   zIndex: 2, position: "relative",
