@@ -609,36 +609,37 @@ function HomeScreen() {
         cheerData={cheerData}
       />
 
-      {/* Total Achievement Card */}
-      <div style={{
-        width: "calc(100% - 32px)",
-        height: 60,
-        background: "var(--PASTEL_TURQUOISE)",
-        borderRadius: "var(--border-radius-large)",
-        display: "flex",
-        alignItems: "center",
-        padding: "16px",
-        gap: 12,
-        margin: "23px auto 0 auto",
-        boxSizing: "border-box"
-      }}>
-          <div style={{
-    // ✅ 다크모드에서도 색상 유지를 위한 필터 추가
-    filter: "brightness(1) contrast(1)", // 기본 색상 유지
-    display: "flex",
-    alignItems: "center"
+{/* Total Achievement Card */}
+<div style={{
+  width: "calc(100% - 32px)",
+  height: 60,
+  background: "var(--PASTEL_TURQUOISE)",
+  borderRadius: "var(--border-radius-large)",
+  display: "flex",
+  alignItems: "center",
+  padding: "16px",
+  gap: 12,
+  margin: "23px auto 0 auto",
+  boxSizing: "border-box"
+}}>
+  <FlameIcon 
+    width={25} 
+    height={25} 
+    style={{
+      filter: "none",
+      colorScheme: "light"
+    }}
+  />
+  <span style={{
+    fontSize: 20,
+    color: "var(--text-primary)",
+    lineHeight: "20px",
+    ...commonFontStyle
   }}>
-  </div>
-        <FlameIcon width={25} height={25} />
-        <span style={{
-          fontSize: 20,
-          color: "var(--text-primary)",
-          lineHeight: "20px",
-          ...commonFontStyle
-        }}>
-          {getStreak()}일 연속 피출
-        </span>
-      </div>
+    {getStreak()}일 연속 피출
+  </span>
+</div>
+
 
       {/* Stats Cards */}
       <StatsCard
