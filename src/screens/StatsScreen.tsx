@@ -380,7 +380,7 @@ const generateCalendarDays = () => {
           padding: "16px",
           width: "calc(100% - 36px)",
           background: "transparent",
-          border: "1px solid var(--MIMOSA)",
+          border: "0.5px solid var(--MIMOSA)",
           borderRadius: 8,
           ...commonFontStyle
         }}>
