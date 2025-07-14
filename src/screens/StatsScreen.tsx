@@ -110,10 +110,13 @@ function StatsScreen() {
     setExpandedSessionId(prevId => (prevId === sessionId ? null : sessionId));
   };
   
-  const getWeekData = (dateStr: string) => {
+    const getWeekData = (dateStr: string) => {
     const date = dayjs(dateStr);
-    const startOfWeek = date.startOf('week');
-    const weekDates = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
+    // 0=일, 1=월, ..., 6=토
+    const dayOfWeek = date.day();
+    const diff = (dayOfWeek + 6) % 7;
+    const startOfWeek = date.subtract(diff, "day");
+    const weekDates = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, "day"));
     const timeData = weekDates.map(d => {
       const dayRecords = practiceRecords.filter(r => r.date === d.format("YYYY-MM-DD"));
       return dayRecords.reduce((sum, r) => sum + (r.practiceTime || 0), 0) / 60;
@@ -144,14 +147,22 @@ function StatsScreen() {
     return Math.max(MIN_HEIGHT, Math.min(ratio * MAX_HEIGHT, MAX_HEIGHT));
   };
 
-  const generateCalendarDays = () => {
-    const startOfMonth = currentMonth.startOf('month').startOf('week');
-    const days = [];
-    for(let i=0; i<42; i++) {
-        days.push(startOfMonth.add(i, 'day'));
-    }
-    return days;
-  };
+const generateCalendarDays = () => {
+  // 1. 이번 달 1일
+  let startOfMonth = currentMonth.startOf('month');
+  // 2. 이번 달 1일의 요일 (0=일, 1=월, ..., 6=토)
+  const dayOfWeek = startOfMonth.day();
+  // 3. 월요일이 1이므로, 1일이 월요일이 아니면 그 전 월요일로 이동
+  // (dayOfWeek === 1이면 그대로, 아니면 -1 ~ -6만큼 빼줌)
+  const diff = (dayOfWeek + 6) % 7; // 1일이 월요일이면 0, 화요일이면 1, ..., 일요일이면 6
+  startOfMonth = startOfMonth.subtract(diff, 'day');
+
+  const days = [];
+  for (let i = 0; i < 42; i++) {
+    days.push(startOfMonth.add(i, 'day'));
+  }
+  return days;
+};
 
   const calendarDays = generateCalendarDays();
   const weeks: dayjs.Dayjs[][] = [];
