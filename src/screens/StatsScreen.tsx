@@ -199,7 +199,7 @@ const generateCalendarDays = () => {
   zIndex: 1000,
   background: "var(--bg-primary)",
   padding: "0 clamp(0px, 4vw, 20px)",  // 좌우 패딩 추가
-  boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+  boxShadow: "none"
 }}>
   <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
 </div>

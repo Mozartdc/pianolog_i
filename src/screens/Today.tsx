@@ -95,7 +95,8 @@ export function Today() {
   width: "calc(100% - 32px)", // ✅ 원래 너비와 동일하게 설정
   zIndex: 1000,
   background: "var(--bg-primary)",
-  boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+  borderBottom: "1px solid var(--border-light)",
+  boxShadow: "none"
 }}>
   <Header
     title="today"
@@ -106,8 +107,10 @@ export function Today() {
   
   <div style={{ 
     padding: "5px 0 10px 0",
+    border: "none",        
     borderBottom: "none", // ✅ 경계선 제거
-    boxShadow: "none"     // ✅ 그림자 제거
+    boxShadow: "none",    
+    outline: "none"       // ✅ 그림자 제거
   }}>
     <WeekCalendar
       selectedDate={selectedDate}
@@ -125,7 +128,8 @@ export function Today() {
       <div
         style={{
           width: "100%",
-          marginTop: 120,
+          marginTop: 130, // ✅ 120에서 130으로 증가 (헤더 라인 공간 확보)
+          paddingTop: 10, // ✅ 추가 여백으로 카드가 캘린더 뒤에 숨지 않도록
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
