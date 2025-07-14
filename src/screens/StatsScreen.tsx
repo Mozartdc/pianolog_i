@@ -8,9 +8,15 @@ import Header from "../components/Header";
 import StatsCheckIcon from "../assets/icons/check_s.svg?react";
 import StatsUncheckIcon from "../assets/icons/uncheck.svg?react";
 import isoWeek from "dayjs/plugin/isoWeek";
+import updateLocale from 'dayjs/plugin/updateLocale';
 
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
+dayjs.extend(isoWeek);
+dayjs.extend(updateLocale);
+dayjs.updateLocale('ko', {
+  weekStart: 1
+});
 
 // 아이콘 imports
 import LaurelLeftIcon from "../assets/icons/laurel_L.svg?react";
@@ -106,7 +112,7 @@ function StatsScreen() {
   
   const getWeekData = (dateStr: string) => {
     const date = dayjs(dateStr);
-    const startOfWeek = date.startOf('isoWeek');
+    const startOfWeek = date.startOf('week');
     const weekDates = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
     const timeData = weekDates.map(d => {
       const dayRecords = practiceRecords.filter(r => r.date === d.format("YYYY-MM-DD"));
@@ -139,7 +145,7 @@ function StatsScreen() {
   };
 
   const generateCalendarDays = () => {
-    const startOfMonth = currentMonth.startOf('month').startOf('isoWeek');
+    const startOfMonth = currentMonth.startOf('month').startOf('week');
     const days = [];
     for(let i=0; i<42; i++) {
         days.push(startOfMonth.add(i, 'day'));
