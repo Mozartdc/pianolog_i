@@ -345,7 +345,7 @@ const generateCalendarDays = () => {
                     opacity: isCurrentMonth ? 1 : 0.3, boxSizing: "border-box"
                   }}
                 >
-                  {practiced && <DoIcon style={{ color: "var(--MIMOSA)", width: "100%", height: "100%", maxWidth: 32, maxHeight: 32, position: "absolute", zIndex: 1, opacity: 0.8 }} />}
+                  {practiced && <DoIcon style={{ color: "--bg-secondary", width: "100%", height: "100%", maxWidth: 32, maxHeight: 32, position: "absolute", zIndex: 1, opacity: 0.8 }} />}
 <span style={{
   fontSize: "clamp(12px, 4vw, 16px)",
   color: isToday
