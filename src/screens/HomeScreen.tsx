@@ -622,14 +622,7 @@ function HomeScreen() {
   margin: "23px auto 0 auto",
   boxSizing: "border-box"
 }}>
-  <FlameIcon 
-    width={25} 
-    height={25} 
-    style={{
-      filter: "none",
-      colorScheme: "light"
-    }}
-  />
+  <FlameIcon width={25} height={25} />
   <span style={{
     fontSize: 20,
     color: "var(--text-primary)",
