@@ -347,7 +347,7 @@ onKeyPress={(e) => {
     fontFamily: "var(--FONT_FAMILY)",
   }}
 >
-  추가완료
+  곡 추가
 </button>
 
 
