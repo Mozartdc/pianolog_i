@@ -181,7 +181,7 @@ export function TodayCalendar() {
         color="var(--VERY_PERI)" // ✅ [수정] 헤더 색상 지정
       />
       {/* ✅ [수정] WeekCalendar 컨테이너 스타일 추가 */}
-      <div style={{ width: "100%", maxWidth: "100%", margin: "15px auto 0 auto" }}>
+      <div style={{ width: "100%", maxWidth: "100%", margin: "0px auto 0 auto" }}>
         <WeekCalendar
           selectedDate={selectedDate}
           practiceRecords={loadPracticeData()}
