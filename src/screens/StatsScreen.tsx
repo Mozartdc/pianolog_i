@@ -138,7 +138,8 @@ function StatsScreen() {
   };
 
   const generateCalendarDays = () => {
-    const startOfMonth = currentMonth.startOf('isoWeek' as any);
+    const startOfMonth = currentMonth.startOf('month');
+    const calendarStart = startOfMonth.startOf('isoWeek' as any);
     const days = [];
     for(let i=0; i<42; i++) {
         days.push(startOfMonth.add(i, 'day'));
