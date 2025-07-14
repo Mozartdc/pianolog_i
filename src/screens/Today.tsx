@@ -159,7 +159,13 @@ return (
       </div>
 
       <button
-        onClick={() => setShowSongPlusModal(true)}
+        onClick={() => {setShowSongPlusModal(true);
+              // ✅ 배경 스크롤 완전 차단
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+        }}
         style={{
           position: "fixed",
           bottom: "103px",
@@ -184,9 +190,12 @@ return (
             inset: 0,
             background: "rgba(0, 0, 0, 0.5)",
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             justifyContent: "center",
             zIndex: 1000,
+            paddingTop: "20vh",
+            height: "100vh", // 고정 높이
+            overflow: "hidden", // 스크롤 방지
           }}
         >
           <div
@@ -200,6 +209,8 @@ return (
               padding: 22,
               display: "flex",
               flexDirection: "column",
+              position: "relative",
+              transform: "none",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
@@ -266,10 +277,21 @@ onKeyPress={(e) => {
 <button
   onClick={() => {
     setShowSongPlusModal(false);
-    // ✅ 추가: 모달 닫을 때 맨 위로 스크롤
+    // ✅ 스타일 복구
+    document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+    
     setTimeout(() => {
-      window.scrollTo(0, 0);
-    }, 100);
+      if (window.scrollY > 0) {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'smooth'
+        });
+      }
+    }, 150);
   }}
   style={{
     flex: 1,
@@ -285,6 +307,7 @@ onKeyPress={(e) => {
   Cancel
 </button>
 
+
 <button
   onClick={() => {
     const input = document.querySelector(
@@ -294,10 +317,22 @@ onKeyPress={(e) => {
       addTrack(input.value);
       input.value = "";
       setShowSongPlusModal(false);
-      // ✅ 추가: 곡 추가 후 맨 위로 스크롤
+      
+      // ✅ 스타일 복구
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+      
       setTimeout(() => {
-        window.scrollTo(0, 0);
-      }, 100);
+        if (window.scrollY > 0) {
+          window.scrollTo({
+            top: 0,
+            left: 0,
+            behavior: 'smooth'
+          });
+        }
+      }, 150);
     }
   }}
   style={{
@@ -314,6 +349,7 @@ onKeyPress={(e) => {
 >
   추가완료
 </button>
+
 
             </div>
           </div>
