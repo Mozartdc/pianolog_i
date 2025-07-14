@@ -71,7 +71,7 @@ export function Today() {
       (!track.completedDate || dayjs(track.completedDate).isSameOrAfter(selectedDate, "day"))
   );
 
-  return (
+return (
     <main
       style={{
         display: "flex",
@@ -86,56 +86,53 @@ export function Today() {
         fontFamily: "var(--FONT_FAMILY)",
       }}
     >
-{/* ✅ 헤더 + 캘린더 통합 고정 섹션 */}
-<div style={{ 
-  position: "fixed",
-  top: 0,
-  left: "50%",
-  transform: "translateX(-50%)",
-  width: "calc(100% - 32px)", // ✅ 원래 너비와 동일하게 설정
-  zIndex: 1000,
-  background: "var(--bg-primary)",
-  borderBottom: "1px solid var(--border-light)",
-  boxShadow: "none"
-}}>
-  <Header
-    title="today"
-    color="var(--VERY_PERI)"
-    showBackButton={false}
-    topMargin={5}
-  />
-  
-  <div style={{ 
-    padding: "5px 0 10px 0",
-    border: "none",        
-    borderBottom: "none", // ✅ 경계선 제거
-    boxShadow: "none",    
-    outline: "none"       // ✅ 그림자 제거
-  }}>
-    <WeekCalendar
-      selectedDate={selectedDate}
-      practiceRecords={practiceRecords}
-      onDateClick={handleDateClick}
-      getKoreanHolidays={getKoreanHolidays}
-      themeColor="var(--VERY_PERI)"
-      themePastelColor="var(--PASTEL_VERY_PERI)"
-    />
-  </div>
-</div>
+      {/* 헤더만 고정 */}
+      <div style={{ 
+        position: "fixed",
+        top: 0,
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: "calc(100% - 32px)",
+        zIndex: 1000,
+        background: "var(--bg-primary)",
+        borderBottom: "1px solid var(--border-light)",
+      }}>
+        <Header
+          title="today"
+          color="var(--VERY_PERI)"
+          showBackButton={false}
+          topMargin={5}
+        />
+      </div>
 
-
-      {/* ✅ 스크롤되는 콘텐츠 영역 */}
+      {/* 스크롤되는 콘텐츠 영역 */}
       <div
         style={{
           width: "100%",
-          marginTop: window.matchMedia('(display-mode: standalone)').matches ? 163 : 143,
-          paddingTop: 10, // ✅ 추가 여백으로 카드가 캘린더 뒤에 숨지 않도록
+          marginTop: 60,
+          paddingTop: 10,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           gap: 4,
         }}
       >
+        {/* 캘린더를 콘텐츠 영역 맨 위에 배치 */}
+        <div style={{ 
+          width: "100%",
+          marginBottom: 20,
+          background: "var(--bg-primary)"
+        }}>
+          <WeekCalendar
+            selectedDate={selectedDate}
+            practiceRecords={practiceRecords}
+            onDateClick={handleDateClick}
+            getKoreanHolidays={getKoreanHolidays}
+            themeColor="var(--VERY_PERI)"
+            themePastelColor="var(--PASTEL_VERY_PERI)"
+          />
+        </div>
+
         {visibleTracks.map((track) => {
           const isChecked =
             !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
