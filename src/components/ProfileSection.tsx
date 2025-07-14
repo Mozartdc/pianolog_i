@@ -167,7 +167,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
         {/* Cheer Content */}
         <div style={{
           marginLeft: 22,
-          marginTop: 20,
+          marginTop: 0,
           flex: 1, // ✅ 남은 공간 모두 사용 (완전 반응형)
           minWidth: 0 // ✅ flex 아이템 축소 허용
         }}>

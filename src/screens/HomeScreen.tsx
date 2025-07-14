@@ -574,12 +574,17 @@ function HomeScreen() {
       ...commonFontStyle
     }}>
 
-      {/* Header */}
-      <Header
-        title="digital piano gallery 피출앱"
-        color="var(--TURQUOISE)"
-        topMargin={5}
-      />
+{/* Header */}
+<div style={{
+  width: "calc(100% - 32px)", // ✅ 좌우 16px 여백 추가
+  margin: "0 auto" // ✅ 중앙 정렬
+}}>
+  <Header
+    title="digital piano gallery 피출앱"
+    color="var(--TURQUOISE)"
+    topMargin={5}
+  />
+</div>
 
       {/* Date Display */}
       <div style={{
@@ -617,6 +622,13 @@ function HomeScreen() {
         margin: "23px auto 0 auto",
         boxSizing: "border-box"
       }}>
+          <div style={{
+    // ✅ 다크모드에서도 색상 유지를 위한 필터 추가
+    filter: "brightness(1) contrast(1)", // 기본 색상 유지
+    display: "flex",
+    alignItems: "center"
+  }}>
+  </div>
         <FlameIcon width={25} height={25} />
         <span style={{
           fontSize: 20,

@@ -189,7 +189,13 @@ useEffect(() => {
       paddingBottom: 34, paddingTop: 5,
       color: "var(--text-primary)", overflow: "hidden",  position: "fixed",
     }}>
-      <Header title="app setting" color="var(--VIVA_MAGENTA)" />
+      <div style={{
+  width: "calc(100% - 32px)", // ✅ 좌우 16px 여백 추가
+  margin: "0 auto" // ✅ 중앙 정렬
+}}>
+  <Header title="app setting" color="var(--VIVA_MAGENTA)" />
+</div>
+
       
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 40, width: "90%", maxWidth: 343 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", justifyContent: "flex-start" }}>
