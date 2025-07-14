@@ -72,93 +72,91 @@ export function Today() {
   );
 
   return (
-    // ✅ 1. 전체 화면을 차지하는 Flexbox 컨테이너 (스크롤 없음)
-    <div
+    <main
       style={{
         display: "flex",
         flexDirection: "column",
+        alignItems: "center",
+        margin: "0 auto",
         width: "100%",
-        height: "100dvh", // 모바일 주소창 높이 고려
+        maxWidth: "100%",
         background: "var(--bg-primary)",
-        overflow: "hidden", // 이 컨테이너 자체는 스크롤되지 않음
+        minHeight: "100vh",
+        paddingBottom: 120,
+        fontFamily: "var(--FONT_FAMILY)",
       }}
     >
-      {/* 헤더는 더 이상 sticky일 필요가 없습니다. */}
-      <Header
-        title="today"
-        color="var(--VERY_PERI)"
-        showBackButton={false}
-        topMargin={5}
-      />
+{/* ✅ 헤더 + 캘린더 통합 고정 섹션 */}
+<div style={{ 
+  position: "fixed",
+  top: 0,
+  left: "50%",
+  transform: "translateX(-50%)",
+  width: "calc(100% - 32px)", // ✅ 원래 너비와 동일하게 설정
+  zIndex: 1000,
+  background: "var(--bg-primary)",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+}}>
+  <Header
+    title="today"
+    color="var(--VERY_PERI)"
+    showBackButton={false}
+    topMargin={5}
+  />
+  
+  <div style={{ 
+    padding: "5px 0 10px 0",
+    borderBottom: "none", // ✅ 경계선 제거
+    boxShadow: "none"     // ✅ 그림자 제거
+  }}>
+    <WeekCalendar
+      selectedDate={selectedDate}
+      practiceRecords={practiceRecords}
+      onDateClick={handleDateClick}
+      getKoreanHolidays={getKoreanHolidays}
+      themeColor="var(--VERY_PERI)"
+      themePastelColor="var(--PASTEL_VERY_PERI)"
+    />
+  </div>
+</div>
 
-      {/* ✅ 2. 스크롤이 일어나는 메인 콘텐츠 영역 */}
-      <main
+
+      {/* ✅ 스크롤되는 콘텐츠 영역 */}
+      <div
         style={{
-          flex: 1, // 남은 모든 공간을 차지
-          overflowY: "auto", // 이 영역만 세로 스크롤 허용
-          fontFamily: "var(--FONT_FAMILY)",
+          width: "100%",
+          marginTop: 120,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 4,
         }}
       >
-        {/* ✅ 3. WeekCalendar는 이제 이 스크롤 영역의 최상단에 고정됩니다. */}
-        <div
-          style={{
-            position: "sticky",
-            top: 0,
-            zIndex: 9,
-            background: "var(--bg-primary)",
-            paddingTop: "5px", // 캘린더 상단 여백
-            // 캘린더 아래 구분선은 제거
-          }}
-        >
-          <WeekCalendar
-            selectedDate={selectedDate}
-            practiceRecords={practiceRecords}
-            onDateClick={handleDateClick}
-            getKoreanHolidays={getKoreanHolidays}
-            themeColor="var(--VERY_PERI)"
-            themePastelColor="var(--PASTEL_VERY_PERI)"
-          />
-        </div>
+        {visibleTracks.map((track) => {
+          const isChecked =
+            !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
+          const partialCount =
+            (partialCounts[selectedDate] && partialCounts[selectedDate][track.id]) || 0;
+          const daysSince = dayjs().diff(dayjs(track.addedDate), "day") + 1;
+          return (
+            <PracticeItem
+              key={track.id}
+              title={track.title}
+              subtitle={`오늘로 ${daysSince}일째`}
+              checked={isChecked}
+              count={partialCount}
+              onCheck={() => toggleCheck(selectedDate, track.id)}
+              onInc={() => incPartial(selectedDate, track.id)}
+              onDec={() => decPartial(selectedDate, track.id)}
+              onEdit={(newTitle) => handleEdit(track.id, newTitle)}
+              onDelete={() => handleDelete(track.id)}
+              onTitleClick={() => handleTitleClick(track.id)}
+              onCountClick={() => handleCountClick(track.id)}
+            />
+          );
+        })}
+      </div>
 
-        {/* 스크롤되는 콘텐츠 (연습 목록) */}
-        <div
-          style={{
-            width: "100%",
-            padding: "27px 16px 120px 16px", // 좌우 패딩을 여기에 적용
-            boxSizing: "border-box",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          {visibleTracks.map((track) => {
-            const isChecked =
-              !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
-            const partialCount =
-              (partialCounts[selectedDate] && partialCounts[selectedDate][track.id]) || 0;
-            const daysSince = dayjs().diff(dayjs(track.addedDate), "day") + 1;
-            return (
-              <PracticeItem
-                key={track.id}
-                title={track.title}
-                subtitle={`오늘로 ${daysSince}일째`}
-                checked={isChecked}
-                count={partialCount}
-                onCheck={() => toggleCheck(selectedDate, track.id)}
-                onInc={() => incPartial(selectedDate, track.id)}
-                onDec={() => decPartial(selectedDate, track.id)}
-                onEdit={(newTitle) => handleEdit(track.id, newTitle)}
-                onDelete={() => handleDelete(track.id)}
-                onTitleClick={() => handleTitleClick(track.id)}
-                onCountClick={() => handleCountClick(track.id)}
-              />
-            );
-          })}
-        </div>
-      </main>
-
-      {/* 플로팅 버튼과 모달은 이 레이아웃 구조 밖에 위치하여 스크롤에 영향을 받지 않습니다. */}
       <button
         onClick={() => setShowSongPlusModal(true)}
         style={{
@@ -312,7 +310,7 @@ export function Today() {
           onPracticeUpdate={handlePracticeUpdate}
         />
       )}
-    </div>
+    </main>
   );
 }
 
