@@ -305,14 +305,17 @@ function HomeScreen() {
         existingTrackIds.has(trackId)
       );
 
+      // ✅ 1. 선택된 날짜에 연습 가능했던 곡들만 필터링합니다.
+      const visibleTracksForSelectedDate = tracks.filter(
+        (track) =>
+          dayjs(track.addedDate).isSameOrBefore(selectedDate, "day") &&
+          (!track.completedDate || dayjs(track.completedDate).isSameOrAfter(selectedDate, "day"))
+      );
+      
       const numerator = validChecks.filter(([, checked]) => checked).length;
-      const visibleTracksForDate = tracks.filter(track => {
-  const isValidDate = dayjs(track.addedDate).isSameOrBefore(selectedDate, 'day') && 
-                     (!track.completedDate || dayjs(track.completedDate).isSameOrAfter(selectedDate, 'day'));
-  return isValidDate;
-});
-const denominator = visibleTracksForDate.length; // 해당 날짜에 존재했던 곡 개수
-
+      
+      // ✅ 2. 분모를 전체 곡 수가 아닌, 그날 연습 가능했던 곡의 수로 설정합니다.
+      const denominator = visibleTracksForSelectedDate.length;
 
       return { numerator, denominator };
     } catch (error) {

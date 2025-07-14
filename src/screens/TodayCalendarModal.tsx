@@ -229,7 +229,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
       <div
         style={{
           width: "calc(100% - 32px)",
-          maxWidth: 324,
+          maxWidth: "min(90vw, 420px)",
           height: "auto",
           maxHeight: "calc(100% - 64px)",
           background: "var(--bg-primary)",
