@@ -334,7 +334,8 @@ const generateCalendarDays = () => {
               const isToday = dateStr === today;
               const isHoliday = koreanHolidays.includes(dateStr);
               const isFuture = date.isAfter(dayjs(), 'day');
-              const practiced = practiceRecords.some(r => r.date === dateStr && r.practiceTime > 0);
+              const practiced = practiceRecords.some(r => r.date === dateStr && r.practiceTime > 0) ||
+                (practiceChecks[dateStr] && Object.values(practiceChecks[dateStr]).some(Boolean));
               return (
                 <div key={dayIndex}
                   onClick={() => { if(isCurrentMonth && !isFuture) { setSelectedDate(dateStr); } }}
@@ -345,13 +346,11 @@ const generateCalendarDays = () => {
                     opacity: isCurrentMonth ? 1 : 0.3, boxSizing: "border-box"
                   }}
                 >
-                  {practiced && <DoIcon style={{ color: "(--PASTEL_MIMOSA)", width: "100%", height: "100%", maxWidth: 32, maxHeight: 32, position: "absolute", zIndex: 1, opacity: 0.8 }} />}
+                  {practiced && <DoIcon style={{ color: "var(--bg-secondary)", width: "100%", height: "100%", maxWidth: 32, maxHeight: 32, position: "absolute", zIndex: 1, opacity: 0.8 }} />}
 <span style={{
   fontSize: "clamp(12px, 4vw, 16px)",
-  color: isToday
-    ? "var(--BLACK)"
-    : (isSelected ? "var(--BLACK)" : (dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-primary)")),
-  fontWeight: isToday ? 700 : 400,
+  color: (dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-primary)"),
+  fontWeight: isToday ? 700 : 400, // ✅ 오늘만 굵게, 나머지는 보통
   zIndex: 2, position: "relative",
   border: isSelected ? "3px solid var(--VIVA_MAGENTA)" : "none",
   background: "transparent",
