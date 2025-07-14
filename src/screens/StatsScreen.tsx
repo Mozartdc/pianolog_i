@@ -187,7 +187,7 @@ const generateCalendarDays = () => {
   return (
     <div style={{
       width: "100%", maxWidth: "100%", margin: "0 auto", background: "var(--bg-primary)",
-      color: "var(--text-primary)", minHeight: "100dvh", padding: "0 clamp(0px, 4vw, 20px) 100px",
+      color: "var(--text-primary)", minHeight: "auto", padding: "0 clamp(0px, 4vw, 20px) 100px",
       boxSizing: "border-box", ...commonFontStyle
     }}>
       {/* ✅ 헤더를 감싸는 div를 추가하고 sticky 관련 스타일을 적용합니다. */}
