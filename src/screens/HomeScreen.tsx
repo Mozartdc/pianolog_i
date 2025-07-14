@@ -295,34 +295,39 @@ function HomeScreen() {
     : [];
   const selectedDateMinutes = selectedDateRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0);
 
-  const selectedDateCheckedCount = (() => {
-    try {
-      const checks = practiceChecks[selectedDate];
-      if (!checks) return { numerator: 0, denominator: tracks.length };
+const selectedDateCheckedCount = (() => {
+  try {
+    // ✅ 1. 먼저, 선택된 날짜에 연습 가능했던 곡들이 몇 개인지 계산합니다.
+    const visibleTracksForDate = tracks.filter(
+      (track) =>
+        dayjs(track.addedDate).isSameOrBefore(selectedDate, "day") &&
+        (!track.completedDate ||
+          dayjs(track.completedDate).isSameOrAfter(selectedDate, "day"))
+    );
 
-      const existingTrackIds = new Set(tracks.map(t => t.id.toString()));
-      const validChecks = Object.entries(checks).filter(([trackId]) =>
-        existingTrackIds.has(trackId)
-      );
+    // ✅ 2. 분모는 이 유효한 곡들의 수가 됩니다.
+    const denominator = visibleTracksForDate.length;
 
-      // ✅ 1. 선택된 날짜에 연습 가능했던 곡들만 필터링합니다.
-      const visibleTracksForSelectedDate = tracks.filter(
-        (track) =>
-          dayjs(track.addedDate).isSameOrBefore(selectedDate, "day") &&
-          (!track.completedDate || dayjs(track.completedDate).isSameOrAfter(selectedDate, "day"))
-      );
-      
-      const numerator = validChecks.filter(([, checked]) => checked).length;
-      
-      // ✅ 2. 분모를 전체 곡 수가 아닌, 그날 연습 가능했던 곡의 수로 설정합니다.
-      const denominator = visibleTracksForSelectedDate.length;
+    // 3. 해당 날짜의 체크 기록을 가져옵니다.
+    const checksForDate = practiceChecks[selectedDate];
 
-      return { numerator, denominator };
-    } catch (error) {
-      console.error("practiceChecks 읽기 실패:", error);
-      return { numerator: 0, denominator: tracks.length };
+    // 체크 기록이 아예 없으면, 분자(numerator)는 0입니다.
+    if (!checksForDate) {
+      return { numerator: 0, denominator };
     }
-  })();
+
+    // ✅ 4. 유효한 곡들 중에서 체크된 것의 개수(분자)를 셉니다.
+    const numerator = visibleTracksForDate.filter(track => 
+      checksForDate[track.id]
+    ).length;
+
+    return { numerator, denominator };
+
+  } catch (error) {
+    console.error("practiceChecks 읽기 실패:", error);
+    return { numerator: 0, denominator: tracks.length }; // 에러 시에는 전체 트랙 수로 대체
+  }
+})();
 
   const todayRecords = Array.isArray(practiceRecords)
     ? practiceRecords.filter((r: PracticeRecord) => r.date === todayStr)

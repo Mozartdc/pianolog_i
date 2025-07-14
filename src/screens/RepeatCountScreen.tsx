@@ -179,7 +179,7 @@ return (
       <button
         onClick={handleReset}
         style={{
-          width: 85, height: 40, background: "var(--bg-secondary)",
+          width: 85, height: 40, background: "var(--button-secondary-bg)",
           border: "none", borderRadius: 8, display: "flex",
           alignItems: "center", justifyContent: "center", gap: 8,
           cursor: "pointer", ...commonFontStyle
@@ -192,7 +192,7 @@ return (
       <button
         onClick={handleMinus}
         style={{
-          width: 85, height: 40, background: "var(--bg-secondary)",
+          width: 85, height: 40, background: "var(--button-secondary-bg)",
           border: "none", borderRadius: 8, display: "flex",
           alignItems: "center", justifyContent: "center", gap: 8,
           cursor: "pointer", ...commonFontStyle
