@@ -306,7 +306,13 @@ function HomeScreen() {
       );
 
       const numerator = validChecks.filter(([, checked]) => checked).length;
-      const denominator = tracks.length;
+      const visibleTracksForDate = tracks.filter(track => {
+  const isValidDate = dayjs(track.addedDate).isSameOrBefore(selectedDate, 'day') && 
+                     (!track.completedDate || dayjs(track.completedDate).isSameOrAfter(selectedDate, 'day'));
+  return isValidDate;
+});
+const denominator = visibleTracksForDate.length; // 해당 날짜에 존재했던 곡 개수
+
 
       return { numerator, denominator };
     } catch (error) {
