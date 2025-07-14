@@ -128,7 +128,7 @@ export function Today() {
       <div
         style={{
           width: "100%",
-          marginTop: 143, // ✅ 120에서 130으로 증가 (헤더 라인 공간 확보)
+          marginTop: window.matchMedia('(display-mode: standalone)').matches ? 163 : 143,
           paddingTop: 10, // ✅ 추가 여백으로 카드가 캘린더 뒤에 숨지 않도록
           display: "flex",
           flexDirection: "column",
