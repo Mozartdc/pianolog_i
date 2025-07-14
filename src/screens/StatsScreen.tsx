@@ -187,18 +187,20 @@ const generateCalendarDays = () => {
   return (
     <div style={{
       width: "100%", maxWidth: "100%", margin: "0 auto", background: "var(--bg-primary)",
-      color: "var(--text-primary)", minHeight: "100dvh", padding: "0 clamp(0px, 4vw, 20px) 100px",
-      boxSizing: "border-box", ...commonFontStyle
+      color: "var(--text-primary)", height: "100dvh", padding: "0 clamp(0px, 4vw, 20px) 100px",
+      boxSizing: "border-box", overflow: "hidden", ...commonFontStyle
     }}>
       {/* ✅ 헤더를 감싸는 div를 추가하고 sticky 관련 스타일을 적용합니다. */}
-      <div style={{ 
-        position: "sticky", 
-        top: 0, 
-        zIndex: 10, 
-        background: "var(--bg-primary)" 
-      }}>
+
         <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
-      </div>
+
+      {/* ✅ 이 main 태그를 추가하고, 모든 콘텐츠를 이 안으로 옮깁니다. */}
+      <main style={{
+        flex: 1, // 남은 모든 공간을 차지
+        overflowY: 'auto', // 이 영역만 세로 스크롤 허용
+        padding: "0 16px 100px 16px", // 좌우 및 하단 패딩
+        boxSizing: 'border-box'
+      }}>
 
       {/* 총 연습 시간 */}
       <div style={{
@@ -531,6 +533,7 @@ const generateCalendarDays = () => {
           </div>
         </div>
       </div>
+      </main>
     </div>
   );
 }
