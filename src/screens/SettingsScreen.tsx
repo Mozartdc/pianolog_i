@@ -182,7 +182,7 @@ useEffect(() => {
 
   return (
     <div style={{
-      width: "calc(100% - 32px)",
+      width: "100%", minHeight: "100dvh",
       background: "var(--bg-primary)",
       fontFamily: "var(--FONT_FAMILY)",
       display: "flex", flexDirection: "column", alignItems: "center",

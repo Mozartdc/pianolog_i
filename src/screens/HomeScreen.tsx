@@ -562,7 +562,8 @@ function HomeScreen() {
 
   return (
     <div style={{
-      width: "calc(100% - 32px)",
+      width: "100%",
+      maxWidth: "100%",
       minHeight: "100vh",
       background: "var(--bg-primary)",
       overflowX: "hidden",
