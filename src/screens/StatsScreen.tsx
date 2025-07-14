@@ -191,20 +191,24 @@ const generateCalendarDays = () => {
       boxSizing: "border-box", ...commonFontStyle
     }}>
       {/* ✅ 헤더를 감싸는 div를 추가하고 sticky 관련 스타일을 적용합니다. */}
-      <div style={{ 
-        position: "sticky", 
-        top: 0, 
-        zIndex: 10, 
-        background: "var(--bg-primary)" 
-      }}>
-        <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
-      </div>
+<div style={{ 
+  position: "fixed",  // sticky 대신 fixed 사용
+  top: 0, 
+  left: 0,
+  right: 0,
+  zIndex: 1000,
+  background: "var(--bg-primary)",
+  padding: "0 clamp(0px, 4vw, 20px)",  // 좌우 패딩 추가
+  boxShadow: "0 1px 3px rgba(0,0,0,0.1)"
+}}>
+  <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
+</div>
 
       {/* 총 연습 시간 */}
       <div style={{
         width: "100%",
         height: 24,
-        margin: "25px auto 0 auto",
+        margin: "80px auto 0 auto",
         display: "flex",
         alignItems: "center",
         justifyContent: "center", // ✅ 'space-between'에서 'center'로 변경
