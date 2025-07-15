@@ -179,26 +179,26 @@ return (
       <button
         onClick={handleReset}
         style={{
-          width: 85, height: 40, background: "var(--button-secondary-bg)",
+          width: 85, height: 40, background: "var(--DARK_GRAY)",
           border: "none", borderRadius: 8, display: "flex",
           alignItems: "center", justifyContent: "center", gap: 8,
           cursor: "pointer", ...commonFontStyle
         }}
       >
-        <AppleResetIcon style={{ color: "var(--text-secondary)" }} width="16" height="16" />
+        <AppleResetIcon style={{ color: "var(--text-primary)" }} width="16" height="16" />
         <span style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: "22px" }}>Reset</span>
       </button>
 
       <button
         onClick={handleMinus}
         style={{
-          width: 85, height: 40, background: "var(--button-secondary-bg)",
+          width: 85, height: 40, background: "var(--DARK_GRAY)",
           border: "none", borderRadius: 8, display: "flex",
           alignItems: "center", justifyContent: "center", gap: 8,
           cursor: "pointer", ...commonFontStyle
         }}
       >
-        <AppleMinusIcon style={{ color: "var(--text-secondary)" }} width="16" height="16" />
+        <AppleMinusIcon style={{ color: "var(--text-primary)" }} width="16" height="16" />
         <span style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: "22px" }}>minus</span>
       </button>
     </div>

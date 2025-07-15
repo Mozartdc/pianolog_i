@@ -457,6 +457,12 @@ const selectedDateCheckedCount = (() => {
     const startMoment = today.hour(Number(startInput.split(':')[0])).minute(Number(startInput.split(':')[1]));
     const endMoment = today.hour(Number(endInput.split(':')[0])).minute(Number(endInput.split(':')[1]));
 
+    // ✅ 피퇴 시간 미래 설정 차단
+    if (endMoment.isAfter(dayjs())) {
+      alert("피퇴 시간은 현재 시간보다 미래로 설정할 수 없습니다.");
+      return;
+    }
+
     let newDurationSeconds = endMoment.diff(startMoment, 'second');
 
     if (newDurationSeconds < 0) {
@@ -471,6 +477,9 @@ const selectedDateCheckedCount = (() => {
     const recordStartTime = startMoment.valueOf();
     const recordEndTime = endMoment.valueOf();
 
+    // ✅ 피퇴 시간이 과거인지 확인
+    const isEndTimeInPast = endMoment.isBefore(dayjs());
+
     const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
     const sessionId = timerState.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
 
@@ -483,17 +492,34 @@ const selectedDateCheckedCount = (() => {
       memo: timerState.memo || ""
     };
 
-    let updatedRecords: PracticeRecord[];
-    const existingRecordIndex = practiceRecords.findIndex(record => record.id === newRecord.id);
+    // ✅ Context의 setPracticeRecords 사용
+    setPracticeRecords(prev => {
+      const existingRecordIndex = prev.findIndex(record => record.id === newRecord.id);
+      if (existingRecordIndex > -1) {
+        const updatedRecords = [...prev];
+        updatedRecords[existingRecordIndex] = newRecord;
+        return updatedRecords;
+      } else {
+        return [...prev, newRecord];
+      }
+    });
 
-    if (existingRecordIndex > -1) {
-      updatedRecords = [...practiceRecords];
-      updatedRecords[existingRecordIndex] = newRecord;
-    } else {
-      updatedRecords = [...practiceRecords, newRecord];
+    // ✅ 핵심: 피퇴 시간이 과거면 타이머 완전 종료
+    if (isEndTimeInPast) {
+      // 타이머 완전 종료
+      localStorage.removeItem('timerState');
+      if (timerRef.current) clearInterval(timerRef.current);
+      setTimerActive(false);
+      setTimerRunning(false);
+      setTimerSeconds(0);
+      setActualStartTime(null);
+      setPausedDuration(0);
+      
+      setShowTimePickModal(false);
+      return; // 여기서 함수 종료
     }
 
-    setPracticeRecords(updatedRecords);
+    // ✅ 피퇴 시간이 현재/미래면 기존 로직 유지 (타이머 계속 실행)
     setActualStartTime(recordStartTime);
     setTimerSeconds(newDurationSeconds);
 
@@ -537,17 +563,17 @@ const selectedDateCheckedCount = (() => {
           memo: timerState.memo || ""
         };
 
-        const existingRecordIndex = practiceRecords.findIndex(record => record.id === newRecord.id);
-        let updatedRecords: PracticeRecord[];
-
-        if (existingRecordIndex > -1) {
-          updatedRecords = [...practiceRecords];
-          updatedRecords[existingRecordIndex] = newRecord;
-        } else {
-          updatedRecords = [...practiceRecords, newRecord];
-        }
-
-        setPracticeRecords(updatedRecords);
+        // ✅ Context의 setPracticeRecords 사용
+        setPracticeRecords(prev => {
+          const existingRecordIndex = prev.findIndex(record => record.id === newRecord.id);
+          if (existingRecordIndex > -1) {
+            const updatedRecords = [...prev];
+            updatedRecords[existingRecordIndex] = newRecord;
+            return updatedRecords;
+          } else {
+            return [...prev, newRecord];
+          }
+        });
       }
 
       localStorage.removeItem('timerState');
