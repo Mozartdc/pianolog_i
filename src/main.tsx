@@ -4,6 +4,14 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import './index.css';
 import App from './App.tsx';
+import * as Sentry from "@sentry/react";
+
+Sentry.init({
+  dsn: "https://85ddbe6c1863cbfe01b641e3ff18b365@o4509672090370048.ingest.us.sentry.io/4509672093843456",
+  // Setting this option to true will send default PII data to Sentry.
+  // For example, automatic IP address collection on events
+  sendDefaultPii: true
+});
 
 // ✅ 여기서 라우터를 생성합니다.
 const router = createBrowserRouter([
@@ -15,7 +23,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {/* ✅ <App /> 대신 <RouterProvider />를 렌더링합니다. */}
-    <RouterProvider router={router} />
-  </StrictMode>,
+    <Sentry.ErrorBoundary fallback={<p>문제가 발생했습니다.</p>}>
+      <RouterProvider router={router} />
+    </Sentry.ErrorBoundary>
+  </StrictMode>
 );
