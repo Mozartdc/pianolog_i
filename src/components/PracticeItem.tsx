@@ -66,7 +66,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               border: "none",
               borderRadius: "var(--border-radius-small)",
               fontSize: 16,
-              color: "transparent",
+              color: "var(--VERY_PERI)",
               cursor: "pointer",
               fontFamily: "var(--FONT_FAMILY)"
             }}
