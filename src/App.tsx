@@ -114,11 +114,6 @@ return (
         boxShadow: "none"
       }}>
 
-{/* ✅ 테스트용 에러 버튼 */}
-      <button onClick={() => { throw new Error("테스트 에러"); }}>
-        테스트 오류 발생
-      </button>
-
         <AppRoutes theme={theme} handleThemeChange={handleThemeChange} />
       </div>
     </PracticeDataProvider>
