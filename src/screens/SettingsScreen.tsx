@@ -205,7 +205,7 @@ useEffect(() => {
             <button onClick={handleAvatarDelete} style={{ width: 77, height: 40, background: "var(--button-secondary-bg)", border: "none", borderRadius: 8, color: "var(--text-primary)", fontSize: 14, cursor: "pointer", ...commonFontStyle }}>삭제</button>
           </div>
         </div>
-        <div style={{ width: "100%", textAlign: "center", fontSize: 14, marginTop: 26, ...commonFontStyle }}>닉네임 입력</div>
+        <div style={{ width: "100%", textAlign: "center", fontSize: 14, marginTop: 26, ...commonFontStyle }}>닉네임 입력 <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>(한글 5자, 영문 8자 미만 권장)</span></div>
         <input value={nickname} onChange={handleNicknameChange} style={{ width: "95%", maxWidth: "100%", height: 40, padding: "8px 16px", borderRadius: 8, border: "var(--border-light)", background: "transparent", color: "var(--text-primary)", fontSize: 16, marginTop: 15, marginBottom: 16, boxSizing: "border-box", ...commonFontStyle }} />
       </div>
 
