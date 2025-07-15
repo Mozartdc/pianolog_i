@@ -71,7 +71,7 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               fontFamily: "var(--FONT_FAMILY)"
             }}
           >
-            Cancle
+            cancle
           </button>
           <button
             onClick={onConfirm}

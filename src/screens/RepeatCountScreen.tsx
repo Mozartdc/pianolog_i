@@ -186,7 +186,7 @@ return (
         }}
       >
         <AppleResetIcon style={{ color: "var(--text-primary)" }} width="16" height="16" />
-        <span style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: "22px" }}>Reset</span>
+        <span style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: "22px" }}>reset</span>
       </button>
 
       <button

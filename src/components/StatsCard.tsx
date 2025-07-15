@@ -53,7 +53,7 @@ const NoRecordModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isO
           style={{
             width: "100%",
             height: 40,
-            background: "var(--VERY_PERI)",
+            background: "var(--TURQUOISE)",
             border: "none",
             borderRadius: "var(--border-radius-small)",
             fontSize: 16,

@@ -703,7 +703,7 @@ const selectedDateCheckedCount = (() => {
         iconAlt="trophy"
         iconWidth={21}
         iconHeight={21}
-        title="총 연습 시간"
+        title="누적 연습 시간"
         value={`${totalHours}시간`}
       />
 

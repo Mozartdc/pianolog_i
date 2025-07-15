@@ -229,7 +229,7 @@ useEffect(() => {
       </label>
 
       <div style={{ width: "90%", maxWidth: 327, color: "var(--text-secondary)", textAlign: "center", fontSize: 12, lineHeight: "150%", margin: "0 auto 18px auto", ...commonFontStyle }}>
-        기기 변경 시 CSV로 백업/복원 가능합니다.
+        기기 변경 시 csv로 백업/복원 가능합니다.
       </div>
 
       <div style={{ width: "90%", maxWidth: 327, display: "flex", alignItems: "center", gap: 8, margin: "0 auto 16px auto" }}>
