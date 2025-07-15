@@ -1,5 +1,3 @@
-// src/components/PracticeItem.tsx
-
 import React, { useState } from "react";
 
 // SVG 아이콘 import
@@ -17,11 +15,85 @@ interface PracticeItemProps {
   onCheck: () => void;
   onInc: () => void;
   onDec: () => void;
-  onEdit?: (newTitle: string) => void; // ✅ [수정] newTitle을 인자로 받도록 타입 변경
+  onEdit?: (newTitle: string) => void;
   onDelete?: () => void;
   onTitleClick?: () => void;
   onCountClick?: () => void;
 }
+
+// 삭제 확인 모달 타입
+interface DeleteConfirmModalProps {
+  isOpen: boolean;
+  title: string;
+  onConfirm: () => void;
+  onCancel: () => void;
+}
+
+const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
+  isOpen,
+  title,
+  onConfirm,
+  onCancel,
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div style={{
+      position: "fixed", inset: 0, background: "rgba(0, 0, 0, 0.5)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 1000
+    }}>
+      <div style={{
+        background: "var(--bg-primary)",
+        borderRadius: "var(--border-radius-small)",
+        padding: 24,
+        width: "calc(100% - 32px)",
+        maxWidth: 324,
+        boxSizing: "border-box",
+        border: "var(--border-light)",
+        textAlign: "center"
+      }}>
+        <div style={{ marginBottom: 16, fontSize: 16, color: "var(--text-primary)" }}>
+          <strong>"{title}"</strong> 곡을 정말 삭제하시겠습니까?
+        </div>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              height: 40,
+              background: "transparent",
+              border: "var(--border-light)",
+              borderRadius: "var(--border-radius-small)",
+              fontSize: 16,
+              color: "var(--VERY_PERI)",
+              cursor: "pointer",
+              fontFamily: "var(--FONT_FAMILY)"
+            }}
+          >
+            취소
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              flex: 1,
+              height: 40,
+              background: "var(--VIVA_MAGENTA)",
+              border: "none",
+              borderRadius: "var(--border-radius-small)",
+              fontSize: 16,
+              color: "var(--button-primary-text)",
+              cursor: "pointer",
+              fontFamily: "var(--FONT_FAMILY)"
+            }}
+          >
+            삭제
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function PracticeItem({
   title,
@@ -39,6 +111,8 @@ export default function PracticeItem({
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTitle, setEditTitle] = useState(title);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTargetTitle, setDeleteTargetTitle] = useState("");
 
   const menuBtnStyle: React.CSSProperties = {
     width: "100%",
@@ -54,7 +128,6 @@ export default function PracticeItem({
 
   const handleEditComplete = () => {
     const newTitle = editTitle.trim();
-    // ✅ [수정] onEdit 함수를 호출하여 변경된 제목을 부모로 전달
     if (newTitle && newTitle !== title && onEdit) {
       onEdit(newTitle);
     }
@@ -179,9 +252,8 @@ export default function PracticeItem({
                 <button 
                   onClick={() => {
                     setShowMenu(false);
-                    if (onDelete && confirm(`"${title}" 곡을 정말 삭제하시겠습니까?`)) {
-                      onDelete();
-                    }
+                    setDeleteTargetTitle(title);
+                    setShowDeleteConfirm(true);
                   }} 
                   style={{ ...menuBtnStyle, color: "var(--VIVA_MAGENTA)" }}
                 >
@@ -192,6 +264,19 @@ export default function PracticeItem({
           </div>
         </div>
       </div>
+
+      {/* 삭제 확인 모달 */}
+      <DeleteConfirmModal
+        isOpen={showDeleteConfirm}
+        title={deleteTargetTitle}
+        onConfirm={() => {
+          if (onDelete) onDelete();
+          setShowDeleteConfirm(false);
+        }}
+        onCancel={() => {
+          setShowDeleteConfirm(false);
+        }}
+      />
 
       {showEditModal && (
         <div 

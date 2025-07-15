@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import { generateExportImage } from "../screens/ExportCardModal";
 import SessionSelectModal from "./SessionSelectModal";
-// ✅ 1. 중앙 데이터 관리소(Context)를 사용하기 위해 import 합니다.
 import { usePracticeData, PracticeRecord } from "../contexts/PracticeDataContext";
 
 interface StatsCardProps {
   Icon: React.ElementType;
   iconAlt: string;
-  // ✅ 2. props 타입 정의에 iconWidth와 iconHeight를 다시 추가합니다.
   iconWidth: number;
   iconHeight: number;
   title: string;
@@ -18,10 +16,63 @@ interface StatsCardProps {
   ExportIcon?: React.ElementType;
 }
 
+// ✅ [추가] 기록 없음 모달 컴포넌트
+const NoRecordModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0, 0, 0, 0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000,
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: "var(--bg-primary)",
+          borderRadius: "var(--border-radius-small)",
+          padding: 24,
+          width: "calc(100% - 32px)",
+          maxWidth: 324,
+          boxSizing: "border-box",
+          border: "var(--border-light)",
+          textAlign: "center",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ marginBottom: 16, fontSize: 16, color: "var(--text-primary)" }}>
+          오늘은 아직 연습 기록이 없습니다.
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%",
+            height: 40,
+            background: "var(--VERY_PERI)",
+            border: "none",
+            borderRadius: "var(--border-radius-small)",
+            fontSize: 16,
+            color: "var(--button-primary-text)",
+            cursor: "pointer",
+            fontFamily: "var(--FONT_FAMILY)",
+          }}
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const StatsCard: React.FC<StatsCardProps> = ({
   Icon,
   iconAlt,
-  iconWidth,   // ✅ 3. props에서 iconWidth와 iconHeight를 받도록 추가합니다.
+  iconWidth,
   iconHeight,
   title,
   value,
@@ -32,7 +83,8 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sessionsToExport, setSessionsToExport] = useState<PracticeRecord[]>([]);
-  // ✅ 4. Context 훅을 통해 최신 practiceRecords를 가져옵니다.
+  // ✅ [추가] 기록 없음 모달 상태
+  const [showNoRecordModal, setShowNoRecordModal] = useState(false);
   const { practiceRecords } = usePracticeData();
 
   const commonFontStyle = {
@@ -104,14 +156,14 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   const handleExportClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // ✅ 5. localStorage에서 직접 읽는 대신, Context에서 가져온 최신 데이터를 사용합니다.
     const todayKey = new Date().toISOString().slice(0, 10);
     const todaySessions = practiceRecords.filter(
       (r: PracticeRecord) => r.date === todayKey && r.practiceTime > 0
     );
 
     if (todaySessions.length === 0) {
-      alert("오늘은 아직 연습 기록이 없습니다.");
+      // ✅ alert 대신 커스텀 모달 표시
+      setShowNoRecordModal(true);
       return;
     }
     setSessionsToExport(todaySessions);
@@ -160,6 +212,12 @@ const StatsCard: React.FC<StatsCardProps> = ({
         onClose={() => setIsModalOpen(false)}
         sessions={sessionsToExport}
         onSelectSession={exportSelectedSession}
+      />
+
+      {/* ✅ [추가] 기록 없음 모달 */}
+      <NoRecordModal
+        isOpen={showNoRecordModal}
+        onClose={() => setShowNoRecordModal(false)}
       />
     </>
   );
