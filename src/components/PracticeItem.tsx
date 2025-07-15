@@ -63,22 +63,22 @@ const DeleteConfirmModal: React.FC<DeleteConfirmModalProps> = ({
               flex: 1,
               height: 40,
               background: "transparent",
-              border: "var(--border-light)",
+              border: "none",
               borderRadius: "var(--border-radius-small)",
               fontSize: 16,
-              color: "var(--VERY_PERI)",
+              color: "transparent",
               cursor: "pointer",
               fontFamily: "var(--FONT_FAMILY)"
             }}
           >
-            취소
+            Cancle
           </button>
           <button
             onClick={onConfirm}
             style={{
               flex: 1,
               height: 40,
-              background: "var(--VIVA_MAGENTA)",
+              background: "var(--VERY_PERI)",
               border: "none",
               borderRadius: "var(--border-radius-small)",
               fontSize: 16,
