@@ -100,7 +100,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
           fontSize: 16,
           lineHeight: "20px",
           color: "var(--text-primary)",
-          textAlign: "center",
+          textAlign: "left",
           marginBottom: 8, // 닉네임 아래 여백
           ...commonFontStyle
         }}>
