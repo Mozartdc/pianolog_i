@@ -96,16 +96,18 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
       }}>
         
         {/* 닉네임을 맨 위로 */}
-        <div style={{
-          fontSize: 16,
-          lineHeight: "20px",
-          color: "var(--text-primary)",
-          textAlign: "left",
-          marginBottom: 8, // 닉네임 아래 여백
-          ...commonFontStyle
-        }}>
-          {nickname}
-        </div>
+<div style={{
+  fontSize: 16,
+  lineHeight: "20px",
+  color: "var(--text-primary)",
+  textAlign: "center",
+  marginBottom: 8,
+  width: "70px",        // ← 프로필 사진 너비와 동일
+  marginLeft: "0px",    // ← 왼쪽 시작점 맞춤
+  ...commonFontStyle
+}}>
+  {nickname}
+</div>
 
         {/* 프로필 사진 + 응원글 */}
         <div style={{
