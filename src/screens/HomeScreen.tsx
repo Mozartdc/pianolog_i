@@ -478,19 +478,21 @@ const selectedDateCheckedCount = (() => {
     const recordEndTime = endMoment.valueOf();
 
     // ✅ 피퇴 시간이 과거인지 확인
-    const isEndTimeInPast = endMoment.isBefore(dayjs());
+const isEndTimeInPast = endMoment.isBefore(dayjs());
+const timeDiffMinutes = dayjs().diff(endMoment, 'minute');
+const shouldCompleteSession = isEndTimeInPast && timeDiffMinutes > 5; // 5분 이상 차이날 때만 완료
 
-    const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
-    const sessionId = timerState.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
+const timerState = JSON.parse(localStorage.getItem('timerState') || '{}');
+const sessionId = timerState.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
 
-    const newRecord: PracticeRecord = {
-      id: sessionId,
-      date: today.format("YYYY-MM-DD"),
-      practiceTime: Math.floor(newDurationSeconds / 60),
-      startTime: recordStartTime,
-      endTime: recordEndTime,
-      memo: timerState.memo || ""
-    };
+const newRecord: PracticeRecord = {
+  id: sessionId,
+  date: today.format("YYYY-MM-DD"),
+  practiceTime: Math.floor(newDurationSeconds / 60),
+  startTime: recordStartTime,
+  endTime: recordEndTime,
+  memo: timerState.memo || ""
+};
 
     // ✅ Context의 setPracticeRecords 사용
     setPracticeRecords(prev => {
@@ -505,7 +507,7 @@ const selectedDateCheckedCount = (() => {
     });
 
     // ✅ 핵심: 피퇴 시간이 과거면 타이머 완전 종료
-    if (isEndTimeInPast) {
+    if (shouldCompleteSession) {
       // 타이머 완전 종료
       localStorage.removeItem('timerState');
       if (timerRef.current) clearInterval(timerRef.current);
