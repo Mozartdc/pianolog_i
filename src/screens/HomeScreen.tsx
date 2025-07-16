@@ -723,7 +723,7 @@ const selectedDateCheckedCount = (() => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          margin: "35px auto 0 auto"
+          margin: "30px auto 0 auto"
         }}>
           <button
             onClick={startTimer}
@@ -739,7 +739,7 @@ const selectedDateCheckedCount = (() => {
           </button>
 
           <span style={{
-            marginTop: 1,
+            marginTop: -1,
             fontSize: 14,
             color: "var(--TURQUOISE)",
             lineHeight: "32px",
