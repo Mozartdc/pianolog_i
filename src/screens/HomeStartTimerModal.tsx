@@ -39,7 +39,7 @@ export function HomeStartTimerModal({
       display: "flex",
       justifyContent: "center",
       alignItems: "flex-end",
-      paddingBottom: 150,
+      paddingBottom: Math.floor(window.screen.height * 0.15),
       zIndex: 100,
       pointerEvents: "none"
     }}>
