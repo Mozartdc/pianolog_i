@@ -6,7 +6,7 @@
   margin: 0 auto;
   min-height: 100vh;
   background: var(--bg-primary); /* 변수 사용 */
-  padding: 20px 16px calc(100px + env(safe-area-inset-bottom)) 16px;
+  padding: 20px 16px 100px 16px;
   font-family: var(--FONT_FAMILY);
 }
 
