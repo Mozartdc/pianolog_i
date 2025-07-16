@@ -31,32 +31,28 @@ export function HomeStartTimerModal({
   };
 
   return (
-    <div style={{
-      position: "fixed",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "flex-end",
-      paddingBottom: Math.floor(window.screen.height * 0.15),
-      zIndex: 100,
-      pointerEvents: "none"
-    }}>
-      <div style={{
-        width: "calc(100% - 32px)",
-        margin: "0 auto",
-        height: 97,
-        background: "var(--bg-primary)",
-        border: "0.5px solid var(--TURQUOISE)",
-        borderRadius: 16,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: 16,
-        gap: 16,
-        pointerEvents: "auto"
-      }}>
+   <div style={{
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "flex-end",
+  paddingBottom: 12,
+  zIndex: 100,
+  pointerEvents: "none"
+}}>
+  <div style={{
+    width: "calc(100% - 32px)",
+    margin: "12px auto 0 auto",
+    height: 97,
+    background: "var(--bg-primary)",
+    border: "0.5px solid var(--TURQUOISE)",
+    borderRadius: 16,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    gap: 16,
+    pointerEvents: "auto"
+  }}>
         {/* 메트로놈 아이콘 */}
         <button
           aria-label="메트로놈"
