@@ -13,19 +13,18 @@ interface ProfileSectionProps {
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheerData }) => {
   const commonFontStyle = {
-    fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
+    fontFamily: "var(--FONT_FAMILY)",
     WebkitFontSmoothing: "antialiased" as const,
     MozOsxFontSmoothing: "grayscale" as const
   };
 
   const renderCheerContent = () => {
     const baseStyle = {
-      // ✅ 완전 반응형: 고정 너비 제거
       width: "100%",
-      height: 80,
+      height: 70, // 80 → 70으로 줄임
       fontSize: 11,
-      color: "var(--text-secondary)", // ✅ CSS 변수 적용
-      fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
+      color: "var(--text-secondary)",
+      fontFamily: "var(--FONT_FAMILY)",
       lineHeight: "20px",
       textAlign: "left" as const,
       display: "flex",
@@ -43,7 +42,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
                 width: "100%", 
                 height: "100%", 
                 objectFit: "contain",
-                borderRadius: "var(--border-radius-medium)" // ✅ CSS 변수 적용
+                borderRadius: "var(--border-radius-medium)"
               }}
             />
           </div>
@@ -57,10 +56,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
                 src={cheerData.imageUrl} 
                 alt={cheerData.imageAlt || "이미지"}
                 style={{ 
-                  width: 40, 
-                  height: 40, 
+                  width: 35, // 40 → 35로 줄임
+                  height: 35, 
                   objectFit: "contain",
-                  borderRadius: "var(--border-radius-small)", // ✅ CSS 변수 적용
+                  borderRadius: "var(--border-radius-small)",
                   flexShrink: 0
                 }}
               />
@@ -68,8 +67,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
                 flex: 1, 
                 fontSize: 11, 
                 lineHeight: "16px",
-                color: "var(--text-secondary)", // ✅ CSS 변수 적용
-                fontFamily: "var(--FONT_FAMILY)" // ✅ CSS 변수 적용
+                color: "var(--text-secondary)",
+                fontFamily: "var(--FONT_FAMILY)"
               }}>
                 {cheerData.message}
               </span>
@@ -89,89 +88,89 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
 
   return (
     <>
-      {/* Profile Section */}
+      {/* 새로운 레이아웃: 닉네임을 맨 위로 */}
       <div style={{
-        // ✅ 완전 반응형: 고정 maxWidth 제거
-        width: "calc(100% - 32px)", // 좌우 16px 패딩 고려
-        display: "flex",
-        margin: "18px auto 0 auto",
-        boxSizing: "border-box" // ✅ 박스 사이징 명시
+        width: "calc(100% - 32px)",
+        margin: "12px auto 0 auto", // 18px → 12px로 줄임
+        boxSizing: "border-box"
       }}>
-        {/* Profile + Nickname Container */}
+        
+        {/* 닉네임을 맨 위로 */}
         <div style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          flexShrink: 0 // ✅ 프로필 영역 고정
+          fontSize: 16,
+          lineHeight: "20px",
+          color: "var(--text-primary)",
+          textAlign: "center",
+          marginBottom: 8, // 닉네임 아래 여백
+          ...commonFontStyle
         }}>
-          {/* Profile Avatar */}
-          <div 
-            style={{
-              width: "80px",
-              height: "80px",
-              borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
-              overflow: "hidden",
-              background: avatar ? "transparent" : "var(--info-bg)", // ✅ CSS 변수 적용
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-          >
-            {avatar ? (
-              <img 
-                src={avatar} 
-                alt="프로필" 
-                style={{ 
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
-                  objectFit: "cover",
-                  display: "block"
-                }}
-              />
-            ) : (
-              <div style={{
-                width: "80px",
-                height: "80px",
-                background: "var(--info-bg)", // ✅ CSS 변수 적용
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "var(--border-radius-large)" // ✅ CSS 변수 적용
-              }}>
-                <span style={{ 
-                  fontSize: 12, 
-                  color: "var(--text-secondary)", // ✅ CSS 변수 적용
-                  textAlign: "center",
-                  ...commonFontStyle
-                }}>
-                  프로필
-                </span>
-              </div>
-            )}
-          </div>
-
-          {/* Nickname */}
-          <div style={{
-            fontSize: 16,
-            lineHeight: "20px",
-            color: "var(--text-primary)", // ✅ CSS 변수 적용
-            textAlign: "center",
-            marginTop: 7,
-            ...commonFontStyle
-          }}>
-            {nickname}
-          </div>
+          {nickname}
         </div>
 
-        {/* Cheer Content */}
+        {/* 프로필 사진 + 응원글 */}
         <div style={{
-          marginLeft: 22,
-          marginTop: 0,
-          flex: 1, // ✅ 남은 공간 모두 사용 (완전 반응형)
-          minWidth: 0 // ✅ flex 아이템 축소 허용
+          display: "flex",
+          alignItems: "flex-start", // 상단 정렬
+          gap: 18 // 22px → 18px로 줄임
         }}>
-          {renderCheerContent()}
+          {/* 프로필 사진 */}
+          <div style={{
+            flexShrink: 0
+          }}>
+            <div 
+              style={{
+                width: "70px", // 80px → 70px로 줄임
+                height: "70px",
+                borderRadius: "var(--border-radius-large)",
+                overflow: "hidden",
+                background: avatar ? "transparent" : "var(--info-bg)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              {avatar ? (
+                <img 
+                  src={avatar} 
+                  alt="프로필" 
+                  style={{ 
+                    width: "70px",
+                    height: "70px",
+                    borderRadius: "var(--border-radius-large)",
+                    objectFit: "cover",
+                    display: "block"
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: "70px",
+                  height: "70px",
+                  background: "var(--info-bg)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: "var(--border-radius-large)"
+                }}>
+                  <span style={{ 
+                    fontSize: 11, // 12px → 11px로 줄임
+                    color: "var(--text-secondary)",
+                    textAlign: "center",
+                    ...commonFontStyle
+                  }}>
+                    프로필
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 응원글 */}
+          <div style={{
+            flex: 1,
+            minWidth: 0
+          }}>
+            {renderCheerContent()}
+          </div>
         </div>
       </div>
     </>
