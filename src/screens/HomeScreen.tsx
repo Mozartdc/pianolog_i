@@ -659,7 +659,7 @@ const selectedDateCheckedCount = (() => {
   alignItems: "center",
   padding: "16px",
   gap: 12,
-  margin: "18px auto 0 auto",
+  margin: "20px auto 0 auto",
   boxSizing: "border-box"
 }}>
   <FlameIcon width={25} height={25} />

@@ -174,7 +174,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
     <>
       <div
         style={{
-          width: "calc(100% - 32px)", height: 55, background: "var(--bg-primary)",
+          width: "calc(100% - 32px)", height: 58, background: "var(--bg-primary)",
           border: "var(--border-light)", borderRadius: "var(--border-radius-large)",
           display: "flex", alignItems: "center", padding: "14px", gap: 12,
           margin: "5px auto 0 auto", boxSizing: "border-box", cursor: onClick ? "pointer" : "default",
