@@ -634,7 +634,7 @@ const selectedDateCheckedCount = (() => {
         color: "var(--text-primary)",
         textAlign: "center",
         lineHeight: "20px",
-        marginTop: "15px",
+        marginTop: "12px",
         padding: "0 16px",
         boxSizing: "border-box",
         ...commonFontStyle
@@ -659,7 +659,7 @@ const selectedDateCheckedCount = (() => {
   alignItems: "center",
   padding: "16px",
   gap: 12,
-  margin: "23px auto 0 auto",
+  margin: "18px auto 0 auto",
   boxSizing: "border-box"
 }}>
   <FlameIcon width={25} height={25} />
@@ -723,7 +723,7 @@ const selectedDateCheckedCount = (() => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          margin: "43px auto 0 auto"
+          margin: "35px auto 0 auto"
         }}>
           <button
             onClick={startTimer}
