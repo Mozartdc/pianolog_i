@@ -19,6 +19,9 @@ export function HomeStopModal({
   onClose 
 }: HomeStopModalProps) {
   const [practiceNote, setPracticeNote] = useState("");
+  // ✨ 마이크로 인터랙션 상태 추가
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -53,8 +56,17 @@ export function HomeStopModal({
     MozOsxFontSmoothing: "grayscale" as const
   };
 
+  // ✨ 마이크로 인터랙션이 적용된 완료 함수
   const handleComplete = () => {
-    onComplete();
+    setIsCompleting(true);
+    setShowCelebration(true);
+    
+    // 1초 후 실제 완료 처리
+    setTimeout(() => {
+      onComplete();
+      setIsCompleting(false);
+      setShowCelebration(false);
+    }, 1000);
   };
 
   if (!isOpen) return null;
@@ -105,6 +117,7 @@ export function HomeStopModal({
         <button
           onClick={onClose}
           aria-label="닫기"
+          disabled={isCompleting}
           style={{
             position: "absolute",
             top: 16,
@@ -113,14 +126,14 @@ export function HomeStopModal({
             height: 20,
             background: "none",
             border: "none",
-            cursor: "pointer",
+            cursor: isCompleting ? "not-allowed" : "pointer",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            padding: 0
+            padding: 0,
+            opacity: isCompleting ? 0.5 : 1
           }}
         >
-          {/* ✅ [수정] <img>를 컴포넌트로 바꾸고 색상 지정 */}
           <CloseIcon style={{ color: "var(--text-secondary)" }} width="20" height="20" />
         </button>
 
@@ -134,7 +147,6 @@ export function HomeStopModal({
           marginTop: 4,
           ...commonFontStyle
         }}>
-          {/* ✅ [수정] <img>를 컴포넌트로 바꾸고 색상 지정 */}
           <EndingNoteIcon 
             style={{ color: "var(--TURQUOISE)" }}
             width="24" 
@@ -157,6 +169,7 @@ export function HomeStopModal({
             value={practiceNote}
             onChange={(e) => setPracticeNote(e.target.value)}
             placeholder="오늘의 연습 노트를 작성해보세요..."
+            disabled={isCompleting}
             style={{
               width: "100%",
               height: 150,
@@ -169,6 +182,8 @@ export function HomeStopModal({
               resize: "none",
               outline: "none",
               boxSizing: "border-box",
+              opacity: isCompleting ? 0.5 : 1,
+              cursor: isCompleting ? "not-allowed" : "text",
               ...commonFontStyle
             }}
           />
@@ -180,43 +195,109 @@ export function HomeStopModal({
           justifyContent: "space-between",
           gap: 12
         }}>
+          {/* ✨ 마이크로 인터랙션이 적용된 피퇴 버튼 */}
           <button
             onClick={handleComplete}
+            disabled={isCompleting}
             style={{
               width: 140,
               height: 35,
               borderRadius: "var(--border-radius-small)",
               border: "none",
-              background: "var(--TURQUOISE)",
-              color: "var(--button-primary-text)", // ✅ --WHITE 대신 의미적 변수 사용
+              background: showCelebration ? "#22c55e" : "var(--TURQUOISE)",
+              color: "var(--button-primary-text)",
               fontSize: 16,
               fontWeight: 600,
-              cursor: "pointer",
-              transition: "var(--transition-fast)",
+              cursor: isCompleting ? "not-allowed" : "pointer",
+              transition: "all 0.3s ease",
+              transform: showCelebration ? "scale(1.05)" : "scale(1)",
+              position: "relative",
+              overflow: "hidden",
               ...commonFontStyle
             }}
           >
-            피퇴
+            {isCompleting ? "수고하셨습니다! 🎉" : "피퇴"}
+            
+            {/* ✨ 반짝이 파티클 효과 */}
+            {showCelebration && (
+              <>
+                <span style={{
+                  position: "absolute",
+                  top: "-5px",
+                  left: "10%",
+                  fontSize: "10px",
+                  animation: "sparkleAnimation 1s ease-out forwards",
+                  animationDelay: "0s"
+                }}>⭐</span>
+                <span style={{
+                  position: "absolute",
+                  top: "-8px",
+                  right: "15%",
+                  fontSize: "8px",
+                  animation: "sparkleAnimation 1s ease-out forwards",
+                  animationDelay: "0.2s"
+                }}>✨</span>
+                <span style={{
+                  position: "absolute",
+                  bottom: "-5px",
+                  left: "20%",
+                  fontSize: "10px",
+                  animation: "sparkleAnimation 1s ease-out forwards",
+                  animationDelay: "0.4s"
+                }}>⭐</span>
+                <span style={{
+                  position: "absolute",
+                  bottom: "-8px",
+                  right: "10%",
+                  fontSize: "8px",
+                  animation: "sparkleAnimation 1s ease-out forwards",
+                  animationDelay: "0.6s"
+                }}>✨</span>
+              </>
+            )}
           </button>
+          
           <button
             onClick={onEditTime}
+            disabled={isCompleting}
             style={{
               width: 140,
               height: 35,
               borderRadius: "var(--border-radius-small)",
               border: "none",
               background: "var(--text-secondary)",
-              color: "var(--text-primary)", // ✅ --WHITE 대신 의미적 변수 사용
+              color: "var(--text-primary)",
               fontSize: 16,
               fontWeight: 600,
-              cursor: "pointer",
+              cursor: isCompleting ? "not-allowed" : "pointer",
               transition: "var(--transition-fast)",
+              opacity: isCompleting ? 0.5 : 1,
               ...commonFontStyle
             }}
           >
             시간 수정
           </button>
         </div>
+
+        {/* ✨ CSS 애니메이션 */}
+        <style>
+          {`
+            @keyframes sparkleAnimation {
+              0% {
+                opacity: 0;
+                transform: translateY(0px) scale(0.5);
+              }
+              50% {
+                opacity: 1;
+                transform: translateY(-8px) scale(1);
+              }
+              100% {
+                opacity: 0;
+                transform: translateY(-16px) scale(0.5);
+              }
+            }
+          `}
+        </style>
       </div>
     </div>
   );
