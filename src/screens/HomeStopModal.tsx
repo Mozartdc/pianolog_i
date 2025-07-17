@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
-// ✅ [수정] 아이콘을 React 컴포넌트로 불러옵니다.
-import EndingNoteIcon from "../assets/icons/endingnote.svg?react";
-import CloseIcon from "../assets/icons/close.svg?react";
+// ✅ [수정] Lucide React 아이콘으로 변경
+import { Music, X, ThumbsUp, Star, Sparkles } from "lucide-react";
 
 interface HomeStopModalProps {
   isOpen: boolean;
@@ -134,7 +133,7 @@ export function HomeStopModal({
             opacity: isCompleting ? 0.5 : 1
           }}
         >
-          <CloseIcon style={{ color: "var(--text-secondary)" }} width="20" height="20" />
+          <X style={{ color: "var(--text-secondary)" }} width={20} height={20} />
         </button>
 
         {/* 제목 + 아이콘 */}
@@ -147,10 +146,10 @@ export function HomeStopModal({
           marginTop: 4,
           ...commonFontStyle
         }}>
-          <EndingNoteIcon 
+          <Music 
             style={{ color: "var(--TURQUOISE)" }}
-            width="24" 
-            height="24"
+            width={24} 
+            height={24}
           />
           <span style={{
             fontSize: 20,
@@ -214,47 +213,66 @@ export function HomeStopModal({
               position: "relative",
               overflow: "visible",
               animation: showCelebration ? "buttonBounce 0.6s ease-out" : "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
               ...commonFontStyle
             }}
           >
-            {isCompleting ? "👍 수고하셨습니다!" : "피퇴"}
+            {isCompleting ? (
+              <>
+                <ThumbsUp width={16} height={16} />
+                수고하셨습니다!
+              </>
+            ) : (
+              "피퇴"
+            )}
             
             {/* ✨ 색종이 + 반짝이 파티클 효과 */}
             {showCelebration && (
               <>
                 {/* 별과 반짝이 */}
-                <span style={{
+                <Star style={{
                   position: "absolute",
                   top: "-8px",
                   left: "15%",
-                  fontSize: "12px",
+                  width: "12px",
+                  height: "12px",
+                  color: "#F0C05A", // MIMOSA
                   animation: "sparkleJump 1s ease-out forwards",
                   animationDelay: "0s"
-                }}>⭐</span>
-                <span style={{
+                }} />
+                <Sparkles style={{
                   position: "absolute",
                   top: "-12px",
                   right: "20%",
-                  fontSize: "10px",
+                  width: "10px",
+                  height: "10px",
+                  color: "#BB2649", // VIVA_MAGENTA
                   animation: "sparkleJump 1s ease-out forwards",
                   animationDelay: "0.1s"
-                }}>✨</span>
-                <span style={{
+                }} />
+                <Star style={{
                   position: "absolute",
                   bottom: "-8px",
                   left: "25%",
-                  fontSize: "12px",
+                  width: "12px",
+                  height: "12px",
+                  color: "#F0C05A", // MIMOSA
                   animation: "sparkleJump 1s ease-out forwards",
                   animationDelay: "0.2s"
-                }}>⭐</span>
-                <span style={{
+                }} />
+                <Sparkles style={{
                   position: "absolute",
                   bottom: "-12px",
                   right: "15%",
-                  fontSize: "10px",
+                  width: "10px",
+                  height: "10px",
+                  color: "#BB2649", // VIVA_MAGENTA
                   animation: "sparkleJump 1s ease-out forwards",
                   animationDelay: "0.3s"
-                }}>✨</span>
+                }} />
 
                 {/* 색종이 효과 */}
                 <span style={{
@@ -263,7 +281,7 @@ export function HomeStopModal({
                   left: "5%",
                   width: "4px",
                   height: "4px",
-                  background: "#ff6b6b",
+                  background: "#F0C05A", // MIMOSA
                   animation: "confettiDrop 1.2s ease-out forwards",
                   animationDelay: "0s"
                 }}></span>
@@ -273,7 +291,7 @@ export function HomeStopModal({
                   left: "30%",
                   width: "3px",
                   height: "6px",
-                  background: "#4ecdc4",
+                  background: "#45b5aa", // TURQUOISE
                   animation: "confettiDrop 1.2s ease-out forwards",
                   animationDelay: "0.1s"
                 }}></span>
@@ -283,7 +301,7 @@ export function HomeStopModal({
                   right: "5%",
                   width: "4px",
                   height: "4px",
-                  background: "#45b7d1",
+                  background: "#BB2649", // VIVA_MAGENTA
                   animation: "confettiDrop 1.2s ease-out forwards",
                   animationDelay: "0.2s"
                 }}></span>
@@ -293,7 +311,7 @@ export function HomeStopModal({
                   right: "35%",
                   width: "3px",
                   height: "5px",
-                  background: "#f9ca24",
+                  background: "#B0876F", // 세 번째 테마 컬러
                   animation: "confettiDrop 1.2s ease-out forwards",
                   animationDelay: "0.15s"
                 }}></span>
@@ -303,7 +321,7 @@ export function HomeStopModal({
                   left: "50%",
                   width: "4px",
                   height: "3px",
-                  background: "#6c5ce7",
+                  background: "#6b778d", // VERY_PERI
                   animation: "confettiDrop 1.2s ease-out forwards",
                   animationDelay: "0.05s"
                 }}></span>
@@ -313,7 +331,7 @@ export function HomeStopModal({
                   right: "45%",
                   width: "3px",
                   height: "4px",
-                  background: "#fd79a8",
+                  background: "#F0C05A", // MIMOSA
                   animation: "confettiDrop 1.2s ease-out forwards",
                   animationDelay: "0.25s"
                 }}></span>
