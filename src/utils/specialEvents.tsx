@@ -4,21 +4,10 @@ import dayjs from 'dayjs';
 import { getTodayCheer } from './cheers'; // 기존 치어 시스템 import
 
 import { 
-  Calendar, 
-  Music, 
   Piano, 
-  Heart, 
-  Star, 
-  Flag, 
-  Gift, 
-  TreePine, 
   Sparkles,
-  Crown,
-  Flower,
-  Award,
-  Coffee,
-  Sunset,
-  Scale
+  TreePine,
+  Flower
 } from 'lucide-react';
 
 // 공통 기본 타입 (홈스크린에서 사용하는 속성들 포함)
@@ -55,7 +44,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Sparkles width={12} height={12} />
+        <Sparkles width={14} height={14} />
         <span><strong>Happy New Year!</strong> 새해 복 많이 받으세요!</span>
       </div>
     ),
@@ -70,7 +59,6 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flag width={12} height={12} />
         <span><strong>삼일절</strong> - 대한독립만세!</span>
       </div>
     ),
@@ -83,7 +71,6 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Heart width={12} height={12} />
         <span><strong>어린이날</strong></span>
       </div>
     ),
@@ -96,7 +83,6 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Star width={12} height={12} />
         <span><strong>현충일</strong> - 순국선열을 기리며</span>
       </div>
     ),
@@ -111,7 +97,6 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Scale width={12} height={12} />
         <span>제 77주년 <strong>제헌절</strong></span>
       </div>
     ),
@@ -126,7 +111,6 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flag width={12} height={12} />
         <span><strong>광복절</strong> - 해방 80주년</span>
       </div>
     ),
@@ -139,7 +123,6 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flag width={12} height={12} />
         <span><strong>개천절</strong></span>
       </div>
     ),
@@ -152,7 +135,6 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flag width={12} height={12} />
         <span><strong>한글날</strong> - 훈민정음의 위대함</span>
       </div>
     ),
@@ -165,7 +147,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <TreePine width={12} height={12} />
+        <TreePine width={14} height={14} />
         <span><strong>크리스마스</strong></span>
       </div>
     ),
@@ -180,20 +162,20 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Piano width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>세계 피아노의 날</strong> - 모든 피아니스트를 위하여!</span>
       </div>
     ),
     imageUrl: '/world-piano-day.png',
     imageAlt: '세계 피아노의 날',
-    date: '2025-03-29', // 매년 3월 29일 (88번째 날)
+    date: '2025-03-29',
     category: 'music-day'
   },
   {
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Music width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>국제 재즈의 날</strong> - UNESCO 지정</span>
       </div>
     ),
@@ -206,20 +188,20 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Music width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>세계 음악의 날</strong> - Fête de la Musique</span>
       </div>
     ),
     imageUrl: '/world-music-day.png',
     imageAlt: '세계 음악의 날',
-    date: '2025-06-21', // 하지
+    date: '2025-06-21',
     category: 'music-day'
   },
   {
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Music width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>국제 음악의 날</strong> - UNESCO 공식</span>
       </div>
     ),
@@ -232,7 +214,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Music width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>세계 클래식 음악의 날</strong></span>
       </div>
     ),
@@ -245,22 +227,22 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Piano width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>피아노 발명 기념일</strong> - 크리스토포리 (1700년경)</span>
       </div>
     ),
     imageUrl: '/piano-invention-day.png',
     imageAlt: '피아노 발명 기념일',
-    date: '2025-07-01', // 임의로 7월 1일 지정
+    date: '2025-07-01',
     category: 'music-day'
   },
 
-  // ==================== 바로크 작곡가 탄생일 ====================
+  // ==================== 작곡가 탄생일 ====================
   {
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Crown width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>헨델</strong> 탄생일 (1685)</span>
       </div>
     ),
@@ -273,7 +255,20 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Crown width={12} height={12} />
+        <Piano width={14} height={14} />
+        <span><strong>하이든</strong> 탄생일 (1732) - 교향곡의 아버지</span>
+      </div>
+    ),
+    imageUrl: '/composer-haydn.png',
+    imageAlt: '하이든',
+    date: '2025-03-21', // 바흐 실제 생일 (구력 3월 21일) // 하이든 실제 생일
+    category: 'composer-birth'
+  },
+  {
+    type: 'textWithImage',
+    message: (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+        <Piano width={14} height={14} />
         <span><strong>바흐</strong> 탄생일 (1685) - 음악의 아버지</span>
       </div>
     ),
@@ -286,7 +281,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Crown width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>스카를라티</strong> 탄생일 (1685)</span>
       </div>
     ),
@@ -295,13 +290,11 @@ export const specialEvents: SpecialEvent[] = [
     date: '2025-10-26',
     category: 'composer-birth'
   },
-
-  // ==================== 고전파 작곡가 탄생일 ====================
   {
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Crown width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>클레멘티</strong> 탄생일 (1752) - 피아노의 아버지</span>
       </div>
     ),
@@ -314,7 +307,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Star width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>모차르트</strong> 탄생일 (1756) - 천재 음악가</span>
       </div>
     ),
@@ -327,7 +320,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Crown width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>베토벤</strong> 탄생일 (1770) - 악성</span>
       </div>
     ),
@@ -336,13 +329,11 @@ export const specialEvents: SpecialEvent[] = [
     date: '2025-12-17',
     category: 'composer-birth'
   },
-
-  // ==================== 낭만파 작곡가 탄생일 ====================
   {
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Heart width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>슈베르트</strong> 탄생일 (1797) - 가곡의 왕</span>
       </div>
     ),
@@ -355,7 +346,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Music width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>멘델스존</strong> 탄생일 (1809)</span>
       </div>
     ),
@@ -368,7 +359,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Piano width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>쇼팽</strong> 탄생일 (1810) - 피아노의 시인</span>
       </div>
     ),
@@ -381,7 +372,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Heart width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>슈만</strong> 탄생일 (1810)</span>
       </div>
     ),
@@ -394,7 +385,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Crown width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>리스트</strong> 탄생일 (1811) - 피아노의 마왕</span>
       </div>
     ),
@@ -407,7 +398,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Music width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>브람스</strong> 탄생일 (1833)</span>
       </div>
     ),
@@ -420,7 +411,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Music width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>차이코프스키</strong> 탄생일 (1840)</span>
       </div>
     ),
@@ -433,7 +424,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Sunset width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>드뷔시</strong> 탄생일 (1862) - 인상주의의 창시자</span>
       </div>
     ),
@@ -446,7 +437,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Piano width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>라흐마니노프</strong> 탄생일 (1873)</span>
       </div>
     ),
@@ -459,7 +450,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'textWithImage',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Music width={12} height={12} />
+        <Piano width={14} height={14} />
         <span><strong>라벨</strong> 탄생일 (1875)</span>
       </div>
     ),
@@ -474,7 +465,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>바흐를 기리며 (1750)</span>
       </div>
     ),
@@ -485,7 +476,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>모차르트를 기리며 (1791) - 35세의 짧은 생</span>
       </div>
     ),
@@ -496,7 +487,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>베토벤을 기리며 (1827)</span>
       </div>
     ),
@@ -507,7 +498,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>슈베르트를 기리며 (1828) - 31세의 아까운 죽음</span>
       </div>
     ),
@@ -518,7 +509,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>멘델스존을 기리며 (1847)</span>
       </div>
     ),
@@ -529,7 +520,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>쇼팽을 기리며 (1849) - 39세, 파리에서</span>
       </div>
     ),
@@ -540,7 +531,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>슈만을 기리며 (1856)</span>
       </div>
     ),
@@ -551,7 +542,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>리스트를 기리며 (1886)</span>
       </div>
     ),
@@ -562,7 +553,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>브람스를 기리며 (1897)</span>
       </div>
     ),
@@ -573,7 +564,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>차이코프스키를 기리며 (1893)</span>
       </div>
     ),
@@ -584,7 +575,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>드뷔시를 기리며 (1918)</span>
       </div>
     ),
@@ -595,7 +586,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>라벨을 기리며 (1937)</span>
       </div>
     ),
@@ -606,7 +597,7 @@ export const specialEvents: SpecialEvent[] = [
     type: 'text',
     message: (
       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-        <Flower width={12} height={12} />
+        <Flower width={14} height={14} />
         <span>라흐마니노프를 기리며 (1943)</span>
       </div>
     ),
@@ -628,13 +619,13 @@ export const getEventsByCategory = (category: SpecialEvent['category']): Special
 // 오늘의 이벤트를 찾는 헬퍼 함수
 export const getTodayEvents = (): SpecialEvent[] => {
   const today = dayjs().format('YYYY-MM-DD');
-  console.log('🎯 오늘 날짜:', today); // 디버깅용
+  console.log('🎯 오늘 날짜:', today);
   const events = getEventsByDate(today);
-  console.log('🎯 오늘의 이벤트:', events); // 디버깅용
+  console.log('🎯 오늘의 이벤트:', events);
   return events;
 };
 
-// 🔧 핵심 수정: 오늘의 이벤트를 CheerData 형태로 반환하는 헬퍼 함수
+// 🔧 핵심: 오늘의 이벤트를 CheerData 형태로 반환하는 헬퍼 함수
 export const getTodayCheerData = (): CheerData => {
   // 1️⃣ 먼저 임시 응원 메시지 확인 (기존 로직)
   const savedCheers = safeLocalStorageGet('temporaryCheers', []);
