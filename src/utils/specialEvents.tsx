@@ -14,17 +14,22 @@ import {
   Flower,
   Award,
   Coffee,
-  Sunset,
-  Scale,
+  Sunset
 } from 'lucide-react';
 
-export interface SpecialEvent {
+// 공통 기본 타입 (홈스크린에서 사용하는 속성들 포함)
+export interface CheerData {
   type: 'text' | 'image' | 'textWithImage';
   message?: string | React.ReactNode;
   imageUrl?: string;
   imageAlt?: string;
-  date: string; // YYYY-MM-DD 형식
-  expiresAt?: string; // ISO 형식
+  date?: string;        // 홈스크린에서 사용
+  expiresAt?: string;   // 홈스크린에서 사용
+}
+
+// SpecialEvent는 CheerData를 확장하고 필수 속성 추가
+export interface SpecialEvent extends CheerData {
+  date: string; // 필수로 변경
   category: 'composer-birth' | 'composer-death' | 'korea-holiday' | 'music-day' | 'special';
 }
 
@@ -69,7 +74,7 @@ export const specialEvents: SpecialEvent[] = [
   // 🎯 오늘 테스트용 - 제헌절 수정
   {
     type: 'textWithImage',
-    message: <span><Scale className="inline w-5 h-5 mr-1" /> 제 77주년 <strong>제헌절</strong></span>,
+    message: <span><Award className="inline w-5 h-5 mr-1" /> 제 77주년 <strong>제헌절</strong></span>,
     imageUrl: '/korea-flag.png',
     imageAlt: '대한민국 국기',
     date: '2025-07-17',
@@ -457,4 +462,39 @@ export const getTodayEvents = (): SpecialEvent[] => {
   const events = getEventsByDate(today);
   console.log('🎯 오늘의 이벤트:', events); // 디버깅용
   return events;
+};
+
+// 오늘의 이벤트를 CheerData 형태로 반환하는 헬퍼 함수
+export const getTodayCheerData = (): CheerData => {
+  const todayEvents = getTodayEvents();
+  if (todayEvents.length > 0) {
+    // 오늘의 이벤트가 여러 개일 경우, 그중 하나를 랜덤으로 선택
+    const event = todayEvents[Math.floor(Math.random() * todayEvents.length)];
+    
+    // SpecialEvent를 CheerData로 반환 (모든 속성 포함)
+    return {
+      type: event.type,
+      message: event.message,
+      imageUrl: event.imageUrl,
+      imageAlt: event.imageAlt,
+      date: event.date,
+      expiresAt: event.expiresAt
+    };
+  }
+
+  // 특별한 이벤트가 없을 경우 기본 메시지
+  const fallbackMessages = [
+    "오늘도 화이팅!", 
+    "꾸준히 연습하는 당신이 멋져요", 
+    "음악과 함께하는 하루"
+  ];
+  const now = new Date();
+  const seed = now.getHours() + now.getMinutes();
+  const messageIndex = seed % fallbackMessages.length;
+  
+  return { 
+    type: 'text', 
+    message: fallbackMessages[messageIndex]
+    // date, expiresAt은 선택적이므로 생략 가능
+  };
 };
