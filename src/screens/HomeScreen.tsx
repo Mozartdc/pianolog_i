@@ -19,7 +19,7 @@ import FlameIcon from "../assets/icons/flame.svg?react";
 import ExportIcon from "../assets/icons/export.svg?react";
 import PlayIcon from "../assets/icons/play.svg?react";
 import { useLocation } from "react-router-dom";
-import { specialEvents, getTodayEvents } from "../utils/specialEvents";
+import { specialEvents, getTodayEvents, getTodayCheerData, CheerData } from "../utils/specialEvents";
 
 // 타입 정의
 interface PracticeRecord {
@@ -44,15 +44,6 @@ type PracticeChecks = {
     [key: string]: boolean;
   };
 };
-
-interface CheerData {
-  type: 'text' | 'image' | 'textWithImage';
-  message?: string;
-  imageUrl?: string;
-  imageAlt?: string;
-  date?: string;
-  expiresAt?: string;
-}
 
 // 한국 공휴일 계산 함수
 const getKoreanHolidays = (year: number): string[] => {
@@ -138,69 +129,6 @@ const cleanupTemporaryData = () => {
     console.error('Cleanup error:', e);
   }
 };
-
-function getTodayCheerData(): CheerData {
-  const today = new Date().toISOString().slice(0, 10);
-  const now = new Date(); // ✅ now 변수 정의
-
-  // 임시 응원 메시지 확인
-  const savedCheers = safeLocalStorageGet('temporaryCheers', []);
-  if (Array.isArray(savedCheers)) {
-    const todaySpecial = savedCheers.find((cheer: CheerData) => {
-      if (cheer.date !== today) return false;
-      
-      // 만료 시간 체크
-      if (cheer.expiresAt && new Date(cheer.expiresAt) <= now) {
-        return false; // 만료된 cheer는 제외
-      }
-      
-      return true;
-    });
-    
-    if (todaySpecial) return todaySpecial;
-  }
-
-  // 만료되지 않은 특별한 cheer 찾기
-  const specialCheer = specialCheers.find(cheer => {
-    if (cheer.date !== today) return false;
-    
-    // 만료 시간이 설정되어 있고, 현재 시간이 만료 시간을 넘었으면 제외
-    if (cheer.expiresAt && new Date(cheer.expiresAt) <= now) {
-      return false;
-    }
-    
-    return true;
-  });
-
-  if (specialCheer) return specialCheer;
-
-  // 기본 응원 메시지
-  try {
-    const cheerMessage = getTodayCheer();
-    if (typeof cheerMessage === 'string' && cheerMessage.trim()) {
-      return { type: 'text', message: cheerMessage };
-    }
-  } catch (e) {
-    console.error('getTodayCheer error:', e);
-  }
-
-  // 폴백 메시지
-  const fallbackMessages = [
-    "오늘도 화이팅!",
-    "꾸준히 연습하는 당신이 멋져요",
-    "음악과 함께하는 하루",
-    "피아노 소리가 아름다워요",
-    "연습이 완벽을 만듭니다",
-    "드가자!",
-    "오늘의 연습도 파이팅!",
-    "멋진 연주를 위해!",
-    "한 음 한 음 정성스럽게"
-  ];
-  
-  const seed = now.getHours() + now.getMinutes() + now.getSeconds();
-  const messageIndex = seed % fallbackMessages.length;
-  return { type: 'text', message: fallbackMessages[messageIndex] };
-}
 
 function HomeScreen() {
   const location = useLocation();

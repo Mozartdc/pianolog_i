@@ -48,33 +48,33 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
           </div>
         );
       
-      case 'textWithImage':
-        return (
-          <div style={baseStyle}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>
-              <img 
-                src={cheerData.imageUrl} 
-                alt={cheerData.imageAlt || "이미지"}
-                style={{ 
-                  width: 35, // 40 → 35로 줄임
-                  height: 35, 
-                  objectFit: "contain",
-                  borderRadius: "var(--border-radius-small)",
-                  flexShrink: 0
-                }}
-              />
-              <span style={{ 
-                flex: 1, 
-                fontSize: 11, 
-                lineHeight: "16px",
-                color: "var(--text-secondary)",
-                fontFamily: "var(--FONT_FAMILY)"
-              }}>
-                {cheerData.message}
-              </span>
-            </div>
-          </div>
-        );
+case 'textWithImage':
+  return (
+    <div style={baseStyle}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, height: "100%" }}>
+        <img 
+          src={cheerData.imageUrl} 
+          alt={cheerData.imageAlt || "이미지"}
+          style={{ 
+            width: 35,
+            height: 35, 
+            objectFit: "contain",
+            borderRadius: "var(--border-radius-small)",
+            flexShrink: 0
+          }}
+        />
+        <div style={{ 
+          flex: 1, 
+          fontSize: 11, 
+          lineHeight: "16px",
+          color: "var(--text-secondary)",
+          fontFamily: "var(--FONT_FAMILY)"
+        }}>
+          🔥 잠시 테스트 - imageUrl: {cheerData.imageUrl} - message: {String(cheerData.message)}
+        </div>
+      </div>
+    </div>
+  );
       
       case 'text':
       default:
