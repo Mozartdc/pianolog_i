@@ -1,5 +1,8 @@
 // specialEvents.tsx
 import React from 'react';
+import dayjs from 'dayjs';
+import { getTodayCheer } from './cheers'; // 기존 치어 시스템 import
+
 import { 
   Calendar, 
   Music, 
@@ -14,7 +17,8 @@ import {
   Flower,
   Award,
   Coffee,
-  Sunset
+  Sunset,
+  Scale,
 } from 'lucide-react';
 
 // 공통 기본 타입 (홈스크린에서 사용하는 속성들 포함)
@@ -32,6 +36,17 @@ export interface SpecialEvent extends CheerData {
   date: string; // 필수로 변경
   category: 'composer-birth' | 'composer-death' | 'korea-holiday' | 'music-day' | 'special';
 }
+
+// localStorage 안전 함수들
+const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (e) {
+    console.error(`localStorage get error for key ${key}:`, e);
+    return defaultValue;
+  }
+};
 
 export const specialEvents: SpecialEvent[] = [
   
@@ -74,7 +89,7 @@ export const specialEvents: SpecialEvent[] = [
   // 🎯 오늘 테스트용 - 제헌절 수정
   {
     type: 'textWithImage',
-    message: <span><Award className="inline w-5 h-5 mr-1" /> 제 77주년 <strong>제헌절</strong></span>,
+    message: <span><Scale className="inline w-5 h-5 mr-1" /> 제 77주년 <strong>제헌절</strong></span>,
     imageUrl: '/korea-flag.png',
     imageAlt: '대한민국 국기',
     date: '2025-07-17',
@@ -457,15 +472,30 @@ export const getEventsByCategory = (category: SpecialEvent['category']): Special
 
 // 오늘의 이벤트를 찾는 헬퍼 함수
 export const getTodayEvents = (): SpecialEvent[] => {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = dayjs().format('YYYY-MM-DD');
   console.log('🎯 오늘 날짜:', today); // 디버깅용
   const events = getEventsByDate(today);
   console.log('🎯 오늘의 이벤트:', events); // 디버깅용
   return events;
 };
 
-// 오늘의 이벤트를 CheerData 형태로 반환하는 헬퍼 함수
+// 🔧 핵심 수정: 오늘의 이벤트를 CheerData 형태로 반환하는 헬퍼 함수
 export const getTodayCheerData = (): CheerData => {
+  // 1️⃣ 먼저 임시 응원 메시지 확인 (기존 로직)
+  const savedCheers = safeLocalStorageGet('temporaryCheers', []);
+  if (Array.isArray(savedCheers)) {
+    const now = new Date();
+    const validCheer = savedCheers.find((cheer: CheerData) => {
+      if (!cheer.expiresAt) return cheer.date === dayjs().format('YYYY-MM-DD');
+      return new Date(cheer.expiresAt) > now && cheer.date === dayjs().format('YYYY-MM-DD');
+    });
+    
+    if (validCheer) {
+      return validCheer;
+    }
+  }
+
+  // 2️⃣ 오늘의 특별 이벤트 확인
   const todayEvents = getTodayEvents();
   if (todayEvents.length > 0) {
     // 오늘의 이벤트가 여러 개일 경우, 그중 하나를 랜덤으로 선택
@@ -482,19 +512,10 @@ export const getTodayCheerData = (): CheerData => {
     };
   }
 
-  // 특별한 이벤트가 없을 경우 기본 메시지
-  const fallbackMessages = [
-    "오늘도 화이팅!", 
-    "꾸준히 연습하는 당신이 멋져요", 
-    "음악과 함께하는 하루"
-  ];
-  const now = new Date();
-  const seed = now.getHours() + now.getMinutes();
-  const messageIndex = seed % fallbackMessages.length;
-  
+  // 3️⃣ 🔧 특별한 이벤트가 없을 경우 기존 치어 시스템 사용
+  const todayCheer = getTodayCheer(); // 기존 함수 사용
   return { 
     type: 'text', 
-    message: fallbackMessages[messageIndex]
-    // date, expiresAt은 선택적이므로 생략 가능
+    message: todayCheer
   };
 };
