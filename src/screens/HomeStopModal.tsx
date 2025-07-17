@@ -204,7 +204,7 @@ export function HomeStopModal({
               height: 35,
               borderRadius: "var(--border-radius-small)",
               border: "none",
-              background: showCelebration ? "#22c55e" : "var(--TURQUOISE)",
+              background: showCelebration ? "var(--VIVA_MAGENTA)" : "var(--TURQUOISE)",
               color: "var(--button-primary-text)",
               fontSize: 16,
               fontWeight: 600,
@@ -217,7 +217,7 @@ export function HomeStopModal({
               ...commonFontStyle
             }}
           >
-            {isCompleting ? "수고하셨습니다! 🎉" : "피퇴"}
+            {isCompleting ? "👍 수고하셨습니다!" : "피퇴"}
             
             {/* ✨ 색종이 + 반짝이 파티클 효과 */}
             {showCelebration && (
