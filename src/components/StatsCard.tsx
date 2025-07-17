@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { generateExportImage } from "../screens/ExportCardModal";
 import SessionSelectModal from "./SessionSelectModal";
 import { usePracticeData, PracticeRecord } from "../contexts/PracticeDataContext";
+import dayjs from "dayjs";
 
 interface StatsCardProps {
   Icon: React.ElementType;
@@ -156,7 +157,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   const handleExportClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const todayKey = new Date().toISOString().slice(0, 10);
+    const todayKey = dayjs().format("YYYY-MM-DD");
     const todaySessions = practiceRecords.filter(
       (r: PracticeRecord) => r.date === todayKey && r.practiceTime > 0
     );
