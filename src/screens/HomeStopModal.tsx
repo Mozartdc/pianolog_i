@@ -210,49 +210,113 @@ export function HomeStopModal({
               fontWeight: 600,
               cursor: isCompleting ? "not-allowed" : "pointer",
               transition: "all 0.3s ease",
-              transform: showCelebration ? "scale(1.05)" : "scale(1)",
+              transform: showCelebration ? "scale(1.1)" : "scale(1)",
               position: "relative",
-              overflow: "hidden",
+              overflow: "visible",
+              animation: showCelebration ? "buttonBounce 0.6s ease-out" : "none",
               ...commonFontStyle
             }}
           >
             {isCompleting ? "수고하셨습니다! 🎉" : "피퇴"}
             
-            {/* ✨ 반짝이 파티클 효과 */}
+            {/* ✨ 색종이 + 반짝이 파티클 효과 */}
             {showCelebration && (
               <>
+                {/* 별과 반짝이 */}
                 <span style={{
                   position: "absolute",
-                  top: "-5px",
-                  left: "10%",
-                  fontSize: "10px",
-                  animation: "sparkleAnimation 1s ease-out forwards",
+                  top: "-8px",
+                  left: "15%",
+                  fontSize: "12px",
+                  animation: "sparkleJump 1s ease-out forwards",
                   animationDelay: "0s"
                 }}>⭐</span>
                 <span style={{
                   position: "absolute",
-                  top: "-8px",
-                  right: "15%",
-                  fontSize: "8px",
-                  animation: "sparkleAnimation 1s ease-out forwards",
-                  animationDelay: "0.2s"
-                }}>✨</span>
-                <span style={{
-                  position: "absolute",
-                  bottom: "-5px",
-                  left: "20%",
+                  top: "-12px",
+                  right: "20%",
                   fontSize: "10px",
-                  animation: "sparkleAnimation 1s ease-out forwards",
-                  animationDelay: "0.4s"
-                }}>⭐</span>
+                  animation: "sparkleJump 1s ease-out forwards",
+                  animationDelay: "0.1s"
+                }}>✨</span>
                 <span style={{
                   position: "absolute",
                   bottom: "-8px",
-                  right: "10%",
-                  fontSize: "8px",
-                  animation: "sparkleAnimation 1s ease-out forwards",
-                  animationDelay: "0.6s"
+                  left: "25%",
+                  fontSize: "12px",
+                  animation: "sparkleJump 1s ease-out forwards",
+                  animationDelay: "0.2s"
+                }}>⭐</span>
+                <span style={{
+                  position: "absolute",
+                  bottom: "-12px",
+                  right: "15%",
+                  fontSize: "10px",
+                  animation: "sparkleJump 1s ease-out forwards",
+                  animationDelay: "0.3s"
                 }}>✨</span>
+
+                {/* 색종이 효과 */}
+                <span style={{
+                  position: "absolute",
+                  top: "-10px",
+                  left: "5%",
+                  width: "4px",
+                  height: "4px",
+                  background: "#ff6b6b",
+                  animation: "confettiDrop 1.2s ease-out forwards",
+                  animationDelay: "0s"
+                }}></span>
+                <span style={{
+                  position: "absolute",
+                  top: "-15px",
+                  left: "30%",
+                  width: "3px",
+                  height: "6px",
+                  background: "#4ecdc4",
+                  animation: "confettiDrop 1.2s ease-out forwards",
+                  animationDelay: "0.1s"
+                }}></span>
+                <span style={{
+                  position: "absolute",
+                  top: "-12px",
+                  right: "5%",
+                  width: "4px",
+                  height: "4px",
+                  background: "#45b7d1",
+                  animation: "confettiDrop 1.2s ease-out forwards",
+                  animationDelay: "0.2s"
+                }}></span>
+                <span style={{
+                  position: "absolute",
+                  top: "-8px",
+                  right: "35%",
+                  width: "3px",
+                  height: "5px",
+                  background: "#f9ca24",
+                  animation: "confettiDrop 1.2s ease-out forwards",
+                  animationDelay: "0.15s"
+                }}></span>
+                <span style={{
+                  position: "absolute",
+                  top: "-14px",
+                  left: "50%",
+                  width: "4px",
+                  height: "3px",
+                  background: "#6c5ce7",
+                  animation: "confettiDrop 1.2s ease-out forwards",
+                  animationDelay: "0.05s"
+                }}></span>
+                <span style={{
+                  position: "absolute",
+                  top: "-11px",
+                  right: "45%",
+                  width: "3px",
+                  height: "4px",
+                  background: "#fd79a8",
+                  animation: "confettiDrop 1.2s ease-out forwards",
+                  animationDelay: "0.25s"
+                }}></span>
               </>
             )}
           </button>
@@ -282,18 +346,45 @@ export function HomeStopModal({
         {/* ✨ CSS 애니메이션 */}
         <style>
           {`
-            @keyframes sparkleAnimation {
+            @keyframes buttonBounce {
+              0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0) scale(1);
+              }
+              40% {
+                transform: translateY(-8px) scale(1.05);
+              }
+              60% {
+                transform: translateY(-4px) scale(1.08);
+              }
+            }
+
+            @keyframes sparkleJump {
               0% {
                 opacity: 0;
-                transform: translateY(0px) scale(0.5);
+                transform: translateY(0px) scale(0.3) rotate(0deg);
               }
               50% {
                 opacity: 1;
-                transform: translateY(-8px) scale(1);
+                transform: translateY(-15px) scale(1.2) rotate(180deg);
               }
               100% {
                 opacity: 0;
-                transform: translateY(-16px) scale(0.5);
+                transform: translateY(-25px) scale(0.5) rotate(360deg);
+              }
+            }
+
+            @keyframes confettiDrop {
+              0% {
+                opacity: 1;
+                transform: translateY(0px) translateX(0px) rotate(0deg);
+              }
+              50% {
+                opacity: 1;
+                transform: translateY(-20px) translateX(-10px) rotate(180deg);
+              }
+              100% {
+                opacity: 0;
+                transform: translateY(30px) translateX(15px) rotate(360deg);
               }
             }
           `}
