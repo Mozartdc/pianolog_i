@@ -68,13 +68,7 @@ const getKoreanHolidays = (year: number): string[] => {
   return holidays;
 };
 
-const specialCheers: CheerData[] = [{
-    type: 'textWithImage',
-    message: '제 77 주년 제헌절',
-    imageUrl: '/event.png',
-    imageAlt: '대한민국 국장',
-    date: '2025-07-17',
-  }];
+const specialCheers: CheerData[] = [];
 
 function getTodayCheerData(): CheerData {
  const today = new Date().toISOString().slice(0, 10);
