@@ -70,38 +70,60 @@ const getKoreanHolidays = (year: number): string[] => {
 
 const specialCheers: CheerData[] = [{
     type: 'textWithImage',
-    message: '제 77 주년 제헌절',
+    message: '<span>제 77 주년 <strong>제헌절</strong></span>',
     imageUrl: '/event.png',
     imageAlt: '대한민국 국장',
-    date: '2025-07-17'
+    date: '2025-07-17',
+    expiresAt: '2025-07-18T00:00:00' // 🆕 다음날 자정에 자동 만료
   }];
 
 function getTodayCheerData(): CheerData {
-  const today = new Date().toISOString().slice(0, 10);
+ const today = new Date().toISOString().slice(0, 10);
+ const currentTime = new Date();
 
-  const savedCheers = localStorage.getItem('temporaryCheers');
-  if (savedCheers) {
-    try {
-      const tempCheers = JSON.parse(savedCheers) as CheerData[];
-      const todaySpecial = tempCheers.find(cheer => cheer.date === today);
-      if (todaySpecial) return todaySpecial;
-    } catch (e) {
-      console.error('Failed to parse temporary cheers:', e);
-    }
-  }
+ const savedCheers = localStorage.getItem('temporaryCheers');
+ if (savedCheers) {
+   try {
+     const tempCheers = JSON.parse(savedCheers) as CheerData[];
+     const todaySpecial = tempCheers.find(cheer => {
+       if (cheer.date !== today) return false;
+       
+       // 만료 시간 체크 (기존 now 변수 사용)
+       if (cheer.expiresAt && new Date(cheer.expiresAt) <= now) {
+         return false; // 만료된 cheer는 제외
+       }
+       
+       return true;
+     });
+     
+     if (todaySpecial) return todaySpecial;
+   } catch (e) {
+     console.error('Failed to parse temporary cheers:', e);
+   }
+ }
 
-  const specialCheer = specialCheers.find(cheer => cheer.date === today);
-  if (specialCheer) return specialCheer;
+ // 만료되지 않은 특별한 cheer 찾기
+ const specialCheer = specialCheers.find(cheer => {
+   if (cheer.date !== today) return false;
+   
+   // 만료 시간이 설정되어 있고, 현재 시간이 만료 시간을 넘었으면 제외
+   if (cheer.expiresAt && new Date(cheer.expiresAt) <= now) {
+     return false;
+   }
+   
+   return true;
+ });
 
-  try {
-    const cheerMessage = getTodayCheer();
-    if (typeof cheerMessage === 'string' && cheerMessage.trim()) {
-      return { type: 'text', message: cheerMessage };
-    }
-  } catch (e) {
-    console.error('getTodayCheer error:', e);
-  }
+if (specialCheer) return specialCheer;
 
+try {
+ const cheerMessage = getTodayCheer();
+ if (typeof cheerMessage === 'string' && cheerMessage.trim()) {
+   return { type: 'text', message: cheerMessage };
+ }
+} catch (e) {
+ console.error('getTodayCheer error:', e);
+}
   const fallbackMessages = [
     "오늘도 화이팅!",
     "꾸준히 연습하는 당신이 멋져요",
