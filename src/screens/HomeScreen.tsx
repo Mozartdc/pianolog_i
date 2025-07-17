@@ -70,7 +70,7 @@ const getKoreanHolidays = (year: number): string[] => {
 
 const specialCheers: CheerData[] = [{
     type: 'textWithImage',
-    message: '<span>제 77 주년 <strong>제헌절</strong></span>',
+    message: '제 77 주년 제헌절',
     imageUrl: '/event.png',
     imageAlt: '대한민국 국장',
     date: '2025-07-17',
