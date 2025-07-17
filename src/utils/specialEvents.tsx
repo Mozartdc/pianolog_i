@@ -51,7 +51,7 @@ export const specialEvents: SpecialEvent[] = [
   },
   {
     type: 'textWithImage',
-    message: <span>제 77 주년 <strong>제헌절</strong>입니다.</span>,
+    message: <span>제 77 주년 <strong>제헌절</strong>􀫗</span>,
     imageUrl: '/event.png',
     imageAlt: '대한민국 국장',
     date: '2025-07-17',
