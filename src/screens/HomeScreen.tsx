@@ -74,7 +74,6 @@ const specialCheers: CheerData[] = [{
     imageUrl: '/event.png',
     imageAlt: '대한민국 국장',
     date: '2025-07-17',
-    expiresAt: '2025-07-18T00:00:00' // 🆕 다음날 자정에 자동 만료
   }];
 
 function getTodayCheerData(): CheerData {
