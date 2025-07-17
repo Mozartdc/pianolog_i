@@ -5,7 +5,7 @@ interface ProfileSectionProps {
   nickname: string;
   cheerData: {
     type: 'text' | 'image' | 'textWithImage';
-    message?: string;
+    message?: string | React.ReactNode; // ✅ 수정
     imageUrl?: string;
     imageAlt?: string;
   };

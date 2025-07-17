@@ -19,6 +19,7 @@ import FlameIcon from "../assets/icons/flame.svg?react";
 import ExportIcon from "../assets/icons/export.svg?react";
 import PlayIcon from "../assets/icons/play.svg?react";
 import { useLocation } from "react-router-dom";
+import { specialEvents, getTodayEvents } from "../utils/specialEvents";
 
 // 타입 정의
 interface PracticeRecord {
@@ -69,14 +70,7 @@ const getKoreanHolidays = (year: number): string[] => {
 };
 
 // ✅ 특별 이벤트 데이터 (이미지 URL은 public 경로 사용)
-const specialCheers: CheerData[] = [{
-  type: 'textWithImage',
-  message: '제 77 주년 제헌절',
-  imageUrl: '/event.png', // public 폴더의 이미지 경로
-  imageAlt: '대한민국 국장',
-  date: '2025-07-17',
-  expiresAt: '2025-07-18T00:00:00' // 다음날 자정에 자동 만료
-}];
+
 
 // ✅ localStorage 안전 함수들
 const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
