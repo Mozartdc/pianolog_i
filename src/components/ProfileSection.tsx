@@ -70,7 +70,7 @@ case 'textWithImage':
           color: "var(--text-secondary)",
           fontFamily: "var(--FONT_FAMILY)"
         }}>
-          🔥 잠시 테스트 - imageUrl: {cheerData.imageUrl} - message: {String(cheerData.message)}
+          {cheerData.message}
         </div>
       </div>
     </div>
