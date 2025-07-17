@@ -50,6 +50,7 @@ interface CheerData {
   imageUrl?: string;
   imageAlt?: string;
   date?: string;
+  expiresAt?: string;
 }
 
 // 한국 공휴일 계산 함수
