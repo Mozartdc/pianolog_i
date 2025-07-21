@@ -12,7 +12,7 @@
   --DARK_GRAY: #9e9c98;
   --VIVA_MAGENTA: #bb2649;
   --MIMOSA: #f0c05a;
-  --PASTEL_MIMOSA: #DECDBE;
+  --PASTEL_MIMOSA: #EFE6DD;
   --TURQUOISE_GRADIENT: linear-gradient(to right, #45b5aa, #5ad8cb);
 
   /* 폰트 시스템 */
@@ -56,14 +56,14 @@ html[data-theme="dark"] {
   /* 기본 색상 오버라이드 */
   --WHITE: #1A1A1A;
   --BLACK: #E0E0E0;
-  --TURQUOISE: #308077;
+  --TURQUOISE: #236862;
   --PASTEL_TURQUOISE: #3A4B4A;
   --VERY_PERI: #909BB0;
   --PASTEL_VERY_PERI: #3D424F; 
   --DARK_GRAY: #777777;
   --VIVA_MAGENTA: #DD5577;
   --MIMOSA: #B0876F;
-  --PASTEL_MIMOSA: #5A5245;
+  --PASTEL_MIMOSA: #B0876F;
   --TURQUOISE_GRADIENT: linear-gradient(to right, #308077, #40A097);
 
   /* 의미적 색상 오버라이드 */
