@@ -356,7 +356,7 @@ const generateCalendarDays = () => {
   color: (dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-primary)"),
   fontWeight: isToday ? 700 : 200, // ✅ 오늘만 굵게, 나머지는 보통
   zIndex: 2, position: "relative",
-  border: isSelected ? "3px solid var(--VIVA_MAGENTA)" : "none",
+  border: isSelected ? "1px solid var(--BLACK)" : "none",
   background: "transparent",
   borderRadius: "50%",
   width: isToday || isSelected ? "100%" : "auto",
