@@ -220,14 +220,22 @@ export function HomeStopModal({
               ...commonFontStyle
             }}
           >
-            {isCompleting ? (
-              <>
-                <ThumbsUp width={16} height={16} />
-                수고하셨습니다!
-              </>
-            ) : (
-              "피퇴"
-            )}
+           {isCompleting ? (
+  <>
+    {/* ThumbsUp 아이콘에 테마 색상 적용 */}
+    <ThumbsUp 
+      width={16} 
+      height={16} 
+      style={{ color: 'var(--text-primary)' }} 
+    />
+    {/* 텍스트를 span으로 감싸고 테마 색상 적용 */}
+    <span style={{ color: 'var(--text-primary)' }}>
+      수고하셨습니다!
+    </span>
+  </>
+) : (
+  "피퇴"
+)}
             
             {/* ✨ 색종이 + 반짝이 파티클 효과 */}
             {showCelebration && (
