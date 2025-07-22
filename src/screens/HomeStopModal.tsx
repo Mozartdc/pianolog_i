@@ -195,47 +195,42 @@ export function HomeStopModal({
           gap: 12
         }}>
           {/* ✨ 마이크로 인터랙션이 적용된 피퇴 버튼 */}
-          <button
-            onClick={handleComplete}
-            disabled={isCompleting}
-            style={{
-              width: 140,
-              height: 35,
-              borderRadius: "var(--border-radius-small)",
-              border: "none",
-              background: showCelebration ? "var(--VIVA_MAGENTA)" : "var(--TURQUOISE)",
-              color: "var(--button-primary-text)",
-              fontSize: 16,
-              fontWeight: 600,
-              cursor: isCompleting ? "not-allowed" : "pointer",
-              transition: "all 0.3s ease",
-              transform: showCelebration ? "scale(1.1)" : "scale(1)",
-              position: "relative",
-              overflow: "visible",
-              animation: showCelebration ? "buttonBounce 0.6s ease-out" : "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              ...commonFontStyle
-            }}
-          >
-          {isCompleting ? (
-            <>
-              {/* ThumbsUp 아이콘에 className 적용 */}
-              <ThumbsUp 
-              width={16} 
-              height={16} 
-              className="theme-text-primary"
-              />
-                {/* 텍스트를 span으로 감싸고 className 적용 */}
-              <span className="theme-text-primary">
-              수고하셨습니다!
-              </span>
-            </>
-        ) : (
-          "피퇴"
-        )}
+         <button
+  onClick={handleComplete}
+  disabled={isCompleting}
+  style={{
+    width: 140,
+    height: 35,
+    borderRadius: "var(--border-radius-small)",
+    border: "none",
+    // ✅ [수정] 배경색을 항상 VIVA_MAGENTA로 고정
+    background: "var(--VIVA_MAGENTA)", 
+    // ✅ [수정] 글자색은 버튼 기본 텍스트 색상으로 유지
+    color: "var(--button-primary-text)", 
+    fontSize: 16,
+    fontWeight: 600,
+    cursor: isCompleting ? "not-allowed" : "pointer",
+    transition: "all 0.3s ease",
+    transform: showCelebration ? "scale(1.1)" : "scale(1)",
+    position: "relative",
+    overflow: "visible",
+    animation: showCelebration ? "buttonBounce 0.6s ease-out" : "none",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    ...commonFontStyle
+  }}
+>
+  {isCompleting ? (
+    <>
+      {/* ThumbsUp 아이콘과 텍스트는 이제 버튼의 color를 상속받아 흰색으로 표시됩니다. */}
+      <ThumbsUp width={16} height={16} />
+      <span>수고하셨습니다!</span>
+    </>
+  ) : (
+    "피퇴"
+  )}
             
             {/* ✨ 색종이 + 반짝이 파티클 효과 */}
             {showCelebration && (
