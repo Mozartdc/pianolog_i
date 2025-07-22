@@ -206,7 +206,7 @@ export function HomeStopModal({
     // ✅ [수정] 배경색을 항상 VIVA_MAGENTA로 고정
     background: "var(--VIVA_MAGENTA)", 
     // ✅ [수정] 글자색은 버튼 기본 텍스트 색상으로 유지
-    color: "var(--BLACK)", 
+    color: "var(--WHITE)", 
     fontSize: 16,
     fontWeight: 600,
     cursor: isCompleting ? "not-allowed" : "pointer",
