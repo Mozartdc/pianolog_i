@@ -350,10 +350,10 @@ const generateCalendarDays = () => {
                     opacity: isCurrentMonth ? 1 : 0.3, boxSizing: "border-box"
                   }}
                 >
-                  {practiced && <DoIcon style={{ color: "var(--PASTEL_MIMOSA)", width: "100%", height: "100%", maxWidth: 32, maxHeight: 32, position: "absolute", zIndex: 1, opacity: 0.8 }} />}
+                  {practiced && <DoIcon style={{ color: "var(--MIMOSA)", width: "100%", height: "100%", maxWidth: 32, maxHeight: 32, position: "absolute", zIndex: 1, opacity: 0.8 }} />}
 <span style={{
   fontSize: "clamp(12px, 4vw, 16px)",
-  color: (dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)"),
+  color: (dayIndex === 6 || isHoliday ? "var(--VIVA_MAGENTA)" : "var(--text-primary)"),
   fontWeight: isToday ? 700 : 200, // ✅ 오늘만 굵게, 나머지는 보통
   zIndex: 2, position: "relative",
   border: isSelected ? "1px solid var(--BLACK)" : "none",
