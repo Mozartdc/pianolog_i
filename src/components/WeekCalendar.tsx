@@ -252,7 +252,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
                 color: isSunday || isHoliday 
                   ? "var(--VIVA_MAGENTA)" 
                   : isSaturday 
-                    ? "#0066cc" // 토요일은 파란색 유지 (CSS 변수에 추가 고려)
+                    ? "var(--VERY_PERI)" // 토요일은 파란색 유지 (CSS 변수에 추가 고려)
                     : "var(--text-secondary)",
                 lineHeight: "14px",
                 textAlign: "center",
