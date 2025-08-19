@@ -1,10 +1,12 @@
-import React from "react";
-import MetronomIcon from "../assets/icons/metronom.svg?react";
+import React, { useRef, useEffect } from "react";
+import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import PauseIcon from "../assets/icons/pause.svg?react";
 import ReplayIcon from "../assets/icons/replay.svg?react";
+import playpianoAnimation from "../assets/Playpiano.json";
 
 interface HomeStartTimerModalProps {
   timerSeconds: number;
+  timerMilliseconds: number; // 추가
   isRunning: boolean;
   onPause: () => void;
   onResume: () => void;
@@ -14,15 +16,30 @@ interface HomeStartTimerModalProps {
 
 export function HomeStartTimerModal({
   timerSeconds,
+  timerMilliseconds, // 추가
   isRunning,
   onPause,
   onResume,
   onComplete,
   onEdit
 }: HomeStartTimerModalProps) {
-  const hours = Math.floor(timerSeconds / 3600);
-  const minutes = Math.floor((timerSeconds % 3600) / 60);
-  const seconds = timerSeconds % 60;
+  const totalMs = timerMilliseconds; // HomeScreen에서 받은 값 사용
+  const hours = Math.floor(totalMs / 3600000);
+  const minutes = Math.floor((totalMs % 3600000) / 60000);
+  const totalSecondsOnly = Math.floor((totalMs % 60000) / 1000);
+  const centiseconds = Math.floor((totalMs % 1000) / 10);
+  const lottieRef = useRef<LottieRefCurrentProps>(null);
+
+  // 일시정지 시 애니메이션도 제어
+  useEffect(() => {
+    if (lottieRef.current) {
+      if (isRunning) {
+        lottieRef.current.play();
+      } else {
+        lottieRef.current.pause();
+      }
+    }
+  }, [isRunning]);
 
   const commonFontStyle = {
     fontFamily: "'Pretendard Variable', 'Pretendard', sans-serif",
@@ -53,23 +70,27 @@ export function HomeStartTimerModal({
     gap: 16,
     pointerEvents: "auto"
   }}>
-        {/* 메트로놈 아이콘 */}
-        <button
-          aria-label="메트로놈"
+        {/* Lottie 피아노 애니메이션 */}
+        <div
           style={{
-            width: 20,
-            height: 20,
-            background: "none",
-            border: "none",
-            cursor: "pointer",
+            width: 40,
+            height: 40,
             display: "flex",
             alignItems: "center",
             justifyContent: "center"
           }}
         >
-          {/* ✅ [수정] alt 속성 제거 */}
-          <MetronomIcon style={{ color: "var(--TURQUOISE)" }} width="20" height="20" />
-        </button>
+          <Lottie
+            lottieRef={lottieRef}
+            animationData={playpianoAnimation}
+            loop={true}
+            autoplay={true}
+            style={{ 
+              width: 40, 
+              height: 40 
+            }}
+          />
+        </div>
 
         {/* 중앙 상태 및 시간 표시 */}
         <div style={{
@@ -113,12 +134,12 @@ export function HomeStartTimerModal({
             </span>
 
             <span style={{ fontSize: 14, lineHeight: "20px", ...commonFontStyle }}>
-              {seconds}s
+              {totalSecondsOnly}s
             </span>
           </div>
         </div>
 
-        {/* 퍼즈/리플레이 버튼 */}
+        {/* ✅ 수정된 부분: 퍼즈/리플레이 버튼 - 모두 MIMOSA 색상으로 통일 */}
         <button
           onClick={isRunning ? onPause : onResume}
           aria-label={isRunning ? "일시정지" : "다시시작"}
@@ -133,14 +154,13 @@ export function HomeStartTimerModal({
             justifyContent: "center"
           }}
         >
-          {/* ✅ [수정] alt 속성 제거 */}
           {isRunning 
-            ? <PauseIcon style={{ color: "var(--text-primary)" }} width="20" height="20" />
+            ? <PauseIcon style={{ color: "var(--MIMOSA)" }} width="20" height="20" />
             : <ReplayIcon style={{ color: "var(--MIMOSA)" }} width="20" height="20" />
           }
         </button>
 
-        {/* 액션 버튼들 */}
+        {/* ✅ 정원 버튼들 - 직사각형의 가로 너비를 지름으로 사용 */}
         <div style={{
           display: "flex",
           gap: 8,
@@ -149,14 +169,18 @@ export function HomeStartTimerModal({
           <button
             onClick={onComplete}
             style={{
+              width: 32, // 원래 버튼의 대략적인 가로 너비
+              height: 32, // width와 동일하게 설정하여 정원 생성
               background: "var(--bg-secondary)",
               border: "none",
-              borderRadius: 6,
-              padding: "5px 8px",
+              borderRadius: "50%", // 정원을 만드는 핵심
               fontSize: 12,
               color: "var(--text-primary)",
               lineHeight: "14px",
               cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               ...commonFontStyle
             }}
           >
@@ -165,14 +189,18 @@ export function HomeStartTimerModal({
           <button
             onClick={onEdit}
             style={{
+              width: 32, // 원래 버튼의 대략적인 가로 너비
+              height: 32, // width와 동일하게 설정하여 정원 생성
               background: "var(--bg-secondary)",
               border: "none",
-              borderRadius: 6,
-              padding: "5px 8px",
+              borderRadius: "50%", // 정원을 만드는 핵심
               fontSize: 12,
               color: "var(--text-primary)",
               lineHeight: "14px",
               cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               ...commonFontStyle
             }}
           >

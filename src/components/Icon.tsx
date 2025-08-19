@@ -1,5 +1,13 @@
 import React from 'react';
 
+// ✅ SVG 파일들을 직접 import (Vite의 SVGR 플러그인 사용)
+import ExportIcon from '../assets/icons/export.svg?react';
+import FlameIcon from '../assets/icons/flame.svg?react';
+import KeyboardIcon from '../assets/icons/keyboard.svg?react';
+import PlayIcon from '../assets/icons/play.svg?react';
+import StaffIcon from '../assets/icons/staff.svg?react';
+import TrophyIcon from '../assets/icons/trophy.svg?react';
+
 interface IconProps {
   name: 'export' | 'flame' | 'keyboard' | 'play' | 'staff' | 'trophy';
   size?: number;
@@ -15,13 +23,14 @@ const Icon: React.FC<IconProps> = ({
   className,
   responsive = false 
 }) => {
-  const iconPaths = {
-    export: '/src/assets/icons/export.svg',
-    flame: '/src/assets/icons/flame.svg', 
-    keyboard: '/src/assets/icons/keyboard.svg',
-    play: '/src/assets/icons/play.svg',
-    staff: '/src/assets/icons/staff.svg',
-    trophy: '/src/assets/icons/trophy.svg'
+  // ✅ import된 컴포넌트를 사용
+  const iconComponents = {
+    export: ExportIcon,
+    flame: FlameIcon,
+    keyboard: KeyboardIcon,
+    play: PlayIcon,
+    staff: StaffIcon,
+    trophy: TrophyIcon
   };
 
   // ✅ 반응형 크기 계산
@@ -35,6 +44,7 @@ const Icon: React.FC<IconProps> = ({
   };
 
   const containerSize = getResponsiveSize();
+  const IconComponent = iconComponents[name];
 
   return (
     <div 
@@ -50,12 +60,9 @@ const Icon: React.FC<IconProps> = ({
         fontFamily: 'var(--FONT_FAMILY)' // ✅ 폰트 통일
       }}
     >
-      <svg
+      <IconComponent
         width="100%"
         height="100%"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
         style={{
           color: color,
           display: 'block',
@@ -64,9 +71,7 @@ const Icon: React.FC<IconProps> = ({
         // ✅ 접근성 개선
         role="img"
         aria-label={`${name} 아이콘`}
-      >
-        <use href={`${iconPaths[name]}#icon`} />
-      </svg>
+      />
     </div>
   );
 };
