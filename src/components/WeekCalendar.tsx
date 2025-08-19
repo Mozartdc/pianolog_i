@@ -1,18 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
+import { motion, useAnimation } from "framer-motion";
 
 interface PracticeRecord {
-  date: string;
-  practiceTime: number;
+  date: string;          // "YYYY-MM-DD"
+  practiceTime: number;  // minutes
 }
 
 interface WeekCalendarProps {
-  selectedDate: string;
-  practiceRecords: PracticeRecord[];
+  selectedDate: string;                                 // "YYYY-MM-DD"
+  practiceRecords: PracticeRecord[];                    // not used here directly, reserved for badges/heatmap etc.
   onDateClick: (dateStr: string) => void;
-  getKoreanHolidays: (year: number) => string[];
-  themeColor?: string;
-  themePastelColor?: string; 
+  getKoreanHolidays: (year: number) => string[];        // returns array of "YYYY-MM-DD"
+  themeColor?: string;                                  // e.g., "var(--TURQUOISE)"
+  themePastelColor?: string;                            // e.g., "var(--PASTEL_TURQUOISE)"
 }
 
 const WeekCalendar: React.FC<WeekCalendarProps> = ({
@@ -21,167 +22,126 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
   onDateClick,
   getKoreanHolidays,
   themeColor = "var(--TURQUOISE)",
-  themePastelColor = "var(--PASTEL_TURQUOISE)"
+  themePastelColor = "var(--PASTEL_TURQUOISE)",
 }) => {
-  const [isDragging, setIsDragging] = useState<boolean>(false);
-  const [startX, setStartX] = useState<number>(0);
-  const [currentTranslateX, setCurrentTranslateX] = useState<number>(0);
-  const [baseTranslateX, setBaseTranslateX] = useState<number>(0);
-  const [touchStartPos, setTouchStartPos] = useState<{x: number, y: number} | null>(null);
-  const [hasMoved, setHasMoved] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const controls = useAnimation();
+  const dragged = useRef(false);
 
   const commonFontStyle = {
-    fontFamily: "var(--FONT_FAMILY)", // ✅ CSS 변수 적용
+    fontFamily: "var(--FONT_FAMILY)",
     WebkitFontSmoothing: "antialiased" as const,
-    MozOsxFontSmoothing: "grayscale" as const
+    MozOsxFontSmoothing: "grayscale" as const,
   };
 
   const CARD_WIDTH = 42;
   const GAP = 8;
-  const TOTAL_CARD_WIDTH = CARD_WIDTH + GAP; // 50px
-  
-  // ✅ 완전 반응형: 고정 SCREEN_WIDTH 제거, 동적 계산
-  const getScreenWidth = () => {
-    if (containerRef.current) {
-      return containerRef.current.offsetWidth;
-    }
-    return 343; // 기본값
-  };
+  const TOTAL_CARD_WIDTH = CARD_WIDTH + GAP;
 
-  // 2년 범위 무한 스크롤
+  // 화면 폭 추적(리사이즈/회전 대응)
+  const [screenWidth, setScreenWidth] = useState<number>(343);
+  useEffect(() => {
+    const ro = new ResizeObserver(([entry]) => {
+      setScreenWidth(Math.round(entry.contentRect.width));
+    });
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // 기준일(오늘) ± 365일 생성. 메모이제이션으로 재생성 방지
   const generateContinuousDates = () => {
-    const baseDate = dayjs(selectedDate);
-    const dates = [];
-    
-    for (let i = -365; i <= 365; i++) {
-      dates.push(baseDate.add(i, 'day'));
-    }
-    
+    const baseDate = dayjs();
+    const dates: dayjs.Dayjs[] = [];
+    for (let i = -365; i <= 365; i++) dates.push(baseDate.add(i, "day"));
     return dates;
   };
+  const allDates = useMemo(() => generateContinuousDates(), []);
 
-  const allDates = generateContinuousDates();
-  const today = dayjs();
-  const todayStr = today.format("YYYY-MM-DD");
-  
-  // 선택된 날짜의 인덱스 찾기
-  const selectedDateIndex = allDates.findIndex(date => date.format("YYYY-MM-DD") === selectedDate);
-  
-  // ✅ 화면 정중앙 계산 - 동적 화면 너비 사용
-  const calculateCenterTransform = () => {
-    if (selectedDateIndex === -1) return 0;
-    const screenWidth = getScreenWidth();
-    const cardCenterPos = selectedDateIndex * TOTAL_CARD_WIDTH + CARD_WIDTH / 2;
-    const screenCenterPos = screenWidth / 2;
-    return screenCenterPos - cardCenterPos;
-  };
+  const todayStr = dayjs().format("YYYY-MM-DD");
+  const contentWidth = allDates.length * TOTAL_CARD_WIDTH;
+  const maxLeft = Math.max(0, contentWidth - screenWidth);
 
-  // selectedDate 변경 시 중앙으로 이동
+  // 선택된 날짜가 변경되면 화면 중앙으로 스크롤
   useEffect(() => {
-    const centerTransform = calculateCenterTransform();
-    setBaseTranslateX(centerTransform);
-    setCurrentTranslateX(0);
-  }, [selectedDate]);
+    const idx = allDates.findIndex((d) => d.format("YYYY-MM-DD") === selectedDate);
+    if (idx < 0) return;
+    const targetX = screenWidth / 2 - (idx * TOTAL_CARD_WIDTH + CARD_WIDTH / 2);
+    controls.start({
+      x: targetX,
+      transition: { type: "spring", stiffness: 300, damping: 30 },
+    });
+  }, [selectedDate, screenWidth, controls]);
 
-  // 날짜 클릭 핸들러
+  // 클릭 처리(로컬 저장 포함)
   const handleDateClick = (dateStr: string) => {
-    console.log("날짜 선택:", dateStr);
     localStorage.setItem("lastSelectedDate", dateStr);
     onDateClick(dateStr);
   };
 
-  // 터치 시작 - 개선된 버전
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartPos({
-      x: e.touches[0].clientX,
-      y: e.touches[0].clientY
-    });
-    setHasMoved(false);
-    setIsDragging(false);
-    setStartX(e.touches[0].clientX);
-  };
-
-  // 터치 이동 - 개선된 버전
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!touchStartPos) return;
-    
-    const deltaX = e.touches[0].clientX - touchStartPos.x;
-    const deltaY = e.touches[0].clientY - touchStartPos.y;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    // 15px 이상 움직이면 드래그로 인식
-    if (distance > 15) {
-      setIsDragging(true);
-      setHasMoved(true);
-      e.preventDefault(); // 드래그 시에만 기본 동작 차단
-      
-      const scrollDelta = e.touches[0].clientX - startX;
-      setCurrentTranslateX(prev => prev + scrollDelta);
-      setStartX(e.touches[0].clientX);
+  // 공휴일 연도별 캐시
+  const holidayCache = useRef(new Map<number, Set<string>>());
+  const getHolidaySet = (y: number) => {
+    if (!holidayCache.current.has(y)) {
+      holidayCache.current.set(y, new Set(getKoreanHolidays(y)));
     }
+    return holidayCache.current.get(y)!;
   };
 
-  // 터치 종료 - 개선된 버전
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    setIsDragging(false);
-    setTouchStartPos(null);
-    setHasMoved(false);
-    setStartX(0);
-  };
-
-  // 마우스 이벤트 (데스크톱)
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-    setStartX(e.clientX);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isDragging) return;
-    
-    const deltaX = e.clientX - startX;
-    setCurrentTranslateX(prev => prev + deltaX);
-    setStartX(e.clientX);
-  };
-
-  const handleMouseUp = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    setStartX(0);
+  // 배경색 헬퍼
+  const getCardBackground = (isToday: boolean, isSelected: boolean): string => {
+    if (isToday) return themePastelColor;
+    if (isSelected) return "var(--info-bg)";
+    return "var(--bg-primary)";
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
+      role="region"
+      aria-label="Week calendar"
       style={{
-        // ✅ 완전 반응형: 고정 maxWidth 제거
-        width: "calc(100% - 32px)", // 좌우 16px 패딩 고려
+        width: "calc(100% - 32px)",
         height: 56,
         margin: "15px auto 0 auto",
         overflow: "hidden",
-        touchAction: "pan-y",
-        userSelect: "none",
-        cursor: isDragging ? "grabbing" : "grab",
-        fontFamily: "var(--FONT_FAMILY)" // ✅ CSS 변수 적용
+        cursor: contentWidth > screenWidth ? "grab" : "default",
+        fontFamily: "var(--FONT_FAMILY)",
       }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseMove={isDragging ? handleMouseMove : undefined}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
     >
-      <div
+      <motion.div
+        drag={contentWidth > screenWidth ? "x" : false}
+        dragConstraints={{
+          right: 0,
+          left: -maxLeft,
+        }}
+        dragTransition={{
+          power: 0.15,
+          timeConstant: 250,
+          modifyTarget: (target) => {
+            const center = screenWidth / 2;
+            const closestIndex = Math.round(
+              (center - target - CARD_WIDTH / 2) / TOTAL_CARD_WIDTH
+            );
+            const newTarget = center - (closestIndex * TOTAL_CARD_WIDTH + CARD_WIDTH / 2);
+            return newTarget;
+          },
+        }}
+        onDragStart={() => {
+          dragged.current = false;
+        }}
+        onDrag={(e, info) => {
+          if (Math.abs(info.delta.x) > 3) dragged.current = true;
+        }}
+        // flag는 onDragEnd에서 굳이 초기화하지 않고 pointerDown 시 초기화
+        animate={controls}
+        initial={false}
         style={{
           display: "flex",
           alignItems: "center",
-          width: `${allDates.length * TOTAL_CARD_WIDTH}px`,
-          transform: `translateX(${baseTranslateX + currentTranslateX}px)`,
-          transition: "none",
+          width: contentWidth,
+          justifyContent: contentWidth > screenWidth ? "flex-start" : "center",
         }}
+        whileTap={{ cursor: contentWidth > screenWidth ? "grabbing" : "default" }}
       >
         {allDates.map((date, index) => {
           const dateStr = date.format("YYYY-MM-DD");
@@ -189,81 +149,75 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
           const isToday = dateStr === todayStr;
           const isSunday = date.day() === 0;
           const isSaturday = date.day() === 6;
-          const koreanHolidays = getKoreanHolidays(date.year());
-          const isHoliday = koreanHolidays.includes(dateStr);
-          
+          const isHoliday = getHolidaySet(date.year()).has(dateStr);
+
           return (
             <div
               key={index}
-              // 데스크톱 클릭
-              onClick={(e) => {
-                e.preventDefault();
-                if (!('ontouchstart' in window) && !isDragging) {
+              onPointerDown={() => {
+                dragged.current = false;
+              }}
+              onClick={() => {
+                if (!dragged.current) handleDateClick(dateStr);
+              }}
+              onKeyDown={(e) => {
+                if (!dragged.current && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
                   handleDateClick(dateStr);
                 }
               }}
-              // 모바일 터치 - 완전히 개선된 버전
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // 드래그하지 않았을 때만 날짜 선택
-                if (!hasMoved && !isDragging) {
-                  console.log("모바일 터치 성공:", dateStr);
-                  handleDateClick(dateStr);
-                }
-              }}
+              role="button"
+              aria-pressed={isSelected}
+              tabIndex={0}
               style={{
                 width: CARD_WIDTH,
                 height: 56,
-                // ✅ CSS 변수 적용
-                background: isToday 
-                  ? themePastelColor
-                  : isSelected 
-                    ? "var(--info-bg)" 
-                    : "var(--bg-primary)",
-                border: isSelected && !isToday 
-                  ? `0.8px solid ${themeColor}` 
-                  : `0.8px solid transparent`,
-                borderRadius: "var(--border-radius-large)", // ✅ CSS 변수 적용
+                background: getCardBackground(isToday, isSelected),
+                border:
+                  isSelected && !isToday ? `0.8px solid ${themeColor}` : `0.8px solid transparent`,
+                borderRadius: "var(--border-radius-large)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                cursor: "pointer",
                 marginRight: GAP,
                 flexShrink: 0,
                 WebkitTapHighlightColor: "transparent",
-                transition: "var(--transition-fast)" // ✅ 부드러운 호버 효과
+                transition: "var(--transition-fast)",
+                userSelect: "none",
+                cursor: "pointer",
               }}
             >
-              <span style={{
-                fontSize: 18,
-                color: "var(--text-primary)", // ✅ CSS 변수 적용
-                lineHeight: "22px",
-                textAlign: "center",
-                ...commonFontStyle
-              }}>
+              <span
+                style={{
+                  fontSize: 18,
+                  color: "var(--text-primary)",
+                  lineHeight: "22px",
+                  textAlign: "center",
+                  ...commonFontStyle,
+                }}
+              >
                 {date.format("D")}
               </span>
-              <span style={{
-                fontSize: 12,
-                // ✅ CSS 변수 적용
-                color: isSunday || isHoliday 
-                  ? "var(--VIVA_MAGENTA)" 
-                  : isSaturday 
-                    ? "var(--VERY_PERI)" // 토요일은 파란색 유지 (CSS 변수에 추가 고려)
+              <span
+                style={{
+                  fontSize: 12,
+                  color: isSunday || isHoliday
+                    ? "var(--VIVA_MAGENTA)"
+                    : isSaturday
+                    ? "var(--VERY_PERI)"
                     : "var(--text-secondary)",
-                lineHeight: "14px",
-                textAlign: "center",
-                ...commonFontStyle
-              }}>
+                  lineHeight: "14px",
+                  textAlign: "center",
+                  ...commonFontStyle,
+                }}
+              >
                 {date.format("ddd").toLowerCase()}
               </span>
             </div>
           );
         })}
-      </div>
+      </motion.div>
     </div>
   );
 };

@@ -2,88 +2,135 @@
 
 /* 라이트 테마 (기본값) */
 :root {
-  /* 기본 색상 팔레트 */
+  /* 기본 컬러 */
   --WHITE: #ffffff;
   --BLACK: #2d2d2a;
   --TURQUOISE: #45b5aa;
-  --PASTEL_TURQUOISE: #e5f6f5;
   --VERY_PERI: #6b778d;
-  --PASTEL_VERY_PERI: #E8EAF0;
-  --DARK_GRAY: #9e9c98;
-  --VIVA_MAGENTA: #bb2649;
+  --DARK_GRAY: #B5BAB6;
+  --VIVA_MAGENTA: #BE3455;
   --MIMOSA: #f0c05a;
-  --PASTEL_MIMOSA: #EFE6DD;
+  --LIVING_CORAL: #F36F63;
+
+  /* 파스텔 컬러 */
+  --PASTEL_TURQUOISE: #d6f0ee;
+  --PASTEL_VERY_PERI: #e2e4ec;
+  --PASTEL_MIMOSA: #fdf6e8;
+  --PASTEL_VIVA_MAGENTA: #f5f3e8;
+
+  /* 그라디언트 */
   --TURQUOISE_GRADIENT: linear-gradient(to right, #45b5aa, #5ad8cb);
 
-  /* 폰트 시스템 */
+  /* 폰트 */
   --FONT_FAMILY: 'Pretendard Variable', 'Pretendard', sans-serif;
 
-  /* 의미적 색상 변수 */
+  /* 텍스트 컬러 */
   --text-primary: var(--BLACK);
   --text-secondary: var(--DARK_GRAY);
+
+  /* 배경 컬러 */
   --bg-primary: var(--WHITE);
   --bg-secondary: var(--PASTEL_TURQUOISE);
+
+  /* 버튼 컬러 */
   --button-primary-bg: var(--TURQUOISE);
   --button-primary-text: var(--WHITE);
   --button-secondary-bg: #F3D6CB;
+
+  /* 상태 컬러 */
   --error-color: var(--VIVA_MAGENTA);
-  --error-bg: #ffeaea; /* ✅ 추가 */
+  --error-bg: var(--PASTEL_VIVA_MAGENTA);
   --info-bg: #f9f9f9;
 
-  /* 그림자 시스템 */
+  /* 그림자 */
   --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.08);
   --shadow-medium: 0 4px 16px rgba(69, 181, 170, 0.25);
   --shadow-strong: 0 4px 16px rgba(69, 181, 170, 0.3);
 
-  /* 보더 시스템 */
-  --border-light: 0.5px solid #9e9c98;
+  /* 테두리 */
+  --border-light: 0.5px solid var(--DARK_GRAY);
   --border-turquoise: 1px solid rgba(69, 181, 170, 0.1);
 
-  /* 레이아웃 시스템 */
+  /* 모달 관련 */
+  --modal-backdrop: rgba(0, 0, 0, 0.5);
+  --modal-backdrop-light: rgba(0, 0, 0, 0.3);
+  --modal-backdrop-home: rgba(45, 45, 42, 0.2);
+  --modal-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  --modal-border: 1px solid rgba(0, 0, 0, 0.1);
+
+  /* 레이아웃 */
   --container-max-width: 375px;
   --padding-responsive: clamp(16px, 4vw, 20px);
+
+  /* 보더 반경 */
   --border-radius-small: 5px;
   --border-radius-medium: 12px;
   --border-radius-large: 16px;
 
-  /* 애니메이션 */
+  /* 트랜지션 */
   --transition-fast: 0.2s ease;
   --transition-medium: 0.3s ease;
 }
 
-/* 다크 테마 (<html> 태그에 data-theme="dark" 속성이 있을 때 적용) */
+/* 다크 테마 */
 html[data-theme="dark"] {
-  /* 기본 색상 오버라이드 */
+  /* 기본 컬러 */
   --WHITE: #1A1A1A;
   --BLACK: #E0E0E0;
-  --TURQUOISE: #236862;
-  --PASTEL_TURQUOISE: #3A4B4A;
-  --VERY_PERI: #909BB0;
-  --PASTEL_VERY_PERI: #3D424F; 
-  --DARK_GRAY: #777777;
-  --VIVA_MAGENTA: #F5E4D8;
+  --TURQUOISE: #8BB5B1;
+  --VERY_PERI: #6A6FB2;
+  --DARK_GRAY: #8A8D93;
+  --VIVA_MAGENTA: #e88ca0;
   --MIMOSA: #B0876F;
-  --PASTEL_MIMOSA: #B0876F;
-  --TURQUOISE_GRADIENT: linear-gradient(to right, #308077, #40A097);
+  --LIVING_CORAL: #CD5B45;
 
-  /* 의미적 색상 오버라이드 */
+  /* 파스텔 컬러 */
+  --PASTEL_TURQUOISE: #2c4c49;
+  --PASTEL_VERY_PERI: #3c4052;
+  --PASTEL_MIMOSA: #3D342B;
+  --PASTEL_VIVA_MAGENTA: #EDCDC2;
+
+  /* 그라디언트 */
+  --TURQUOISE_GRADIENT: linear-gradient(to right, #236862, #3c9e92);
+
+  /* 텍스트 컬러 */
   --text-primary: var(--BLACK);
   --text-secondary: var(--DARK_GRAY);
+
+  /* 배경 컬러 */
   --bg-primary: var(--WHITE);
   --bg-secondary: #2C2C2C;
+
+  /* 버튼 컬러 */
   --button-primary-bg: var(--TURQUOISE);
   --button-primary-text: var(--BLACK);
   --button-secondary-bg: #3a3a3c;
+
+  /* 상태 컬러 */
   --error-color: var(--VIVA_MAGENTA);
-  --error-bg: rgba(187, 38, 73, 0.2); /* ✅ 추가 */
+  --error-bg: var(--PASTEL_VIVA_MAGENTA);
   --info-bg: #444444;
 
-  /* 다크모드 그림자 시스템 */
+  /* 그림자 */
   --shadow-light: 0 2px 12px rgba(255, 255, 255, 0.1);
-  --shadow-medium: 0 4px 16px rgba(48, 128, 119, 0.4);
-  --shadow-strong: 0 4px 16px rgba(48, 128, 119, 0.5);
+  --shadow-medium: 0 4px 16px rgba(35, 104, 98, 0.4);
+  --shadow-strong: 0 4px 16px rgba(35, 104, 98, 0.5);
 
-  /* 다크모드 보더 시스템 */
-  --border-light: 0.5px solid #555555;
-  --border-turquoise: 1px solid rgba(48, 128, 119, 0.3);
+  /* 테두리 */
+  --border-light: 0.5px solid var(--DARK_GRAY);
+  --border-turquoise: 1px solid rgba(35, 104, 98, 0.3);
+
+  /* 다크 테마 모달 변수 */
+  --modal-backdrop: rgba(0, 0, 0, 0.7);
+  --modal-backdrop-light: rgba(0, 0, 0, 0.5);
+  --modal-backdrop-home: rgba(45, 45, 42, 0.4);
+  --modal-shadow: 0 2px 6px rgba(255, 255, 255, 0.1);
+  --modal-border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Lottie 애니메이션 최적화 */
+.lottie svg {
+  shape-rendering: geometricPrecision;
+  text-rendering: geometricPrecision;
+  transform: translateZ(0); /* GPU 레이어로 올려서 블러 방지 */
 }

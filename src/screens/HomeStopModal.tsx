@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
-// ✅ [수정] Lucide React 아이콘으로 변경
-import { Music, X, ThumbsUp, Star, Sparkles } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Music, X } from "lucide-react";
+import Lottie, { LottieRefCurrentProps } from 'lottie-react';
+import EditIcon from "../assets/icons/edit.svg?react";
+import PowerIcon from "../assets/icons/power.svg?react";
+import likeAnimation from '../assets/like-animation.json';
 
 interface HomeStopModalProps {
   isOpen: boolean;
@@ -10,62 +13,83 @@ interface HomeStopModalProps {
   onClose: () => void;
 }
 
-export function HomeStopModal({ 
-  isOpen, 
-  practiceTime, 
-  onComplete, 
-  onEditTime, 
-  onClose 
+export function HomeStopModal({
+  isOpen,
+  practiceTime,
+  onComplete,
+  onEditTime,
+  onClose,
 }: HomeStopModalProps) {
   const [practiceNote, setPracticeNote] = useState("");
-  // ✨ 마이크로 인터랙션 상태 추가
   const [isCompleting, setIsCompleting] = useState(false);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+  const lottieRef = useRef<LottieRefCurrentProps>(null);
 
   useEffect(() => {
     if (isOpen) {
-      const timerState = localStorage.getItem('timerState');
+      // ✅ 새로운 timerV2 키에서 memo 읽기
+      const timerState = localStorage.getItem("timerV2");
       if (timerState) {
         try {
           const { memo } = JSON.parse(timerState);
           setPracticeNote(memo || "");
         } catch (error) {
-          console.error('메모 불러오기 실패:', error);
+          console.error("메모 불러오기 실패:", error);
         }
       }
+      setIsCompleting(false);
+      setIsLikeAnimating(false);
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const timerState = localStorage.getItem('timerState');
-    if (timerState) {
-      try {
-        const parsed = JSON.parse(timerState);
-        parsed.memo = practiceNote;
-        localStorage.setItem('timerState', JSON.stringify(parsed));
-      } catch (error) {
-        console.error('메모 저장 실패:', error);
+  // ✅ 새로운 timerV2 키로 memo 저장
+  const persistMemo = () => {
+    try {
+      const s = localStorage.getItem("timerV2");
+      if (s) {
+        const p = JSON.parse(s);
+        p.memo = practiceNote;
+        p.lastUpdatedMs = Date.now(); // ✅ 업데이트 시간도 갱신
+        localStorage.setItem("timerV2", JSON.stringify(p));
+        console.log('📝 HomeStopModal: memo 저장 완료', practiceNote);
       }
+    } catch (e) {
+      console.error("메모 저장 실패:", e);
     }
-  }, [practiceNote]);
+  };
+
+  const handleCloseAndSave = () => {
+    if (isCompleting || isLikeAnimating) return;
+    persistMemo();
+    onClose();
+  };
+
+  // 피퇴 버튼 클릭 처리
+  const handleLikeClick = () => {
+    if (isCompleting || isLikeAnimating) return;
+    
+    setIsLikeAnimating(true);
+    setIsCompleting(true);
+    
+    // Lottie 애니메이션 시작 - 약간의 딜레이 후 확실히 시작
+    setTimeout(() => {
+      if (lottieRef.current) {
+        lottieRef.current.goToAndStop(0, true);
+        lottieRef.current.play();
+      }
+    }, 100);
+  };
+
+  // Lottie 애니메이션 완료 처리
+  const handleLottieComplete = () => {
+    persistMemo();
+    onComplete();
+  };
 
   const commonFontStyle = {
     fontFamily: "var(--FONT_FAMILY)",
     WebkitFontSmoothing: "antialiased" as const,
-    MozOsxFontSmoothing: "grayscale" as const
-  };
-
-  // ✨ 마이크로 인터랙션이 적용된 완료 함수
-  const handleComplete = () => {
-    setIsCompleting(true);
-    setShowCelebration(true);
-    
-    // 1초 후 실제 완료 처리
-    setTimeout(() => {
-      onComplete();
-      setIsCompleting(false);
-      setShowCelebration(false);
-    }, 1000);
+    MozOsxFontSmoothing: "grayscale" as const,
   };
 
   if (!isOpen) return null;
@@ -74,342 +98,140 @@ export function HomeStopModal({
     <div
       style={{
         position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: "rgba(45, 45, 42, 0.2)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-        padding: "40px 20px",
-        WebkitBackfaceVisibility: "hidden",
-        transform: "translateZ(0)"
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: "var(--modal-backdrop-home)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 1000, padding: "40px 0px",
       }}
-      onClick={onClose}
+      onClick={handleCloseAndSave}
     >
       <div
         style={{
           background: "var(--bg-primary)",
           borderRadius: 8,
-          width: "100%",
-          maxWidth: 345,
-          height: "auto",
-          minHeight: 320,
-          maxHeight: "80vh",
+          width: "100%-32px",
+          minHeight: 320, maxHeight: "80vh",
           boxShadow: "var(--shadow-medium)",
-          display: "flex",
-          flexDirection: "column",
+          display: "flex", flexDirection: "column",
           padding: "32px 20px 20px 20px",
-          boxSizing: "border-box",
-          position: "relative",
-          overflowY: "auto",
-          border: "1px solid rgba(0, 0, 0, 0.1)",
-          transform: "translateZ(0)",
-          WebkitBackfaceVisibility: "hidden",
-          ...commonFontStyle
+          boxSizing: "border-box", position: "relative",
+          overflowY: "auto", border: "var(--modal-border)",
+          ...commonFontStyle,
         }}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* 우측 상단 X 버튼 */}
+        {/* 닫기 */}
         <button
-          onClick={onClose}
+          onClick={handleCloseAndSave}
           aria-label="닫기"
           disabled={isCompleting}
           style={{
-            position: "absolute",
-            top: 16,
-            right: 16,
-            width: 20,
-            height: 20,
-            background: "none",
-            border: "none",
+            position: "absolute", top: 16, right: 16,
+            width: 20, height: 20,
+            background: "none", border: "none",
             cursor: isCompleting ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 0,
-            opacity: isCompleting ? 0.5 : 1
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 0, opacity: isCompleting ? 0.5 : 1,
           }}
         >
           <X style={{ color: "var(--text-secondary)" }} width={20} height={20} />
         </button>
 
-        {/* 제목 + 아이콘 */}
+        {/* 헤더 */}
         <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 8,
-          marginBottom: 24,
-          marginTop: 4,
-          ...commonFontStyle
+          display: "flex", alignItems: "center", justifyContent: "center",
+          gap: 8, marginBottom: 24, marginTop: 4, ...commonFontStyle,
         }}>
-          <Music 
-            style={{ color: "var(--TURQUOISE)" }}
-            width={24} 
-            height={24}
-          />
-          <span style={{
-            fontSize: 20,
-            fontWeight: 600,
-            color: "var(--text-primary)"
-          }}>
+          <Music style={{ color: "var(--TURQUOISE)" }} width={24} height={24} />
+          <span style={{ fontSize: 20, fontWeight: 600, color: "var(--text-primary)" }}>
             오늘 {practiceTime} 연습
           </span>
         </div>
 
-        {/* 연습 노트 입력 */}
-        <div style={{
-          marginBottom: 20
-        }}>
-          <textarea
-            value={practiceNote}
-            onChange={(e) => setPracticeNote(e.target.value)}
-            placeholder="오늘의 연습 노트를 작성해보세요..."
+        {/* 메모 */}
+        <textarea
+          value={practiceNote}
+          onChange={(e) => setPracticeNote(e.target.value)}
+          placeholder="오늘의 연습 노트를 작성해보세요..."
+          disabled={isCompleting}
+          style={{
+            width: "100%", height: 150,
+            border: "var(--border-light)",
+            borderRadius: "var(--border-radius-medium)",
+            padding: 16, fontSize: 16,
+            color: "var(--text-primary)", background: "var(--bg-primary)",
+            resize: "none", outline: "none", boxSizing: "border-box",
+            opacity: isCompleting ? 0.5 : 1,
+            cursor: isCompleting ? "not-allowed" : "text", ...commonFontStyle,
+          }}
+        />
+
+        {/* 버튼 영역 */}
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 20 }}>
+          {/* 피퇴 버튼: Lottie 애니메이션 */}
+          <button
+            onClick={handleLikeClick}
             disabled={isCompleting}
             style={{
-              width: "100%",
-              height: 150,
-              border: "var(--border-light)",
-              borderRadius: "var(--border-radius-medium)",
-              padding: 16,
-              fontSize: 16,
-              color: "var(--text-primary)",
-              background: "var(--bg-primary)",
-              resize: "none",
-              outline: "none",
-              boxSizing: "border-box",
-              opacity: isCompleting ? 0.5 : 1,
-              cursor: isCompleting ? "not-allowed" : "text",
-              ...commonFontStyle
+              width: 140, height: 35,
+              background: "none", border: "none",
+              borderRadius: "var(--border-radius-small)",
+              cursor: isCompleting ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: 8, opacity: isCompleting ? 0.9 : 1,
+              color: "var(--VIVA_MAGENTA)", ...commonFontStyle,
             }}
-          />
-        </div>
-
-        {/* 버튼들 */}
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 12
-        }}>
-          {/* ✨ 마이크로 인터랙션이 적용된 피퇴 버튼 */}
-         <button
-  onClick={handleComplete}
-  disabled={isCompleting}
-  style={{
-    width: 140,
-    height: 35,
-    borderRadius: "var(--border-radius-small)",
-    border: "none",
-    // ✅ [수정] 배경색을 항상 VIVA_MAGENTA로 고정
-    background: "var(--VIVA_MAGENTA)", 
-    // ✅ [수정] 글자색은 버튼 기본 텍스트 색상으로 유지
-    color: "var(--WHITE)", 
-    fontSize: 16,
-    fontWeight: 600,
-    cursor: isCompleting ? "not-allowed" : "pointer",
-    transition: "all 0.3s ease",
-    transform: showCelebration ? "scale(1.1)" : "scale(1)",
-    position: "relative",
-    overflow: "visible",
-    animation: showCelebration ? "buttonBounce 0.6s ease-out" : "none",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 6,
-    ...commonFontStyle
-  }}
->
-  {isCompleting ? (
-    <>
-      {/* ThumbsUp 아이콘과 텍스트는 이제 버튼의 color를 상속받아 흰색으로 표시됩니다. */}
-      <ThumbsUp width={16} height={16} />
-      <span>수고하셨습니다!</span>
-    </>
-  ) : (
-    "피퇴"
-  )}
-            
-            {/* ✨ 색종이 + 반짝이 파티클 효과 */}
-            {showCelebration && (
+            aria-label="피퇴"
+          >
+            {!isLikeAnimating ? (
+              // 기본 상태: Power 아이콘 + "피퇴" 텍스트
               <>
-                {/* 별과 반짝이 */}
-                <Star style={{
-                  position: "absolute",
-                  top: "-8px",
-                  left: "15%",
-                  width: "12px",
-                  height: "12px",
-                  color: "#F0C05A", // MIMOSA
-                  animation: "sparkleJump 1s ease-out forwards",
-                  animationDelay: "0s"
-                }} />
-                <Sparkles style={{
-                  position: "absolute",
-                  top: "-12px",
-                  right: "20%",
-                  width: "10px",
-                  height: "10px",
-                  color: "#BB2649", // VIVA_MAGENTA
-                  animation: "sparkleJump 1s ease-out forwards",
-                  animationDelay: "0.1s"
-                }} />
-                <Star style={{
-                  position: "absolute",
-                  bottom: "-8px",
-                  left: "25%",
-                  width: "12px",
-                  height: "12px",
-                  color: "#F0C05A", // MIMOSA
-                  animation: "sparkleJump 1s ease-out forwards",
-                  animationDelay: "0.2s"
-                }} />
-                <Sparkles style={{
-                  position: "absolute",
-                  bottom: "-12px",
-                  right: "15%",
-                  width: "10px",
-                  height: "10px",
-                  color: "#BB2649", // VIVA_MAGENTA
-                  animation: "sparkleJump 1s ease-out forwards",
-                  animationDelay: "0.3s"
-                }} />
-
-                {/* 색종이 효과 */}
-                <span style={{
-                  position: "absolute",
-                  top: "-10px",
-                  left: "5%",
-                  width: "4px",
-                  height: "4px",
-                  background: "#F0C05A", // MIMOSA
-                  animation: "confettiDrop 1.2s ease-out forwards",
-                  animationDelay: "0s"
-                }}></span>
-                <span style={{
-                  position: "absolute",
-                  top: "-15px",
-                  left: "30%",
-                  width: "3px",
-                  height: "6px",
-                  background: "#45b5aa", // TURQUOISE
-                  animation: "confettiDrop 1.2s ease-out forwards",
-                  animationDelay: "0.1s"
-                }}></span>
-                <span style={{
-                  position: "absolute",
-                  top: "-12px",
-                  right: "5%",
-                  width: "4px",
-                  height: "4px",
-                  background: "#BB2649", // VIVA_MAGENTA
-                  animation: "confettiDrop 1.2s ease-out forwards",
-                  animationDelay: "0.2s"
-                }}></span>
-                <span style={{
-                  position: "absolute",
-                  top: "-8px",
-                  right: "35%",
-                  width: "3px",
-                  height: "5px",
-                  background: "#B0876F", // 세 번째 테마 컬러
-                  animation: "confettiDrop 1.2s ease-out forwards",
-                  animationDelay: "0.15s"
-                }}></span>
-                <span style={{
-                  position: "absolute",
-                  top: "-14px",
-                  left: "50%",
-                  width: "4px",
-                  height: "3px",
-                  background: "#6b778d", // VERY_PERI
-                  animation: "confettiDrop 1.2s ease-out forwards",
-                  animationDelay: "0.05s"
-                }}></span>
-                <span style={{
-                  position: "absolute",
-                  top: "-11px",
-                  right: "45%",
-                  width: "3px",
-                  height: "4px",
-                  background: "#F0C05A", // MIMOSA
-                  animation: "confettiDrop 1.2s ease-out forwards",
-                  animationDelay: "0.25s"
-                }}></span>
+                <PowerIcon width={16} height={16} style={{ color: "currentColor" }} />
+                <span style={{ fontSize: 16, fontWeight: 600 }}>피퇴</span>
               </>
+            ) : (
+              // 애니메이션 상태: Lottie (크기 225%, 미모사 색상)
+              <div style={{ 
+                width: 90, 
+                height: 90,
+                color: 'var(--MIMOSA)',
+                filter: 'drop-shadow(0 0 0 var(--MIMOSA))'
+              }}>
+                <Lottie
+                  lottieRef={lottieRef}
+                  animationData={likeAnimation}
+                  loop={false}
+                  autoplay={true}
+                  style={{ 
+                    width: '100%', 
+                    height: '100%'
+                  }}
+                  onComplete={handleLottieComplete}
+                />
+              </div>
             )}
           </button>
-          
+
+          {/* 시간 수정 버튼 */}
           <button
-            onClick={onEditTime}
+            onClick={() => { if (!isCompleting) { persistMemo(); onEditTime(); } }}
             disabled={isCompleting}
             style={{
-              width: 140,
-              height: 35,
+              width: 140, height: 35,
               borderRadius: "var(--border-radius-small)",
-              border: "none",
-              background: "var(--text-secondary)",
-              color: "var(--text-primary)",
-              fontSize: 16,
-              fontWeight: 600,
+              border: "none", background: "transparent",
+              fontSize: 16, fontWeight: 600,
               cursor: isCompleting ? "not-allowed" : "pointer",
-              transition: "var(--transition-fast)",
-              opacity: isCompleting ? 0.5 : 1,
-              ...commonFontStyle
+              transition: "color 0.2s ease",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: 8, opacity: isCompleting ? 0.5 : 1, ...commonFontStyle,
+              color: "var(--BLACK)",
             }}
           >
-            시간 수정
+            <EditIcon width={16} height={16} />
+            <span style={{ color: "currentColor" }}>시간 수정</span>
           </button>
         </div>
-
-        {/* ✨ CSS 애니메이션 */}
-        <style>
-          {`
-            @keyframes buttonBounce {
-              0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0) scale(1);
-              }
-              40% {
-                transform: translateY(-8px) scale(1.05);
-              }
-              60% {
-                transform: translateY(-4px) scale(1.08);
-              }
-            }
-
-            @keyframes sparkleJump {
-              0% {
-                opacity: 0;
-                transform: translateY(0px) scale(0.3) rotate(0deg);
-              }
-              50% {
-                opacity: 1;
-                transform: translateY(-15px) scale(1.2) rotate(180deg);
-              }
-              100% {
-                opacity: 0;
-                transform: translateY(-25px) scale(0.5) rotate(360deg);
-              }
-            }
-
-            @keyframes confettiDrop {
-              0% {
-                opacity: 1;
-                transform: translateY(0px) translateX(0px) rotate(0deg);
-              }
-              50% {
-                opacity: 1;
-                transform: translateY(-20px) translateX(-10px) rotate(180deg);
-              }
-              100% {
-                opacity: 0;
-                transform: translateY(30px) translateX(15px) rotate(360deg);
-              }
-            }
-          `}
-        </style>
       </div>
     </div>
   );

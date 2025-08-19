@@ -1,54 +1,84 @@
-# React + TypeScript + Vite
+Here’s an English README draft tailored for your Pianolog PWA project. It explains clearly what the app does, its features, tech stack, and how to set it up, instead of the default Vite boilerplate.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+---
 
-Currently, two official plugins are available:
+# Pianolog – Digital Piano Practice Log PWA
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Pianolog is a Progressive Web App designed for digital piano players to track, analyze, and improve their practice sessions. It combines session logging, statistics, and motivation tools in a clean, mobile-friendly interface.
 
-## Expanding the ESLint configuration
+This project was created by members of the Digital Piano Gallery on DC Inside (디지털피아노 갤러리, 디시인사이드).
+Community link: https://gall.dcinside.com/mgallery/board/lists/?id=digitalpiano
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Features
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+* **Practice Session Tracking** – Start, pause, resume, and complete practice timers.
+* **Memo & Note Management** – Add notes or memos to any session for later review.
+* **Statistics Dashboard** – View daily, weekly, and monthly stats with charts and calendars.
+* **Metronome Tool** – Built-in metronome with customizable tempo.
+* **Special Events** – Track and celebrate milestones with event badges and animations.
+* **Profile Management** – Upload and update your practice profile image.
+* **Offline-Ready PWA** – Installable on desktop or mobile, works offline with service worker caching.
+
+## Tech Stack
+
+* **Frontend**: React + TypeScript
+* **Build Tool**: Vite
+* **Routing**: React Router
+* **State Management**: React Context API
+* **PWA**: vite-plugin-pwa with Workbox
+* **Styling**: CSS Modules & global variables
+* **Animations**: Lottie JSON assets
+
+## Project Structure
+
+```
+src/
+  assets/          # Icons, images, Lottie animations
+  components/      # Reusable UI components
+  contexts/        # Global state (PracticeDataContext)
+  screens/         # Main screens & modals
+  styles/          # CSS variables, base, and layout styles
+  utils/           # Utility functions
+public/            # Static assets for PWA (icons, manifest)
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Installation
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```bash
+git clone https://github.com/Mozartdc/pianolog.git
+cd pianolog
+npm install
 ```
+
+## Development
+
+```bash
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+## Preview Production Build
+
+```bash
+npm run preview
+```
+
+## PWA Usage
+
+1. Visit the deployed URL in Chrome, Edge, or Safari.
+2. Use the “Install App” option from the browser menu.
+3. Pianolog will work offline after the first load.
+
+## License
+
+MIT License – see the [LICENSE](LICENSE) file for details.
+
+---
+
+If you want, I can also add **badges** (e.g., PWA Ready, Made with Vite, React, etc.) and **screenshots** sections to make it look more professional on GitHub. That would make the README more engaging.
+Do you want me to extend it with those visual elements?

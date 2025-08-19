@@ -3,6 +3,7 @@ import { generateExportImage } from "../screens/ExportCardModal";
 import SessionSelectModal from "./SessionSelectModal";
 import { usePracticeData, PracticeRecord } from "../contexts/PracticeDataContext";
 import dayjs from "dayjs";
+import OkIcon from "../assets/icons/ok.svg?react";
 
 interface StatsCardProps {
   Icon: React.ElementType;
@@ -17,54 +18,91 @@ interface StatsCardProps {
   ExportIcon?: React.ElementType;
 }
 
-// ✅ [추가] 기록 없음 모달 컴포넌트
+// ✅ [수정] 기록 없음 모달 컴포넌트 - 다른 모달과 통일된 스타일
 const NoRecordModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
+
+  const commonFontStyle = {
+    fontFamily: "var(--FONT_FAMILY)",
+    WebkitFontSmoothing: "antialiased" as const,
+    MozOsxFontSmoothing: "grayscale" as const
+  };
+
   return (
     <div
       style={{
         position: "fixed",
-        inset: 0,
-        background: "rgba(0, 0, 0, 0.5)",
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: "var(--modal-backdrop-home)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 1000,
+        padding: "40px 0px",
       }}
       onClick={onClose}
     >
       <div
         style={{
           background: "var(--bg-primary)",
-          borderRadius: "var(--border-radius-small)",
-          padding: 24,
-          width: "calc(100% - 32px)",
-          maxWidth: 324,
+          borderRadius: 8,
+          width: "100%-32px",
+          minHeight: 100,
+          maxHeight: "80vh",
+          boxShadow: "var(--shadow-medium)",
+          display: "flex",
+          flexDirection: "column",
+          padding: "32px 20px 20px 20px",
           boxSizing: "border-box",
-          border: "var(--border-light)",
+          position: "relative",
+          overflowY: "auto",
+          border: "var(--modal-border)",
           textAlign: "center",
+          ...commonFontStyle
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ marginBottom: 16, fontSize: 16, color: "var(--text-primary)" }}>
+        {/* 메시지 */}
+        <div style={{ 
+          marginBottom: 24, 
+          fontSize: 16, 
+          color: "var(--text-primary)",
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          ...commonFontStyle
+        }}>
           오늘은 아직 연습 기록이 없습니다.
         </div>
-        <button
-          onClick={onClose}
-          style={{
-            width: "100%",
-            height: 40,
-            background: "var(--TURQUOISE)",
-            border: "none",
-            borderRadius: "var(--border-radius-small)",
-            fontSize: 16,
-            color: "var(--button-primary-text)",
-            cursor: "pointer",
-            fontFamily: "var(--FONT_FAMILY)",
-          }}
-        >
-          확인
-        </button>
+
+        {/* ✅ 다른 모달과 동일한 버튼 스타일 */}
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "center", 
+          marginTop: "auto"
+        }}>
+          <button
+            onClick={onClose}
+            style={{
+              width: 140,
+              height: 35,
+              background: "none",
+              border: "none",
+              borderRadius: "var(--border-radius-small)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              color: "var(--VIVA_MAGENTA)",
+              ...commonFontStyle,
+            }}
+          >
+            <OkIcon width={16} height={16} style={{ color: "currentColor" }} />
+            <span style={{ fontSize: 16, fontWeight: 600 }}>확인</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -84,7 +122,6 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sessionsToExport, setSessionsToExport] = useState<PracticeRecord[]>([]);
-  // ✅ [추가] 기록 없음 모달 상태
   const [showNoRecordModal, setShowNoRecordModal] = useState(false);
   const { practiceRecords } = usePracticeData();
 
@@ -96,17 +133,19 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   const exportSelectedSession = async (session: PracticeRecord) => {
     try {
-      const nickname = localStorage.getItem("nickname") || "피출러";
+      // ✅ 닉네임 기본값 수정
+      const nickname = localStorage.getItem("nickname") || "디붕이";
       const avatar = localStorage.getItem("avatar") || "";
       const sessionDate = new Date(session.startTime);
 
       const rootStyle = getComputedStyle(document.documentElement);
+      // ✅ 색상 처리 개선
       const themeColors = {
         bgPrimary: rootStyle.getPropertyValue('--bg-primary').trim(),
         textPrimary: rootStyle.getPropertyValue('--text-primary').trim(),
         textSecondary: rootStyle.getPropertyValue('--text-secondary').trim(),
         turquoise: rootStyle.getPropertyValue('--TURQUOISE').trim(),
-        borderLight: rootStyle.getPropertyValue('--border-light').trim().split(' ')[2] || '#E0E0E0'
+        borderLight: rootStyle.getPropertyValue('--text-secondary').trim() // ✅ 간단한 처리
       };
 
       const dateOptions: Intl.DateTimeFormatOptions = { year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short' };
@@ -163,7 +202,6 @@ const StatsCard: React.FC<StatsCardProps> = ({
     );
 
     if (todaySessions.length === 0) {
-      // ✅ alert 대신 커스텀 모달 표시
       setShowNoRecordModal(true);
       return;
     }
@@ -175,31 +213,71 @@ const StatsCard: React.FC<StatsCardProps> = ({
     <>
       <div
         style={{
-          width: "calc(100% - 32px)", height: 58, background: "var(--bg-primary)",
-          border: "var(--border-light)", borderRadius: "var(--border-radius-large)",
-          display: "flex", alignItems: "center", padding: "14px", gap: 12,
-          margin: "5px auto 0 auto", boxSizing: "border-box", cursor: onClick ? "pointer" : "default",
+          width: "calc(100% - 32px)", 
+          height: 58, 
+          background: "var(--bg-primary)",
+          border: "var(--border-light)", 
+          borderRadius: "var(--border-radius-large)",
+          display: "flex", 
+          alignItems: "center", 
+          padding: "14px", 
+          gap: 12,
+          margin: "5px auto 0 auto", 
+          boxSizing: "border-box", 
+          cursor: onClick ? "pointer" : "default",
           transition: "var(--transition-fast)"
         }}
         onClick={onClick}
       >
+        {/* 아이콘 */}
         <div style={{ color: iconColor || "var(--text-secondary)", display: 'flex' }}>
           <Icon style={{ width: iconWidth, height: iconHeight }} />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
-          <span style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: "20px", textAlign: "left", ...commonFontStyle }}>
-            {title}
-          </span>
-          <span style={{ fontSize: 12, color: "var(--text-primary)", lineHeight: "16px", textAlign: "left", ...commonFontStyle }}>
+        {/* 한 줄 레이아웃 */}
+        <div style={{ 
+          display: "flex", 
+          alignItems: "center", 
+          flex: 1, 
+          minWidth: 0,
+          gap: 10
+        }}>
+          {/* value (1시간 0분) */}
+          <span style={{ 
+            fontSize: 14,
+            color: "var(--text-primary)", 
+            lineHeight: "16px", 
+            whiteSpace: "nowrap",
+            ...commonFontStyle 
+          }}>
             {value}
+          </span>
+          
+          {/* title (오늘의 피출 기록) */}
+          <span style={{ 
+            fontSize: 12,
+            color: "var(--text-secondary)", 
+            lineHeight: "20px", 
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            ...commonFontStyle 
+          }}>
+            {title}
           </span>
         </div>
         
+        {/* 내보내기 아이콘 */}
         {showExportIcon && ExportIcon && (
           <div
             onClick={handleExportClick} 
-            style={{ color: "var(--text-secondary)", cursor: "pointer", transition: "var(--transition-fast)", opacity: 0.8 }}
+            style={{ 
+              color: "var(--text-secondary)", 
+              cursor: "pointer", 
+              transition: "var(--transition-fast)", 
+              opacity: 0.8,
+              flexShrink: 0
+            }}
             onMouseOver={(e) => { e.currentTarget.style.opacity = "1"; }}
             onMouseOut={(e) => { e.currentTarget.style.opacity = "0.8"; }}
           >
@@ -215,7 +293,6 @@ const StatsCard: React.FC<StatsCardProps> = ({
         onSelectSession={exportSelectedSession}
       />
 
-      {/* ✅ [추가] 기록 없음 모달 */}
       <NoRecordModal
         isOpen={showNoRecordModal}
         onClose={() => setShowNoRecordModal(false)}

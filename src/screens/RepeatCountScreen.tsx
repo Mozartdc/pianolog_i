@@ -5,8 +5,9 @@ import dayjs from "dayjs";
 
 // 아이콘 imports
 import AppleSongIcon from "../assets/icons/applesong.svg?react";
-import AppleResetIcon from "../assets/icons/apple reset.svg?react";
-import AppleMinusIcon from "../assets/icons/appleminus.svg?react";
+// ✅ [변경] 새로운 아이콘들로 교체
+import DownIcon from "../assets/icons/down.svg?react";
+import ResetIcon from "../assets/icons/reset.svg?react";
 // ✅ [수정] 중앙 데이터 관리소에서 필요한 함수들을 추가로 가져옵니다.
 import { usePracticeData } from "../contexts/PracticeDataContext";
 
@@ -30,7 +31,7 @@ MozOsxFontSmoothing: "grayscale" as const
 };
 
 const track = trackId !== null ? tracks.find((t) => t.id === trackId) : null;
-const displayTitle = track ? track.title : "practice";
+const displayTitle = track ? track.title : "piano";
 const today = dayjs().format("YYYY-MM-DD");
 
 useEffect(() => {
@@ -168,38 +169,58 @@ return (
       </div>
     </div>
 
-    {/* 하단 버튼 */}
+    {/* ✅ [변경] 하단 버튼 - 아이콘만, 중앙 정렬 */}
     <div style={{
       width: "100%",
-      maxWidth: "343px",
       display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center"
+      justifyContent: "center",
+      alignItems: "center",
+      gap: 150 // 두 버튼 사이 간격
     }}>
+      {/* Reset 버튼 */}
       <button
         onClick={handleReset}
         style={{
-          width: 85, height: 40, background: "var(--DARK_GRAY)",
-          border: "none", borderRadius: 8, display: "flex",
-          alignItems: "center", justifyContent: "center", gap: 8,
-          cursor: "pointer", ...commonFontStyle
+          width: 60,
+          height: 60,
+          background: "none",
+          border: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          borderRadius: "50%", // 원형 터치 영역
+          padding: 0
         }}
       >
-        <AppleResetIcon style={{ color: "var(--text-primary)" }} width="16" height="16" />
-        <span style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: "22px" }}>reset</span>
+        <ResetIcon 
+          style={{ color: "var(--text-primary)" }} 
+          width="24" 
+          height="24" 
+        />
       </button>
 
+      {/* Minus 버튼 */}
       <button
         onClick={handleMinus}
         style={{
-          width: 85, height: 40, background: "var(--DARK_GRAY)",
-          border: "none", borderRadius: 8, display: "flex",
-          alignItems: "center", justifyContent: "center", gap: 8,
-          cursor: "pointer", ...commonFontStyle
+          width: 60,
+          height: 60,
+          background: "none",
+          border: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          borderRadius: "50%", // 원형 터치 영역
+          padding: 0
         }}
       >
-        <AppleMinusIcon style={{ color: "var(--text-primary)" }} width="16" height="16" />
-        <span style={{ fontSize: 14, color: "var(--text-primary)", lineHeight: "22px" }}>minus</span>
+        <DownIcon 
+          style={{ color: "var(--text-primary)" }} 
+          width="24" 
+          height="24" 
+        />
       </button>
     </div>
   </div>

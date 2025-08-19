@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import HistoryIcon from "../assets/icons/History.svg?react"; // ✅ .svg?react로 임포트
+import HistoryIcon from "../assets/icons/History.svg?react";
+import ExportIcon from "../assets/icons/export.svg?react";
 
 interface PracticeRecord {
   id: string;
@@ -44,54 +45,83 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
   };
   
   const commonFontStyle = {
-    fontFamily: "var(--FONT_FAMILY)"
+    fontFamily: "var(--FONT_FAMILY)",
+    WebkitFontSmoothing: "antialiased" as const,
+    MozOsxFontSmoothing: "grayscale" as const
   };
 
   return (
-    <div style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "rgba(0,0,0,0.5)",
-      zIndex: 9999,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "20px",
-      boxSizing: "border-box"
-    }}>
-      <div style={{
-        width: "100%",
-        background: "var(--bg-primary)", // ✅ 수정
-        color: "var(--text-primary)", // ✅ 기본 텍스트 색상
-        borderRadius: 8,
-        padding: "20px",
-        display: "flex",
-        flexDirection: "column",
-        gap: 16,
-        maxHeight: "80vh",
-        overflowY: "auto",
-        ...commonFontStyle
-      }}>
+    <div 
+      style={{
+        position: "fixed",
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: "var(--modal-backdrop-home)",
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
+        zIndex: 1000, 
+        padding: "40px 0px",
+      }}
+      onClick={onClose}
+    >
+      <div 
+        style={{
+          background: "var(--bg-primary)",
+          borderRadius: 8,
+          width: "100%-32px",
+          minHeight: 320, 
+          maxHeight: "80vh",
+          boxShadow: "var(--shadow-medium)",
+          display: "flex", 
+          flexDirection: "column",
+          padding: "32px 20px 20px 20px",
+          boxSizing: "border-box", 
+          position: "relative",
+          overflowY: "auto", 
+          border: "var(--modal-border)",
+          ...commonFontStyle,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ✅ 헤더 - 다른 모달과 일관된 스타일 */}
         <div style={{
-          fontSize: 16,
-          fontWeight: 600,
-          textAlign: "center",
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "center",
+          gap: 8, 
+          marginBottom: 24, 
+          marginTop: 4, 
+          ...commonFontStyle,
         }}>
-          공유할 피출 기록을 선택해주세요.
+          <ExportIcon width={24} height={24} style={{ color: "var(--text-primary)" }} />
+          <span style={{ 
+            fontSize: 20, 
+            fontWeight: 600, 
+            color: "var(--text-primary)" 
+          }}>
+            공유할 피출 기록 선택
+          </span>
         </div>
         
+        {/* 안내 텍스트 */}
         <div style={{
           fontSize: 12,
-          color: "var(--text-secondary)", // ✅ 수정
+          color: "var(--text-secondary)",
           textAlign: "center",
+          marginBottom: 20,
+          lineHeight: "16px",
+          ...commonFontStyle
         }}>
           오늘 날짜의 피출기록만 선택 가능합니다.
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {/* 세션 목록 */}
+        <div style={{ 
+          display: "flex", 
+          flexDirection: "column", 
+          gap: 10,
+          marginBottom: 20
+        }}>
           {sessions.map((session, index) => {
             const startTime = new Date(session.startTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
             const endTime = new Date(session.endTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
@@ -105,69 +135,100 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
                 onClick={() => handleSessionClick(session)}
                 style={{
                   width: "100%",
-                  padding: "8px 10px",
-                  border: `1px solid ${isSelected ? "var(--VERY_PERI)" : "var(--text-secondary)"}`, // ✅ 수정
-                  borderRadius: 5,
+                  padding: "12px 16px",
+                  border: `1px solid ${isSelected ? "var(--TURQUOISE)" : "var(--border-light)"}`,
+                  borderRadius: "var(--border-radius-medium)",
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                  background: isSelected ? "var(--bg-secondary)" : "var(--bg-primary)", // ✅ 수정
+                  gap: 12,
+                  background: isSelected ? "var(--bg-secondary)" : "var(--bg-primary)",
                   boxSizing: "border-box",
                   cursor: "pointer",
-                  position: 'relative',
-                  color: "var(--text-primary)" // ✅ 아이콘 색상 상속
+                  transition: "all 0.2s ease",
+                  ...commonFontStyle
                 }}
               >
-                <HistoryIcon style={{ width: 16, height: 16, flexShrink: 0, color: "var(--text-secondary)" }} />
+                <HistoryIcon 
+                  style={{ 
+                    width: 16, 
+                    height: 16, 
+                    flexShrink: 0, 
+                    color: isSelected ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)" 
+                  }} 
+                />
                 <div style={{
                   fontSize: 14,
                   flex: 1,
                   overflow: "hidden",
-                  whiteSpace: "nowrap",
-                  textOverflow: "ellipsis"
+                  color: "var(--text-primary)"
                 }}>
-                  <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+                  <span style={{ 
+                    fontSize: 12, 
+                    color: "var(--text-secondary)" 
+                  }}>
                     session {index + 1}.
                   </span>{" "}
                   {duration} ({timeRange})
                 </div>
+                
+                {/* 선택 표시 */}
+              
               </div>
             );
           })}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+        {/* ✅ 버튼 영역 - HomeStopModal과 동일한 스타일 */}
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          gap: 12, 
+          marginTop: "auto"
+        }}>
+          {/* Cancel 버튼 - 왼쪽 */}
           <button
             onClick={onClose}
             style={{
-              width: 87,
-              height: 43,
+              width: 140, 
+              height: 35,
+              borderRadius: "var(--border-radius-small)",
+              border: "none", 
               background: "transparent",
-              border: "none",
-              color: "var(--text-secondary)", // ✅ 수정
-              fontSize: 14,
+              fontSize: 16, 
+              fontWeight: 600,
               cursor: "pointer",
-              ...commonFontStyle
+              transition: "color 0.2s ease",
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              gap: 8, 
+              ...commonFontStyle,
+              color: "var(--text-primary)",
             }}
           >
-            Cancel
+            <span style={{ color: "currentColor" }}>cancel</span>
           </button>
           
+          {/* Export 버튼 - 오른쪽 */}
           <button
             onClick={handleConfirmClick}
             style={{
-              width: 137,
-              height: 43,
-              background: "var(--VERY_PERI)", // ✅ 수정
+              width: 140, 
+              height: 35,
+              background: "none", 
               border: "none",
-              borderRadius: 8,
-              color: "var(--button-primary-text)", // ✅ 수정
-              fontSize: 14,
+              borderRadius: "var(--border-radius-small)",
               cursor: "pointer",
-              ...commonFontStyle
+              display: "flex", 
+              alignItems: "center", 
+              justifyContent: "center",
+              gap: 8,
+              color: "var(--TURQUOISE)", 
+              ...commonFontStyle,
             }}
           >
-            확인
+            <ExportIcon width={16} height={16} style={{ color: "currentColor" }} />
+            <span style={{ fontSize: 16, fontWeight: 600 }}>내보내기</span>
           </button>
         </div>
       </div>

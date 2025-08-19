@@ -1,25 +1,29 @@
 // src/App.tsx
 
-import { BrowserRouter, Routes, Route, useLocation, ScrollRestoration } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom"; // BrowserRouter 제거
 import { useState, useEffect } from "react";
 import HomeScreen from "./screens/HomeScreen";
 import Today from "./screens/Today";
 import RepeatCountScreen from "./screens/RepeatCountScreen";
-import TodayCalendar from "./screens/TodayCalendar";
+//import TodayCalendar from "./screens/TodayCalendar";
 import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';
 import BottomTabBar from "./components/BottomTabBar";
 import { PracticeDataProvider } from "./contexts/PracticeDataContext";
+import Metronome from './screens/Metronome';
+// import FirstTimeSyncModal from './components/FirstTimeSyncModal'; // FirstTimeSync
+// FirstTimeSyncModal import 제거
 
-// ✅ Theme 타입을 App.tsx에서도 사용
+// Theme 타입 정의
 type Theme = "light" | "dark" | "system";
 
-function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "statistic" | "setting" {
+function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "metronome" | "statistic" | "setting" {
   switch (pathname) {
     case "/": return "home";
     case "/today": return "today";
     case "/timer": return "apple";
+    case "/metronome": return "metronome"; // 👈 이거 추가
     case "/stats": return "statistic";
     case "/settings": return "setting";
     case "/calendar": return "today";
@@ -34,7 +38,7 @@ function NavigationBar() {
   return <BottomTabBar activeTab={activeTab} onTabChange={() => {}} />;
 }
 
-// ✅ props를 전달받도록 AppRoutes 수정
+// props를 전달받도록 AppRoutes 수정
 function AppRoutes({ theme, handleThemeChange }: { theme: Theme, handleThemeChange: (theme: Theme) => void }) {
   return (
     <>
@@ -42,11 +46,10 @@ function AppRoutes({ theme, handleThemeChange }: { theme: Theme, handleThemeChan
         <Route path="/" element={<HomeScreen />} />
         <Route path="/today" element={<Today />} />
         <Route path="/timer" element={<RepeatCountScreen />} />
-        <Route path="/calendar" element={<TodayCalendar />} />
         <Route path="/practice" element={<PracticeSessionScreen />} />
-        {/* ✅ SettingsScreen에 theme 상태와 핸들러를 props로 전달 */}
         <Route path="/settings" element={<SettingsScreen theme={theme} handleThemeChange={handleThemeChange} />} />
         <Route path="/stats" element={<StatsScreen />} />
+        <Route path="/metronome" element={<Metronome />} />
       </Routes>
       <NavigationBar />
     </>
@@ -96,13 +99,13 @@ function App() {
     return () => window.removeEventListener('resize', setRealHeight);
   }, []);
   
-  // ✅ 테마를 변경하는 핸들러 함수를 App 컴포넌트에 정의
+  // 테마를 변경하는 핸들러 함수
   const handleThemeChange = (selectedTheme: Theme) => {
     setTheme(selectedTheme);
     localStorage.setItem("theme", selectedTheme);
   };
 
-return (
+  return (
     <PracticeDataProvider>
       <div style={{
         width: "100%",
@@ -113,7 +116,9 @@ return (
         background: "var(--bg-primary)",
         boxShadow: "none"
       }}>
-
+        {/* FirstTimeSyncModal 제거 */}
+        
+        {/* BrowserRouter 제거하고 AppRoutes만 렌더링 */}
         <AppRoutes theme={theme} handleThemeChange={handleThemeChange} />
       </div>
     </PracticeDataProvider>

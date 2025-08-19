@@ -17,9 +17,11 @@ import StaffIcon from "../assets/icons/staff.svg?react";
 import TrophyIcon from "../assets/icons/trophy.svg?react";
 import FlameIcon from "../assets/icons/flame.svg?react";
 import ExportIcon from "../assets/icons/export.svg?react";
-import PlayIcon from "../assets/icons/play.svg?react";
+import Lottie from 'lottie-react';
+import playButtonAnimation from '../assets/playbutton.json';
 import { useLocation } from "react-router-dom";
 import { specialEvents, getTodayEvents, getTodayCheerData, CheerData } from "../utils/specialEvents";
+import { validateTimeSettings, logTimeInfo } from "../utils/timeValidation";
 
 // 타입 정의
 interface PracticeRecord {
@@ -60,10 +62,7 @@ const getKoreanHolidays = (year: number): string[] => {
   return holidays;
 };
 
-// ✅ 특별 이벤트 데이터 (이미지 URL은 public 경로 사용)
-
-
-// ✅ localStorage 안전 함수들
+// localStorage 안전 함수들
 const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
   try {
     const item = localStorage.getItem(key);
@@ -77,7 +76,6 @@ const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
 const safeLocalStorageSet = (key: string, value: any) => {
   try {
     const serialized = JSON.stringify(value);
-    // 크기 체크 (5MB 제한)
     if (serialized.length > 5 * 1024 * 1024) {
       console.warn(`Data too large for localStorage key ${key}`);
       return false;
@@ -87,7 +85,6 @@ const safeLocalStorageSet = (key: string, value: any) => {
   } catch (e) {
     if (e.name === 'QuotaExceededError') {
       console.error('localStorage quota exceeded');
-      // 임시 데이터 정리
       cleanupTemporaryData();
     } else {
       console.error(`localStorage set error for key ${key}:`, e);
@@ -96,10 +93,9 @@ const safeLocalStorageSet = (key: string, value: any) => {
   }
 };
 
-// ✅ 임시 데이터 정리 함수
+// 임시 데이터 정리 함수
 const cleanupTemporaryData = () => {
   try {
-    // 만료된 임시 응원 메시지 정리
     const savedCheers = localStorage.getItem('temporaryCheers');
     if (savedCheers) {
       const cheers = JSON.parse(savedCheers);
@@ -108,17 +104,14 @@ const cleanupTemporaryData = () => {
         if (!cheer.expiresAt) return true;
         return new Date(cheer.expiresAt) > now;
       });
-      
       if (validCheers.length < cheers.length) {
         localStorage.setItem('temporaryCheers', JSON.stringify(validCheers));
       }
     }
-    
-    // 오래된 연습 기록 정리 (1년 이상 된 기록)
     const oneYearAgo = dayjs().subtract(1, 'year').format('YYYY-MM-DD');
     const practiceRecords = safeLocalStorageGet('practiceRecords', []);
     if (Array.isArray(practiceRecords)) {
-      const recentRecords = practiceRecords.filter((record: PracticeRecord) => 
+      const recentRecords = practiceRecords.filter((record: PracticeRecord) =>
         record.date >= oneYearAgo
       );
       if (recentRecords.length < practiceRecords.length) {
@@ -133,11 +126,17 @@ const cleanupTemporaryData = () => {
 function HomeScreen() {
   const location = useLocation();
 
-  // ✅ 스크롤 방지 로직
+  // ✅ Context에서 타이머 상태와 메서드들 가져오기
+  const { 
+    practiceRecords, setPracticeRecords, tracks, practiceChecks,
+    timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime,
+    startSession, pauseSession, resumeSession, completeSession, updateTimerStartTime
+  } = usePracticeData();
+
+  // 스크롤 방지
   useEffect(() => {
     if (location.pathname === '/' || location.pathname === '/home') {
       const originalBodyStyle = document.body.style.cssText;
-
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
       document.body.style.top = '0';
@@ -150,143 +149,48 @@ function HomeScreen() {
     }
   }, [location.pathname]);
 
-  // Context에서 연습 기록, 곡 목록, 체크 데이터를 가져옵니다.
-  const { practiceRecords, setPracticeRecords, tracks, practiceChecks } = usePracticeData();
-
-  // 로컬 상태
   const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
 
-  // 타이머 상태
-  const [timerActive, setTimerActive] = useState(false);
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [timerSeconds, setTimerSeconds] = useState(0);
+  // 모달 상태들
   const [showTimePickModal, setShowTimePickModal] = useState(false);
   const [showHomeStopModal, setShowHomeStopModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-  const timerRef = useRef<number | null>(null);
+  const playLottieRef = useRef<any>(null);
 
-  const [actualStartTime, setActualStartTime] = useState<number | null>(null);
-  const [pausedDuration, setPausedDuration] = useState<number>(0);
-  const [isCompleting, setIsCompleting] = useState(false);
+  // ✅ 제거된 상태들: 모든 타이머 관련 로컬 상태 제거
+  // - timerMilliseconds, timerRef, actualStartTime, pausedDuration, isCompleting, fromStopModal 등
 
-  // ✅ 초기 정리 작업
+  const [fromStopModal, setFromStopModal] = useState(false);
+
   useEffect(() => {
     cleanupTemporaryData();
   }, []);
 
-  // 타이머 상태 복원
-  useEffect(() => {
-    const restoreTimer = () => {
-      const timerState = safeLocalStorageGet('timerState', null);
-      if (timerState) {
-        try {
-          const { isRunning, startTime, pausedTime = 0, pausedAt, sessionId, memo } = timerState;
+  // ✅ 타이머 복원 로직 완전 제거 - Context가 담당
 
-          let currentPausedDuration = pausedTime;
-          if (!isRunning && pausedAt) {
-            currentPausedDuration += (Date.now() - pausedAt);
-          }
-
-          const elapsedSeconds = Math.floor((Date.now() - startTime - currentPausedDuration) / 1000);
-
-          setTimerSeconds(Math.max(0, elapsedSeconds));
-          setTimerActive(true);
-          setTimerRunning(isRunning);
-          setActualStartTime(startTime);
-          setPausedDuration(currentPausedDuration);
-
-          if (isRunning) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            timerRef.current = window.setInterval(() => {
-              setTimerSeconds(Math.floor((Date.now() - startTime - currentPausedDuration) / 1000));
-            }, 1000);
-          }
-        } catch (error) {
-          console.error('타이머 복원 실패:', error);
-          localStorage.removeItem('timerState');
-          setTimerActive(false);
-        }
-      }
-    };
-
-    restoreTimer();
-  }, []);
-
-  // tracks 변경 감지 및 동기화
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const savedTracks = localStorage.getItem("tracks");
-      if (savedTracks) {
-        // Context에서 tracks를 관리하므로 별도 setTracks 불필요
-      }
-    };
-
-    const interval = setInterval(() => {
-      // Context에서 tracks를 관리하므로 별도 setTracks 불필요
-    }, 1000);
-
-    return () => {
-      clearInterval(interval);
-    };
-  }, [tracks]);
-
-  // practiceChecks 정리
-  useEffect(() => {
-    const cleanupPracticeChecks = () => {
-      const existingTrackIds = new Set(tracks.map(t => t.id.toString()));
-      let needsUpdate = false;
-      const cleanedChecks = { ...practiceChecks };
-
-      Object.keys(cleanedChecks).forEach(date => {
-        const dayChecks = cleanedChecks[date];
-        Object.keys(dayChecks).forEach(trackId => {
-          if (!existingTrackIds.has(trackId)) {
-            delete cleanedChecks[date][trackId];
-            needsUpdate = true;
-          }
-        });
-      });
-
-      if (needsUpdate) {
-        safeLocalStorageSet("practiceChecks", cleanedChecks);
-      }
-    };
-
-    if (tracks.length > 0) {
-      cleanupPracticeChecks();
-    }
-  }, [tracks, practiceChecks]);
-
-  // ✅ 치어스 롤링 (24시간마다)
+  // 응원 메시지 롤링
   useEffect(() => {
     const cheerInterval = setInterval(() => {
       setCheerData(getTodayCheerData());
-    }, 86400000); // 24시간
+    }, 86400000);
     return () => clearInterval(cheerInterval);
   }, []);
 
-  // ✅ localStorage 변경 감지 (간격 늘림)
+  // localStorage 변경 감지 (닉네임, 아바타)
   useEffect(() => {
     const interval = setInterval(() => {
       const currentAvatar = localStorage.getItem("avatar") || "";
       const currentNickname = localStorage.getItem("nickname") || "디붕이";
-      if (currentAvatar !== avatar) {
-        setAvatar(currentAvatar);
-      }
-      if (currentNickname !== nickname) {
-        setNickname(currentNickname);
-      }
-    }, 5000); // 5초로 간격 늘림
-
-    return () => {
-      clearInterval(interval);
-    };
+      if (currentAvatar !== avatar) setAvatar(currentAvatar);
+      if (currentNickname !== nickname) setNickname(currentNickname);
+    }, 5000);
+    return () => { clearInterval(interval); };
   }, [avatar, nickname]);
 
-  // 키보드 이벤트 처리
+  // 기타
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -295,46 +199,182 @@ function HomeScreen() {
         setShowExportModal(false);
       }
     };
-
     document.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      if (timerRef.current) clearInterval(timerRef.current);
+      // ✅ timerRef 정리 로직 제거 - Context가 담당
     };
   }, []);
 
-  // 계산된 값들
+  // ✅ 새로운 단순화된 타이머 메서드들 - Context 메서드 직접 호출
+  const handleStartTimer = () => {
+    console.log('🎯 HomeScreen: 타이머 시작 요청');
+    startSession();
+  };
+
+  const handlePauseTimer = () => {
+    console.log('🎯 HomeScreen: 타이머 일시정지 요청');
+    pauseSession();
+  };
+
+  const handleResumeTimer = () => {
+    console.log('🎯 HomeScreen: 타이머 재시작 요청');
+    resumeSession();
+  };
+
+  const handleCompleteTimer = () => {
+    console.log('🎯 HomeScreen: 타이머 완료 모달 표시');
+    setShowHomeStopModal(true);
+  };
+
+  const handleEditTimer = () => {
+    console.log('🎯 HomeScreen: 타이머 수정 모달 표시');
+    setFromStopModal(false);
+    setShowTimePickModal(true);
+  };
+
+  // ✅ 수정된 시간 업데이트 핸들러 - Context의 timerV2와 연동
+  const handleTimeSave = (startTimestamp: number, endTimestamp: number) => {
+    console.log('HomeScreen 시간 저장:', {
+      startTimestamp,
+      endTimestamp,
+      startFormatted: dayjs(startTimestamp).format('YYYY-MM-DD HH:mm'),
+      endFormatted: dayjs(endTimestamp).format('YYYY-MM-DD HH:mm'),
+      currentSelectedDate: selectedDate
+    });
+
+    // ✅ 강화된 미래 시간 검증
+    const now = Date.now();
+    const oneMinuteLater = now + 60 * 1000;
+
+    if (startTimestamp > oneMinuteLater) {
+      alert("피출 시간은 현재 시간보다 미래로 설정할 수 없습니다.");
+      return;
+    }
+
+    if (endTimestamp > oneMinuteLater) {
+      alert("피퇴 시간은 현재 시간보다 미래로 설정할 수 없습니다.");
+      return;
+    }
+
+    const validation = validateTimeSettings(startTimestamp, endTimestamp);
+    if (!validation.isValid) {
+      alert(validation.error);
+      return;
+    }
+
+    const newDurationSeconds = (endTimestamp - startTimestamp) / 1000;
+    const newPracticeTime = Math.floor(newDurationSeconds / 60);
+    logTimeInfo('HomeScreen 시간 저장', startTimestamp, endTimestamp);
+
+    const recordDate = dayjs(startTimestamp).format("YYYY-MM-DD");
+    const dateChanged = recordDate !== selectedDate;
+    
+    if (dateChanged) {
+      console.log('📅 날짜 변경 감지:', {
+        기존날짜: selectedDate,
+        새날짜: recordDate
+      });
+      setSelectedDate(recordDate);
+    }
+
+    // ✅ Context에서 timerV2 상태 읽어서 sessionId 가져오기
+    const timerV2 = safeLocalStorageGet('timerV2', {});
+    const sessionId = timerV2.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
+
+    const newRecord: PracticeRecord = {
+      id: sessionId,
+      date: recordDate,
+      practiceTime: newPracticeTime,
+      startTime: startTimestamp,
+      endTime: endTimestamp,
+      memo: timerV2.memo || ""
+    };
+
+    setPracticeRecords(prev => {
+      const existingRecordIndex = prev.findIndex(record => record.id === newRecord.id);
+      let updatedRecords;
+      if (existingRecordIndex > -1) {
+        updatedRecords = [...prev];
+        updatedRecords[existingRecordIndex] = newRecord;
+      } else {
+        updatedRecords = [...prev, newRecord];
+      }
+      return updatedRecords;
+    });
+
+    // ✅ Context의 timerV2 상태 업데이트 (수동으로 localStorage 조작)
+    // ✅ Context 메서드로 시작시간 수정
+    updateTimerStartTime(startTimestamp);
+
+    if (!fromStopModal) {
+      setShowTimePickModal(false);
+    }
+    
+    console.log('📝 시간 수정 완료:', {
+      새시작시간: dayjs(startTimestamp).format('YYYY-MM-DD HH:mm'),
+      새종료시간: dayjs(endTimestamp).format('YYYY-MM-DD HH:mm'),
+      새날짜: recordDate,
+      설정된시간: newPracticeTime + '분'
+    });
+  };
+
+  const handlePracticeComplete = () => {
+    console.log('🎯 HomeScreen: 연습 완료 처리');
+    
+    // ✅ HomeStopModal에서 저장한 memo 읽기
+    const timerV2 = safeLocalStorageGet('timerV2', {});
+    const memo = timerV2.memo || '';
+    
+    // ✅ Context 메서드로 완료 처리
+    completeSession(memo);
+    
+    setShowHomeStopModal(false);
+  };
+
+  const handleEditTimeFromStop = () => {
+    console.log('🎯 HomeScreen: 피퇴모달에서 시간 수정');
+    setShowHomeStopModal(false);
+    setFromStopModal(true);
+    setShowTimePickModal(true);
+  };
+
+  const handleReturnToStopModal = () => {
+    console.log('🎯 HomeScreen: 피퇴모달로 복귀');
+    setShowTimePickModal(false);
+    setFromStopModal(false);
+    setShowHomeStopModal(true);
+  };
+
+  // ✅ 나머지 계산 로직들 (변경 없음)
   const today = dayjs();
   const todayStr = today.format("YYYY-MM-DD");
   const displayDate = dayjs(selectedDate);
   const selectedDateFormatted = displayDate.format("YYYY년 MM월 DD일");
-
   const selectedDateRecords = Array.isArray(practiceRecords)
     ? practiceRecords.filter((r: PracticeRecord) => r.date === selectedDate)
     : [];
   const selectedDateMinutes = selectedDateRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0);
-
   const selectedDateCheckedCount = (() => {
     try {
       const visibleTracksForDate = tracks.filter(
-        (track) =>
-          dayjs(track.addedDate).isSameOrBefore(selectedDate, "day") &&
-          (!track.completedDate ||
-            dayjs(track.completedDate).isSameOrAfter(selectedDate, "day"))
+        (track) => {
+          const addedBeforeOrOn = dayjs(track.addedDate).isSameOrBefore(selectedDate, "day");
+          const notCompletedOrCompletedAfter = !track.completedDate ||
+                                              dayjs(track.completedDate).isSameOrAfter(selectedDate, "day");
+          
+          const hasPracticeOnDate = practiceChecks[selectedDate] && 
+                                   practiceChecks[selectedDate][track.id];
+          
+          return (addedBeforeOrOn && notCompletedOrCompletedAfter) || hasPracticeOnDate;
+        }
       );
-
       const denominator = visibleTracksForDate.length;
       const checksForDate = practiceChecks[selectedDate];
-
-      if (!checksForDate) {
-        return { numerator: 0, denominator };
-      }
-
-      const numerator = visibleTracksForDate.filter(track => 
+      if (!checksForDate) return { numerator: 0, denominator };
+      const numerator = visibleTracksForDate.filter(track =>
         checksForDate[track.id]
       ).length;
-
       return { numerator, denominator };
 
     } catch (error) {
@@ -342,29 +382,21 @@ function HomeScreen() {
       return { numerator: 0, denominator: tracks.length };
     }
   })();
-
+  
   const todayRecords = Array.isArray(practiceRecords)
     ? practiceRecords.filter((r: PracticeRecord) => r.date === todayStr)
     : [];
-
   const totalMinutes = Array.isArray(practiceRecords)
     ? practiceRecords.reduce((sum: number, r: PracticeRecord) => sum + Number(r.practiceTime || 0), 0)
     : 0;
-
   const totalHours = Math.floor(totalMinutes / 60);
 
-  // 연속 일수 계산
   const getStreak = (): number => {
-    if (!Array.isArray(practiceRecords)) {
-      return 0;
-    }
-
+    if (!Array.isArray(practiceRecords)) return 0;
     let streak = 0;
     let day = dayjs();
-
     try {
       const todayPracticed = practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"));
-
       if (todayPracticed) {
         while (practiceRecords.some((r: PracticeRecord) => r.date === day.format("YYYY-MM-DD"))) {
           streak++;
@@ -383,228 +415,13 @@ function HomeScreen() {
       console.error("getStreak 계산 실패:", error);
       return 0;
     }
-
     return streak;
   };
 
-  // 이벤트 핸들러들
-  const handleDateClick = (dateStr: string) => {
-    setSelectedDate(dateStr);
-  };
+  const handleDateClick = (dateStr: string) => { setSelectedDate(dateStr); };
+  const handleExport = () => { setShowExportModal(true); };
 
-  const handleExport = () => {
-    setShowExportModal(true);
-  };
-
-  // 타이머 기능들
-  const startTimer = () => {
-    const currentTimestamp = Date.now();
-    const sessionId = dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
-
-    const timerState = {
-      isRunning: true,
-      startTime: currentTimestamp,
-      pausedTime: 0,
-      sessionId: sessionId,
-      memo: ""
-    };
-
-    if (safeLocalStorageSet('timerState', timerState)) {
-      setTimerActive(true);
-      setTimerRunning(true);
-      setTimerSeconds(0);
-      setActualStartTime(currentTimestamp);
-      setPausedDuration(0);
-
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = window.setInterval(() => {
-        setTimerSeconds(Math.floor((Date.now() - currentTimestamp - 0) / 1000));
-      }, 1000);
-    }
-  };
-
-  const pauseTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setTimerRunning(false);
-
-    const timerState = safeLocalStorageGet('timerState', {});
-    const newPausedDuration = (pausedDuration || 0) + (Date.now() - (timerState.pausedAt || Date.now()));
-    setPausedDuration(newPausedDuration);
-
-    safeLocalStorageSet('timerState', {
-      ...timerState,
-      isRunning: false,
-      pausedAt: Date.now(),
-      pausedTime: newPausedDuration
-    });
-  };
-
-  const resumeTimer = () => {
-    const timerState = safeLocalStorageGet('timerState', {});
-    const newPausedDuration = (pausedDuration || 0) + (Date.now() - (timerState.pausedAt || Date.now()));
-    setPausedDuration(newPausedDuration);
-
-    safeLocalStorageSet('timerState', {
-      ...timerState,
-      isRunning: true,
-      pausedAt: undefined,
-      pausedTime: newPausedDuration
-    });
-
-    setTimerRunning(true);
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = window.setInterval(() => {
-      if (actualStartTime !== null) {
-        setTimerSeconds(Math.floor((Date.now() - actualStartTime - newPausedDuration) / 1000));
-      }
-    }, 1000);
-  };
-
-  const completeTimer = () => {
-    setShowHomeStopModal(true);
-  };
-
-  const editTimer = () => {
-    setShowTimePickModal(true);
-  };
-
-  const handleTimeSave = (startInput: string, endInput: string) => {
-    const today = dayjs();
-    const startMoment = today.hour(Number(startInput.split(':')[0])).minute(Number(startInput.split(':')[1]));
-    const endMoment = today.hour(Number(endInput.split(':')[0])).minute(Number(endInput.split(':')[1]));
-
-    if (endMoment.isAfter(dayjs())) {
-      alert("피퇴 시간은 현재 시간보다 미래로 설정할 수 없습니다.");
-      return;
-    }
-
-    let newDurationSeconds = endMoment.diff(startMoment, 'second');
-
-    if (newDurationSeconds < 0) {
-      newDurationSeconds += 24 * 60 * 60;
-    }
-
-    if (newDurationSeconds <= 0) {
-      alert("연습 시간은 1분 이상이어야 합니다.");
-      return;
-    }
-
-    const recordStartTime = startMoment.valueOf();
-    const recordEndTime = endMoment.valueOf();
-
-    const isEndTimeInPast = endMoment.isBefore(dayjs());
-    const timeDiffMinutes = dayjs().diff(endMoment, 'minute');
-    const shouldCompleteSession = isEndTimeInPast && timeDiffMinutes > 5;
-
-    const timerState = safeLocalStorageGet('timerState', {});
-    const sessionId = timerState.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
-
-    const newRecord: PracticeRecord = {
-      id: sessionId,
-      date: today.format("YYYY-MM-DD"),
-      practiceTime: Math.floor(newDurationSeconds / 60),
-      startTime: recordStartTime,
-      endTime: recordEndTime,
-      memo: timerState.memo || ""
-    };
-
-    setPracticeRecords(prev => {
-      const existingRecordIndex = prev.findIndex(record => record.id === newRecord.id);
-      if (existingRecordIndex > -1) {
-        const updatedRecords = [...prev];
-        updatedRecords[existingRecordIndex] = newRecord;
-        return updatedRecords;
-      } else {
-        return [...prev, newRecord];
-      }
-    });
-
-    if (shouldCompleteSession) {
-      localStorage.removeItem('timerState');
-      if (timerRef.current) clearInterval(timerRef.current);
-      setTimerActive(false);
-      setTimerRunning(false);
-      setTimerSeconds(0);
-      setActualStartTime(null);
-      setPausedDuration(0);
-      
-      setShowTimePickModal(false);
-      return;
-    }
-
-    setActualStartTime(recordStartTime);
-    setTimerSeconds(newDurationSeconds);
-
-    safeLocalStorageSet('timerState', {
-      isRunning: timerRunning,
-      startTime: recordStartTime,
-      pausedTime: 0,
-      sessionId: sessionId,
-      memo: timerState.memo || ""
-    });
-
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (timerRunning) {
-      timerRef.current = window.setInterval(() => {
-        setTimerSeconds(Math.floor((Date.now() - recordStartTime - 0) / 1000));
-      }, 1000);
-    }
-
-    setTimerActive(true);
-    setShowTimePickModal(false);
-  };
-
-  const handlePracticeComplete = () => {
-    if (isCompleting) return;
-    setIsCompleting(true);
-
-    try {
-      const addMinutes = Math.floor(timerSeconds / 60);
-
-      if (addMinutes > 0) {
-        const timerState = safeLocalStorageGet('timerState', {});
-        const recordedStartTime = timerState.startTime;
-        const recordedEndTime = Date.now();
-
-        const newRecord: PracticeRecord = {
-          id: timerState.sessionId,
-          date: dayjs().format("YYYY-MM-DD"),
-          practiceTime: addMinutes,
-          startTime: recordedStartTime,
-          endTime: recordedEndTime,
-          memo: timerState.memo || ""
-        };
-
-        setPracticeRecords(prev => {
-          const existingRecordIndex = prev.findIndex(record => record.id === newRecord.id);
-          if (existingRecordIndex > -1) {
-            const updatedRecords = [...prev];
-            updatedRecords[existingRecordIndex] = newRecord;
-            return updatedRecords;
-          } else {
-            return [...prev, newRecord];
-          }
-        });
-      }
-
-      localStorage.removeItem('timerState');
-      if (timerRef.current) clearInterval(timerRef.current);
-      setTimerActive(false);
-      setTimerRunning(false);
-      setTimerSeconds(0);
-      setActualStartTime(null);
-      setPausedDuration(0);
-      setShowHomeStopModal(false);
-    } finally {
-      setIsCompleting(false);
-    }
-  };
-
-  const handleEditTimeFromStop = () => {
-    setShowHomeStopModal(false);
-    setShowTimePickModal(true);
-  };
-
+  // 공통 폰트 스타일
   const commonFontStyle = {
     fontFamily: "var(--FONT_FAMILY)",
     WebkitFontSmoothing: "antialiased" as const,
@@ -624,19 +441,15 @@ function HomeScreen() {
       boxSizing: "border-box",
       ...commonFontStyle
     }}>
-
       {/* Header */}
-      <div style={{
-        width: "calc(100% - 32px)",
-        margin: "0 auto"
-      }}>
+      <div style={{ width: "calc(100% - 32px)", margin: "0 auto" }}>
         <Header
           title="digital piano gallery 피출앱"
           color="var(--TURQUOISE)"
           topMargin={5}
         />
       </div>
-
+      
       {/* Date Display */}
       <div style={{
         width: "100%",
@@ -654,11 +467,7 @@ function HomeScreen() {
       </div>
 
       {/* Profile Section */}
-      <ProfileSection
-        avatar={avatar}
-        nickname={nickname}
-        cheerData={cheerData}
-      />
+      <ProfileSection avatar={avatar} nickname={nickname} cheerData={cheerData} />
 
       {/* Total Achievement Card */}
       <div style={{
@@ -691,22 +500,20 @@ function HomeScreen() {
         iconAlt="keyboard"
         iconWidth={24}
         iconHeight={24}
-        title={selectedDate === todayStr ? "오늘의 피출 기록" : `${selectedDateFormatted} 피출 기록`}
+        title={selectedDate === todayStr ? "오늘의 피출 기록" : `${dayjs(selectedDate).format("YY.MM.DD")} 피출 기록`}
         value={`${Math.floor(selectedDateMinutes / 60)}시간 ${selectedDateMinutes % 60}분`}
         showExportIcon={true}
         ExportIcon={ExportIcon}
       />
-
       <StatsCard
         Icon={StaffIcon}
         iconColor="var(--TURQUOISE)"
         iconAlt="staff"
         iconWidth={24}
         iconHeight={24}
-        title={selectedDate === todayStr ? "오늘 연습한 곡" : `${selectedDateFormatted} 연습한 곡`}
+        title={selectedDate === todayStr ? "오늘 연습한 곡" : `${dayjs(selectedDate).format("YY.MM.DD")} 연습한 곡`}
         value={`${selectedDateCheckedCount.numerator}/${selectedDateCheckedCount.denominator} 곡`}
       />
-
       <StatsCard
         Icon={TrophyIcon}
         iconColor="var(--TURQUOISE)"
@@ -726,17 +533,18 @@ function HomeScreen() {
         themePastelColor="var(--PASTEL_TURQUOISE)"
       />
 
-      {/* Start Button */}
+      {/* Start Button - ✅ 단순화된 로직 */}
       {!timerActive && (
         <div style={{
-          width: 50,
+          width: 100,
+          height: 100,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          margin: "30px auto 0 auto"
+          margin: "0px auto 0 auto"
         }}>
           <button
-            onClick={startTimer}
+            onClick={handleStartTimer}
             style={{
               background: "none",
               border: "none",
@@ -745,41 +553,57 @@ function HomeScreen() {
               transition: "var(--transition-fast)"
             }}
           >
-            <PlayIcon style={{ color: "var(--TURQUOISE)" }} width={50} height={50} />
+            <div
+              style={{
+                width: 100,
+                height: 100,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              <Lottie
+                lottieRef={playLottieRef}
+                animationData={playButtonAnimation}
+                loop
+                autoplay
+                renderer="svg"
+                rendererSettings={{ preserveAspectRatio: "xMidYMid meet" }}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                }}
+              />
+            </div>
           </button>
-
-          <span style={{
-            marginTop: -1,
-            fontSize: 14,
-            color: "var(--TURQUOISE)",
-            lineHeight: "32px",
-            pointerEvents: "none",
-            ...commonFontStyle
-          }}>
-            드가자!
-          </span>
         </div>
       )}
 
-      {/* Modals */}
+      {/* Modals - ✅ 새로운 핸들러들 사용 */}
       {timerActive && (
         <HomeStartTimerModal
           timerSeconds={timerSeconds}
+          timerMilliseconds={timerMilliseconds}
           isRunning={timerRunning}
-          onPause={pauseTimer}
-          onResume={resumeTimer}
-          onComplete={completeTimer}
-          onEdit={editTimer}
+          onPause={handlePauseTimer}
+          onResume={handleResumeTimer}
+          onComplete={handleCompleteTimer}
+          onEdit={handleEditTimer}
         />
       )}
 
-      {showTimePickModal && (
+     {showTimePickModal && (
         <TimePickModal
           isOpen={showTimePickModal}
-          onClose={() => setShowTimePickModal(false)}
+          onClose={() => {
+            setShowTimePickModal(false);
+            setFromStopModal(false);
+          }}
           onSave={handleTimeSave}
-          currentDuration={timerSeconds}
-          actualStartTime={actualStartTime}
+          actualStartTime={timerStartTime}
+          actualEndTime={timerStartTime ? timerStartTime + timerMilliseconds : null}
+          fromStopModal={fromStopModal}
+          onReturnToStopModal={handleReturnToStopModal}
         />
       )}
 
@@ -807,18 +631,12 @@ function HomeScreen() {
   );
 }
 
-// ✅ 임시 응원 메시지 추가 함수 (안전한 localStorage 사용)
+// 임시 응원 메시지 추가 함수
 export function addTemporaryCheer(cheerData: CheerData) {
   const savedCheers = safeLocalStorageGet('temporaryCheers', []);
   let cheers: CheerData[] = Array.isArray(savedCheers) ? savedCheers : [];
-
   const existingIndex = cheers.findIndex(cheer => cheer.date === cheerData.date);
-  if (existingIndex >= 0) {
-    cheers[existingIndex] = cheerData;
-  } else {
-    cheers.push(cheerData);
-  }
-
+  if (existingIndex >= 0) { cheers[existingIndex] = cheerData; } else { cheers.push(cheerData); }
   safeLocalStorageSet('temporaryCheers', cheers);
 }
 

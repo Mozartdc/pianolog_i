@@ -66,10 +66,18 @@ export function Today() {
   };
 
   const visibleTracks = tracks.filter(
-    (track) =>
-      dayjs(track.addedDate).isSameOrBefore(selectedDate, "day") &&
-      (!track.completedDate || dayjs(track.completedDate).isSameOrAfter(selectedDate, "day"))
-  );
+  (track) => {
+    const addedBeforeOrOn = dayjs(track.addedDate).isSameOrBefore(selectedDate, "day");
+    const notCompletedOrCompletedAfter = !track.completedDate || 
+                                        dayjs(track.completedDate).isSameOrAfter(selectedDate, "day");
+    
+    // 🔧 추가: 해당 날짜에 연습 기록이 있으면 보이게 함
+    const hasPracticeOnDate = practiceChecks[selectedDate] && 
+                             practiceChecks[selectedDate][track.id];
+    
+    return (addedBeforeOrOn && notCompletedOrCompletedAfter) || hasPracticeOnDate;
+  }
+);
 
 return (
     <main
@@ -214,7 +222,7 @@ return (
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 7 }}>
-              <SongNoteIcon style={{ color: "var(--TURQUOISE)" }} width="16" height="16" />
+              <SongNoteIcon style={{ color: "var(--VERY_PERI)" }} width="16" height="16" />
               <span
                 style={{
                   fontSize: 15,
@@ -242,8 +250,8 @@ return (
                 border: "var(--border-light)",
                 borderRadius: "var(--border-radius-small)",
                 padding: "0 12px",
-                fontSize: 16,
-                background: "var(--bg-secondary)",
+                fontSize: 14,
+                background: "transparent",
                 color: "var(--text-primary)",
                 fontFamily: "var(--FONT_FAMILY)",
                 marginBottom: 15,
@@ -299,12 +307,12 @@ onKeyPress={(e) => {
     background: "transparent",
     border: "none",
     fontSize: 16,
-    color: "var(--VERY_PERI)",
+    color: "var(--DARK_GRAY)",
     cursor: "pointer",
     fontFamily: "var(--FONT_FAMILY)",
   }}
 >
-  Cancel
+  cancel
 </button>
 
 
@@ -338,15 +346,22 @@ onKeyPress={(e) => {
   style={{
     flex: 1,
     height: 43,
-    background: "var(--VERY_PERI)",
+    background: "transparent", // 👈 배경 제거
     border: "none",
     borderRadius: "var(--border-radius-small)",
     fontSize: 16,
-    color: "var(--button-primary-text)",
+    color: "var(--VERY_PERI)", // 👈 텍스트 색상을 버튼 원래 배경색으로
     cursor: "pointer",
     fontFamily: "var(--FONT_FAMILY)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
   }}
 >
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" width="18" height="18">
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+  </svg>
   곡 추가
 </button>
 

@@ -13,12 +13,18 @@ import AvatarCropper, { AvatarCropperHandles } from "../components/ProfileUpload
 // ✅ [수정] 모든 아이콘을 React 컴포넌트로 불러옵니다.
 import ExportIcon from "../assets/icons/s_export.svg?react";
 import ImportIcon from "../assets/icons/s_import.svg?react";
+import SaveIcon from "../assets/icons/save.svg?react";
+import LoadIcon from "../assets/icons/load.svg?react";
 import DayIcon from "../assets/icons/day.svg?react";
 import NightIcon from "../assets/icons/night.svg?react";
 import SystemIcon from "../assets/icons/system.svg?react";
 import RadioOn from "../assets/icons/radio_on.svg?react";
 import RadioOff from "../assets/icons/radiooff.svg?react";
+import SettingIcon from "../assets/icons/setting.svg?react";
+import EditIcon from "../assets/icons/edit.svg?react";
+import QuestionIcon from "../assets/icons/question.svg?react";
 import Logo from "../utils/img/logo.png";
+import UserIcon from '../assets/icons/user.svg?react';
 
 type Theme = "light" | "dark" | "system";
 // ✅ [수정] icon의 타입을 string에서 React.ElementType으로 변경합니다.
@@ -32,6 +38,19 @@ const themeOptions: { value: Theme; label: string; icon: React.ElementType }[] =
 interface PracticeRecord { id: string; date: string; practiceTime: number; startTime: number; endTime: number; memo?: string; track?: string; }
 type Track = { id: number; title: string; addedDate: string; completedDate?: string; };
 type PracticeChecks = { [date: string]: { [trackId: number]: boolean; }; };
+type PartialCounts = { [date: string]: { [key: string]: number; }; };
+
+// 전체 데이터 타입 정의
+interface FullBackupData {
+  tracks: Track[];
+  practiceRecords: PracticeRecord[];
+  practiceChecks: PracticeChecks;
+  partialCounts: PartialCounts;
+  avatar: string;
+  nickname: string;
+  timestamp: string;
+  version: string;
+}
 
 // CSV 함수 (변경 없음)
 function toCSV(practiceRecords: PracticeRecord[], allTracks: Track[], practiceChecks: PracticeChecks): string {
@@ -121,6 +140,8 @@ interface SettingsScreenProps {
 export default function SettingScreen({ theme, handleThemeChange }: SettingsScreenProps) {
   const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
   const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
+  const [tooltip1Visible, setTooltip1Visible] = useState(false);
+  const [tooltip2Visible, setTooltip2Visible] = useState(false);
   const avatarCropperRef = useRef<AvatarCropperHandles>(null);
   
   // 스크롤 방지
@@ -143,6 +164,7 @@ useEffect(() => {
     localStorage.setItem("nickname", e.target.value);
   };
   
+  // 기존 CSV 내보내기
   const handleExport = () => {
     try {
         const practiceRecordsString = localStorage.getItem("practiceRecords");
@@ -162,6 +184,8 @@ useEffect(() => {
         alert("연습 기록 CSV 파일이 성공적으로 내보내졌습니다!");
     } catch (error) { console.error("CSV 내보내기 실패:", error); alert("CSV 파일 내보내기에 실패했습니다."); }
   };
+
+  // 기존 CSV 가져오기
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -177,8 +201,76 @@ useEffect(() => {
       reader.readAsText(file, 'UTF-8');
     }
   };
+
+  // 새 기능: 전체 데이터 백업
+  const handleFullBackup = () => {
+    try {
+      const allData: FullBackupData = {
+        tracks: JSON.parse(localStorage.getItem("tracks") || "[]"),
+        practiceRecords: JSON.parse(localStorage.getItem("practiceRecords") || "[]"),
+        practiceChecks: JSON.parse(localStorage.getItem("practiceChecks") || "{}"),
+        partialCounts: JSON.parse(localStorage.getItem("partialCounts") || "{}"),
+        avatar: localStorage.getItem("avatar") || "",
+        nickname: localStorage.getItem("nickname") || "디붕이",
+        timestamp: new Date().toISOString(),
+        version: "1.0"
+      };
+      
+      const blob = new Blob([JSON.stringify(allData, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `pianolog_전체백업_${dayjs().format("YYYYMMDD_HHmmss")}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      alert("전체 데이터 백업이 성공적으로 완료되었습니다!");
+    } catch (error) {
+      console.error("전체 백업 실패:", error);
+      alert("전체 데이터 백업에 실패했습니다.");
+    }
+  };
+
+  // 새 기능: 전체 데이터 복원
+  const handleFullRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const jsonData = reader.result as string;
+          const data: FullBackupData = JSON.parse(jsonData);
+          
+          // 데이터 검증
+          if (!data.version || !data.timestamp) {
+            throw new Error("올바른 백업 파일이 아닙니다.");
+          }
+          
+          // 모든 데이터 복원
+          localStorage.setItem("tracks", JSON.stringify(data.tracks || []));
+          localStorage.setItem("practiceRecords", JSON.stringify(data.practiceRecords || []));
+          localStorage.setItem("practiceChecks", JSON.stringify(data.practiceChecks || {}));
+          localStorage.setItem("partialCounts", JSON.stringify(data.partialCounts || {}));
+          
+          if (data.avatar) localStorage.setItem("avatar", data.avatar);
+          if (data.nickname) localStorage.setItem("nickname", data.nickname);
+          
+          alert("전체 데이터 복원이 완료되었습니다! 페이지를 새로고침하여 적용하세요.");
+        } catch (error) {
+          console.error("전체 복원 실패:", error);
+          alert("백업 파일 읽기에 실패했습니다. 올바른 형식의 파일인지 확인해주세요.");
+        }
+      };
+      reader.readAsText(file, 'UTF-8');
+    }
+  };
+
   const handleRegisterAvatarClick = () => { avatarCropperRef.current?.triggerFileInput(); };
-  const handleAvatarDelete = () => { setAvatar(""); localStorage.removeItem("avatar"); };
+  const handleAvatarDelete = () => { 
+    console.log("삭제 버튼 클릭됨");
+    setAvatar(""); 
+    localStorage.removeItem("avatar");
+    console.log("아바타 삭제 완료");
+  };
 
   return (
     <div style={{
@@ -197,39 +289,246 @@ useEffect(() => {
 </div>
 
       
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 40, width: "90%", maxWidth: 343 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", justifyContent: "flex-start" }}>
-          <AvatarCropper ref={avatarCropperRef} onAvatarChange={setAvatar} size={80} />
-          <div style={{ display: "flex", gap: 8 }}>
-            <button onClick={handleRegisterAvatarClick} style={{ width: 77, height: 40, background: "var(--button-secondary-bg)", border: "none", borderRadius: 8, color: "var(--text-primary)", fontSize: 14, cursor: "pointer", ...commonFontStyle }}>등록</button>
-            <button onClick={handleAvatarDelete} style={{ width: 77, height: 40, background: "var(--button-secondary-bg)", border: "none", borderRadius: 8, color: "var(--text-primary)", fontSize: 14, cursor: "pointer", ...commonFontStyle }}>삭제</button>
+{/* ✅ 수정된 프로필 영역 - 수직 정렬 맞춤 */}
+      <div style={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        alignItems: "center", 
+        marginTop: 40, 
+        width: "90%", 
+        maxWidth: 343 
+      }}>
+        <div style={{ 
+          display: "flex", 
+          alignItems: "flex-start",
+          gap: 20, 
+          width: "100%", 
+          justifyContent: "flex-start" 
+        }}>
+          {/* ProfileUploader - 80px (기준점) */}
+          <AvatarCropper 
+            ref={avatarCropperRef} 
+            onAvatarChange={(v) => {
+              console.log('SettingsScreen: onAvatarChange 호출됨:', v);
+              setAvatar(v);
+              if (v) {
+                localStorage.setItem('avatar', v);
+              } else {
+                localStorage.removeItem('avatar');
+              }
+            }}
+            avatar={avatar}
+            size={80} 
+          />
+          
+          {/* ✅ 우측 영역: 사진 박스 위치에 맞춰 정렬 */}
+          <div style={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            flex: 1, 
+            height: 80,  // ✅ ProfileUploader와 동일한 높이
+            justifyContent: "space-between"  // ✅ 위아래 정렬
+          }}>
+            {/* ✅ 닉네임 입력창 - 사진 박스 위쪽과 정렬 */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <input 
+                value={nickname} 
+                onChange={handleNicknameChange} 
+                style={{ 
+                  width: "100%",
+                  height: 32, 
+                  padding: "4px 0", 
+                  border: "none",
+                  borderBottom: "1px solid var(--DARK_GRAY)",
+                  background: "transparent", 
+                  color: "var(--text-primary)", 
+                  fontSize: 14, 
+                  boxSizing: "border-box",
+                  outline: "none",
+                  borderRadius: 0,
+                  ...commonFontStyle 
+                }} 
+              />
+              
+              {/* 닉네임 설명 텍스트 */}
+              <div style={{ 
+                fontSize: 12, 
+                color: "var(--DARK_GRAY)", 
+                textAlign: "left",
+                width: "100%",
+                ...commonFontStyle 
+              }}>
+                닉네임 입력 (한글 5자, 영문 8자 미만 권장)
+              </div>
+            </div>
+            
+            {/* ✅ 등록/삭제 버튼 - 사진 박스 아래쪽과 정렬 */}
+            <div style={{ 
+              display: "flex", 
+              gap: 20, 
+              alignItems: "center",
+              alignSelf: "flex-start"  // ✅ 왼쪽 정렬
+            }}>
+              <button 
+                onClick={handleRegisterAvatarClick} 
+                style={{ 
+                  background: "none", 
+                  border: "none", 
+                  cursor: "pointer", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 6,
+                  padding: 0,
+                  ...commonFontStyle 
+                }}
+              >
+                <UserIcon width={16} height={16} style={{ color: "var(--DARK_GRAY)" }} />
+                <span style={{ fontSize: 14, color: "var(--DARK_GRAY)" }}>등록</span>
+              </button>
+              
+              <button 
+                onClick={handleAvatarDelete} 
+                style={{ 
+                  background: "none", 
+                  border: "none", 
+                  cursor: "pointer", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 6,
+                  padding: 0,
+                  ...commonFontStyle 
+                }}
+              >
+                <EditIcon width={16} height={16} style={{ color: "var(--DARK_GRAY)" }} />
+                <span style={{ fontSize: 14, color: "var(--DARK_GRAY)" }}>삭제</span>
+              </button>
+            </div>
           </div>
         </div>
-        <div style={{ width: "100%", textAlign: "center", fontSize: 14, marginTop: 26, ...commonFontStyle }}>닉네임 입력 <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>(한글 5자, 영문 8자 미만 권장)</span></div>
-        <input value={nickname} onChange={handleNicknameChange} style={{ width: "95%", maxWidth: "100%", height: 40, padding: "8px 16px", borderRadius: 8, border: "var(--border-light)", background: "transparent", color: "var(--text-primary)", fontSize: 16, marginTop: 15, marginBottom: 16, boxSizing: "border-box", ...commonFontStyle }} />
       </div>
 
-      <div style={{ width: "90%", maxWidth: 327, display: "flex", alignItems: "center", gap: 8, margin: "24px auto 16px auto" }}>
+      {/* 데이터 관리 섹션 */}
+      <div style={{ width: "90%", maxWidth: 327, display: "flex", alignItems: "center", gap: 8, margin: "32px auto 20px auto" }}>
         <div style={{ flex: 1, height: 0.5, background: "var(--VIVA_MAGENTA)" }} />
-        <span style={{ fontSize: 14, fontWeight: 400, ...commonFontStyle }}>데이터 관리</span>
+        <span style={{ fontSize: 14, fontWeight: 400, ...commonFontStyle }}>data</span>
         <div style={{ flex: 1, height: 0.5, background: "var(--VIVA_MAGENTA)" }} />
       </div>
 
-      {/* ✅ [수정] 내보내기 버튼 아이콘 수정 */}
-      <button onClick={handleExport} style={{ width: "90%", maxWidth: 327, height: 40, borderRadius: 8, background: "var(--button-secondary-bg)", border: "none", color: "var(--text-primary)", fontSize: 14, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 8, cursor: "pointer", ...commonFontStyle }}>
-        <ExportIcon width={16} height={20} />
-        연습 기록 내보내기
-      </button>
+      {/* 2x2 그리드 - 완전히 새로운 코드 */}
+      <div style={{ width: "90%", maxWidth: 327, marginBottom: 40 }}>
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "1fr 1fr", 
+          gap: "20px 16px"
+        }}>
+          {/* 첫 번째 행 */}
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <button onClick={handleExport} style={{ 
+              display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", 
+              color: "var(--text-primary)", fontSize: 14, cursor: "pointer", padding: 0, ...commonFontStyle 
+            }}>
+              <ExportIcon width={20} height={20} style={{ color: "var(--VIVA_MAGENTA)" }} />
+              연습 기록 내보내기
+            </button>
+            <div style={{ position: "relative" }}>
+              <QuestionIcon 
+                width={18} 
+                height={18} 
+                style={{ color: "var(--DARK_GRAY)", cursor: "pointer" }}
+                onClick={() => setTooltip1Visible(!tooltip1Visible)}
+                onMouseEnter={() => setTooltip1Visible(true)}
+                onMouseLeave={() => setTooltip1Visible(false)}
+              />
+              <div style={{
+                position: "absolute",
+                bottom: "130%",
+                left: "-180px",
+                backgroundColor: "var(--bg-secondary)",
+                color: "var(--text-primary)",
+                padding: "12px 16px",
+                borderRadius: "8px",
+                fontSize: "13px",
+                minWidth: "200px",
+                maxWidth: "250px",
+                textAlign: "left",
+                zIndex: 1000,
+                visibility: tooltip1Visible ? "visible" : "hidden",
+                opacity: tooltip1Visible ? 1 : 0,
+                transition: "opacity 0.2s, visibility 0.2s",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                border: "1px solid var(--border-light)",
+                whiteSpace: "normal",
+                lineHeight: "1.4",
+                ...commonFontStyle
+              }}>
+                연습기록만백업/복원 (곡 목록 및 체크 상태는 복원되지 않습니다.)
+              </div>
+            </div>
+          </div>
 
-      {/* ✅ [수정] 가져오기 버튼 아이콘 수정 */}
-      <label style={{ width: "90%", maxWidth: 327, height: 40, borderRadius: 8, background: "var(--button-secondary-bg)", border: "none", color: "var(--text-primary)", fontSize: 14, display: "flex", alignItems: "center", gap: 8, justifyContent: "center", marginBottom: 18, cursor: "pointer", ...commonFontStyle }}>
-        <ImportIcon width={16} height={20} />
-        연습 기록 가져오기
-        <input type="file" accept=".csv" hidden onChange={handleImport} />
-      </label>
+          <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+            <button onClick={handleFullBackup} style={{ 
+              display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", 
+              color: "var(--text-primary)", fontSize: 14, cursor: "pointer", padding: 0, ...commonFontStyle 
+            }}>
+              <SaveIcon width={20} height={20} style={{ color: "var(--VIVA_MAGENTA)" }} />
+              전체 데이터 백업
+            </button>
+            <div style={{ position: "relative" }}>
+              <QuestionIcon 
+                width={18} 
+                height={18} 
+                style={{ color: "var(--DARK_GRAY)", cursor: "pointer" }}
+                onClick={() => setTooltip2Visible(!tooltip2Visible)}
+                onMouseEnter={() => setTooltip2Visible(true)}
+                onMouseLeave={() => setTooltip2Visible(false)}
+              />
+              <div style={{
+                position: "absolute",
+                bottom: "130%",
+                left: "-160px",
+                backgroundColor: "var(--bg-secondary)",
+                color: "var(--text-primary)",
+                padding: "12px 16px",
+                borderRadius: "8px",
+                fontSize: "13px",
+                minWidth: "180px",
+                maxWidth: "220px",
+                textAlign: "left",
+                zIndex: 1000,
+                visibility: tooltip2Visible ? "visible" : "hidden",
+                opacity: tooltip2Visible ? 1 : 0,
+                transition: "opacity 0.2s, visibility 0.2s",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+                border: "1px solid var(--border-light)",
+                whiteSpace: "normal",
+                lineHeight: "1.4",
+                ...commonFontStyle
+              }}>
+                앱 재설치 / 기기변경시 (완전 복원을 위한 백업)
+              </div>
+            </div>
+          </div>
 
-      <div style={{ width: "90%", maxWidth: 327, color: "var(--text-secondary)", textAlign: "center", fontSize: 12, lineHeight: "150%", margin: "0 auto 18px auto", ...commonFontStyle }}>
-        기기 변경 시 csv로 백업/복원 가능합니다.
+          {/* 두 번째 행 */}
+          <label style={{ 
+            display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", 
+            color: "var(--text-primary)", fontSize: 14, cursor: "pointer", padding: 0, ...commonFontStyle 
+          }}>
+            <ImportIcon width={20} height={20} style={{ color: "var(--VIVA_MAGENTA)" }} />
+            연습 기록 가져오기
+            <input type="file" accept=".csv" hidden onChange={handleImport} />
+          </label>
+
+          <label style={{ 
+            display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", 
+            color: "var(--text-primary)", fontSize: 14, cursor: "pointer", padding: 0, ...commonFontStyle 
+          }}>
+            <LoadIcon width={20} height={20} style={{ color: "var(--VIVA_MAGENTA)" }} />
+            전체 데이터 복원
+            <input type="file" accept=".json" hidden onChange={handleFullRestore} />
+          </label>
+        </div>
       </div>
 
       <div style={{ width: "90%", maxWidth: 327, display: "flex", alignItems: "center", gap: 8, margin: "0 auto 16px auto" }}>
@@ -238,7 +537,8 @@ useEffect(() => {
         <div style={{ flex: 1, height: 0.5, background: "var(--VIVA_MAGENTA)" }} />
       </div>
 
-      <div style={{ display: "flex", width: "90%", maxWidth: 320, justifyContent: "center", alignItems: "center", gap: 14, marginBottom: 32 }}>
+      {/* Display 섹션 - 3개 아이콘 간격 넓히기 */}
+      <div style={{ display: "flex", width: "90%", maxWidth: 327, justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
         {/* ✅ [수정] 테마 선택 아이콘 렌더링 로직 수정 */}
         {themeOptions.map(opt => {
           const checked = theme === opt.value;
@@ -254,6 +554,7 @@ useEffect(() => {
         })}
       </div>
 
+      {/* 로고 - 원래 위치 유지 */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 10 }}>
         <img src={Logo} alt="logo" width={100} height={65} />
         <span style={{ textAlign: "center", fontSize: 14, lineHeight: "100%", marginTop: 0, ...commonFontStyle }}>digital piano gallery</span>
