@@ -38,7 +38,43 @@ const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
 };
 
 export const specialEvents: SpecialEvent[] = [
-  
+  // ==================== 특별 기간 이벤트 (8월 31일 ~ 9월 7일) ====================
+{
+  type: 'textWithImage',
+  message: (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+      <span><strong>aasdf43 전국 3위</strong><br />전국 피아노 콩쿠르 입상을 축하합니다.</span>
+    </div>
+  ),
+  imageUrl: '/happy.gif',
+  imageAlt: '특별한 날',
+  date: '2025-08-31',
+  category: 'special'
+},
+  {
+  type: 'textWithImage',
+  message: (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+      <span><strong>aasdf43 전국 3위</strong><br />전국 피아노 콩쿠르 입상을 축하합니다.</span>
+    </div>
+  ),
+  imageUrl: '/happy.gif',
+  imageAlt: '특별한 날',
+  date: '2025-09-01',
+  category: 'special'
+},
+    {
+  type: 'textWithImage',
+  message: (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+      <span><strong>aasdf43 전국 3위</strong><br />전국 피아노 콩쿠르 입상을 축하합니다.</span>
+    </div>
+  ),
+  imageUrl: '/happy.gif',
+  imageAlt: '특별한 날',
+  date: '2025-09-02',
+  category: 'special'
+},
   // ==================== 신년 & 국제 기념일 ====================
   {
     type: 'textWithImage',
