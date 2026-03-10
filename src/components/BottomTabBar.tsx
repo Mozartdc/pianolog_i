@@ -26,7 +26,7 @@ const activeColors = {
   home: "var(--TURQUOISE)",
   today: "var(--VERY_PERI)",
   apple: "var(--text-primary)",
-  metronome: "var(--text-secondary)", // 항상 회색
+  metronome: "var(--text-secondary)", // always gray
   statistic: "var(--MIMOSA)",
   setting: "var(--VIVA_MAGENTA)"
 };
@@ -61,7 +61,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
     navigate(tabToPath[tab]);
   };
 
-  // 🔧 타이머 시간 포맷팅 함수
+  // Format timer time display
   const formatTimerTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
@@ -96,7 +96,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         zIndex: 100,
       }}
     >
-      {/* 🔧 타이머 표시 (홈 탭이 아닐 때만) - 스타일 수정 */}
+      {/* Show timer display (only when not on home tab) - updated styles */}
       {timerActive && activeTab !== 'home' && (
         <div
           style={{
@@ -105,11 +105,11 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
             left: '50%',
             transform: 'translateX(-50%)',
             fontSize: '14px', 
-            color: 'var(--LIVING_CORAL)', // 블랙으로 변경
+            color: 'var(--LIVING_CORAL)', // changed to black
             fontWeight: '400',
             fontFamily: 'var(--FONT_FAMILY)',
             whiteSpace: 'nowrap'
-            // 테두리와 배경 제거
+            // removed border and background
           }}
         >
           {formatTimerTime(timerSeconds)}
@@ -120,7 +120,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         const Icon = iconComponents[tab];
         const isActive = activeTab === tab;
         
-        // 🔧 메트로놈은 항상 비활성화 색상으로 표시
+        // Metronome always shows inactive color
         const color = tab === 'metronome' 
           ? "var(--text-secondary)" 
           : (isActive ? activeColors[tab] : "var(--text-secondary)");

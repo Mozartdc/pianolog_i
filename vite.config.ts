@@ -15,11 +15,11 @@ export default defineConfig({
       includeAssets: [
         'apple-touch-icon.png'
       ],
-      // ✅ PWA 캐시 크기 제한 증가 및 최적화
+      // ✅ Increase PWA cache size limit and optimize
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB로 증가
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // Increased to 5MB
         globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,jpg,jpeg}'],
-        // ✅ 큰 파일들은 런타임 캐시로 처리
+        // ✅ Handle large files with runtime cache
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -28,7 +28,7 @@ export default defineConfig({
               cacheName: 'google-fonts-cache',
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365 // 1년
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
               }
             }
           }
@@ -69,23 +69,23 @@ export default defineConfig({
       }
     })
   ],
-  // 개발 서버 설정
+  // Dev server settings
   server: {
     port: 5173,
     host: true
   },
-  // ✅ 빌드 최적화 설정
+  // ✅ Build optimization settings
   build: {
     outDir: 'dist',
     sourcemap: false,
     minify: 'esbuild',
-    // ✅ 청크 크기 경고 임계값 증가
+    // ✅ Increase chunk size warning threshold
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // ✅ 수동 청크 분할로 번들 크기 최적화
+        // ✅ Optimize bundle size with manual chunk splitting
         manualChunks: {
-          // 큰 라이브러리들을 별도 청크로 분리 (실제 설치된 것만)
+          // Split large libraries into separate chunks (only installed ones)
           'react-vendor': ['react', 'react-dom'],
           'router-vendor': ['react-router-dom'],
           'lottie-vendor': ['lottie-react', 'lottie-web'],
@@ -97,7 +97,7 @@ export default defineConfig({
       }
     }
   },
-  // 환경 변수 설정
+  // Environment variable settings
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version)
   }

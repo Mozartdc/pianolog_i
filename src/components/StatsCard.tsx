@@ -18,7 +18,7 @@ interface StatsCardProps {
   ExportIcon?: React.ElementType;
 }
 
-// ✅ [수정] 기록 없음 모달 컴포넌트 - 다른 모달과 통일된 스타일
+// No record modal component - matches other modal styles
 const NoRecordModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
@@ -62,7 +62,7 @@ const NoRecordModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isO
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 메시지 */}
+        {/* Message text */}
         <div style={{ 
           marginBottom: 24, 
           fontSize: 16, 
@@ -76,7 +76,7 @@ const NoRecordModal: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isO
           오늘은 아직 연습 기록이 없습니다.
         </div>
 
-        {/* ✅ 다른 모달과 동일한 버튼 스타일 */}
+        {/* Button with same style as other modals */}
         <div style={{ 
           display: "flex", 
           justifyContent: "center", 
@@ -133,19 +133,19 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   const exportSelectedSession = async (session: PracticeRecord) => {
     try {
-      // ✅ 닉네임 기본값 수정
+      // Default nickname fix
       const nickname = localStorage.getItem("nickname") || "디붕이";
       const avatar = localStorage.getItem("avatar") || "";
       const sessionDate = new Date(session.startTime);
 
       const rootStyle = getComputedStyle(document.documentElement);
-      // ✅ 색상 처리 개선
+      // Better color handling
       const themeColors = {
         bgPrimary: rootStyle.getPropertyValue('--bg-primary').trim(),
         textPrimary: rootStyle.getPropertyValue('--text-primary').trim(),
         textSecondary: rootStyle.getPropertyValue('--text-secondary').trim(),
         turquoise: rootStyle.getPropertyValue('--TURQUOISE').trim(),
-        borderLight: rootStyle.getPropertyValue('--text-secondary').trim() // ✅ 간단한 처리
+        borderLight: rootStyle.getPropertyValue('--text-secondary').trim() // Simple handling
       };
 
       const dateOptions: Intl.DateTimeFormatOptions = { year: '2-digit', month: '2-digit', day: '2-digit', weekday: 'short' };
@@ -229,12 +229,12 @@ const StatsCard: React.FC<StatsCardProps> = ({
         }}
         onClick={onClick}
       >
-        {/* 아이콘 */}
+        {/* Icon */}
         <div style={{ color: iconColor || "var(--text-secondary)", display: 'flex' }}>
           <Icon style={{ width: iconWidth, height: iconHeight }} />
         </div>
 
-        {/* 한 줄 레이아웃 */}
+        {/* Single line layout */}
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
@@ -267,7 +267,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
           </span>
         </div>
         
-        {/* 내보내기 아이콘 */}
+        {/* Export icon */}
         {showExportIcon && ExportIcon && (
           <div
             onClick={handleExportClick} 

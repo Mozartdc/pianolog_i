@@ -88,41 +88,41 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
 
   return (
     <>
-      {/* 새로운 레이아웃: 닉네임을 맨 위로 */}
+      {/* New layout: Move nickname to the top */}
       <div style={{
         width: "calc(100% - 32px)",
         margin: "12px auto 0 auto",
         boxSizing: "border-box"
       }}>
         
-        {/* 닉네임을 맨 위로 - ✅ 80px에 맞춰 수정 */}
+        {/* Move nickname to top - Updated to match 80px */}
         <div style={{
           fontSize: 16,
           lineHeight: "20px",
           color: "var(--text-primary)",
           textAlign: "center",
           marginBottom: 8,
-          width: "80px",        // ✅ 70px → 80px
+          width: "80px",        // 70px → 80px
           marginLeft: "0px",
           ...commonFontStyle
         }}>
           {nickname}
         </div>
 
-        {/* 프로필 사진 + 응원글 */}
+        {/* Profile picture + cheer message */}
         <div style={{
           display: "flex",
           alignItems: "flex-start",
           gap: 18
         }}>
-          {/* 프로필 사진 - ✅ 80px로 통일 */}
+          {/* Profile picture - Unified to 80px */}
           <div style={{
             flexShrink: 0
           }}>
             <div 
               style={{
-                width: "80px",     // ✅ 유지
-                height: "80px",    // ✅ 유지
+                width: "80px",     // Keep
+                height: "80px",    // Keep
                 borderRadius: "var(--border-radius-large)",
                 overflow: "hidden",
                 background: avatar ? "transparent" : "var(--info-bg)",
@@ -136,8 +136,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
                   src={avatar} 
                   alt="프로필" 
                   style={{ 
-                    width: "80px",    // ✅ 70px → 80px
-                    height: "80px",   // ✅ 70px → 80px
+                    width: "80px",    // 70px → 80px
+                    height: "80px",   // 70px → 80px
                     borderRadius: "var(--border-radius-large)",
                     objectFit: "cover",
                     display: "block"
@@ -145,8 +145,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
                 />
               ) : (
                 <div style={{
-                  width: "80px",    // ✅ 70px → 80px
-                  height: "80px",   // ✅ 70px → 80px
+                  width: "80px",    // 70px → 80px
+                  height: "80px",   // 70px → 80px
                   background: "var(--info-bg)",
                   display: "flex",
                   alignItems: "center",
@@ -166,7 +166,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({ avatar, nickname, cheer
             </div>
           </div>
 
-          {/* 응원글 */}
+          {/* Cheer message */}
           <div style={{
             flex: 1,
             minWidth: 0

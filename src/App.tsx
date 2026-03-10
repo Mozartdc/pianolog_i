@@ -1,6 +1,6 @@
 // src/App.tsx
 
-import { Routes, Route, useLocation } from "react-router-dom"; // BrowserRouter 제거
+import { Routes, Route, useLocation } from "react-router-dom"; // Remove BrowserRouter
 import { useState, useEffect } from "react";
 import HomeScreen from "./screens/HomeScreen";
 import Today from "./screens/Today";
@@ -13,9 +13,9 @@ import BottomTabBar from "./components/BottomTabBar";
 import { PracticeDataProvider } from "./contexts/PracticeDataContext";
 import Metronome from './screens/Metronome';
 // import FirstTimeSyncModal from './components/FirstTimeSyncModal'; // FirstTimeSync
-// FirstTimeSyncModal import 제거
+// Remove FirstTimeSyncModal import
 
-// Theme 타입 정의
+// Theme type definition
 type Theme = "light" | "dark" | "system";
 
 function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "metronome" | "statistic" | "setting" {
@@ -23,7 +23,7 @@ function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "m
     case "/": return "home";
     case "/today": return "today";
     case "/timer": return "apple";
-    case "/metronome": return "metronome"; // 👈 이거 추가
+    case "/metronome": return "metronome"; // 👈 Added this
     case "/stats": return "statistic";
     case "/settings": return "setting";
     case "/calendar": return "today";
@@ -38,7 +38,7 @@ function NavigationBar() {
   return <BottomTabBar activeTab={activeTab} onTabChange={() => {}} />;
 }
 
-// props를 전달받도록 AppRoutes 수정
+// Modified AppRoutes to receive props
 function AppRoutes({ theme, handleThemeChange }: { theme: Theme, handleThemeChange: (theme: Theme) => void }) {
   return (
     <>
@@ -99,7 +99,7 @@ function App() {
     return () => window.removeEventListener('resize', setRealHeight);
   }, []);
   
-  // 테마를 변경하는 핸들러 함수
+  // Handler function to change theme
   const handleThemeChange = (selectedTheme: Theme) => {
     setTheme(selectedTheme);
     localStorage.setItem("theme", selectedTheme);
@@ -116,9 +116,9 @@ function App() {
         background: "var(--bg-primary)",
         boxShadow: "none"
       }}>
-        {/* FirstTimeSyncModal 제거 */}
+        {/* Removed FirstTimeSyncModal */}
         
-        {/* BrowserRouter 제거하고 AppRoutes만 렌더링 */}
+        {/* Remove BrowserRouter and render only AppRoutes */}
         <AppRoutes theme={theme} handleThemeChange={handleThemeChange} />
       </div>
     </PracticeDataProvider>

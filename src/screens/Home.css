@@ -1,16 +1,16 @@
 /* src/screens/Home.css */
 
-/* 홈 화면 정밀 레이아웃 */
+/* Home screen precise layout */
 .home-container {
-  max-width: 390px; /* 이 max-width는 컴포넌트 자체의 책임이므로 유지 */
+  max-width: 390px; /* Keep this max-width as it's the component's responsibility */
   margin: 0 auto;
   min-height: 100vh;
-  background: var(--bg-primary); /* 변수 사용 */
+  background: var(--bg-primary); /* Using variable */
   padding: 20px 16px 100px 16px;
   font-family: var(--FONT_FAMILY);
 }
 
-/* 헤더 영역 */
+/* Header area */
 .home-header {
   margin-bottom: 24px;
 }
@@ -18,7 +18,7 @@
 .home-title {
   font-size: 18px;
   font-weight: 700;
-  color: var(--TURQUOISE); /* 변수 사용 */
+  color: var(--TURQUOISE); /* Using variable */
   margin-bottom: 4px;
   line-height: 1.3;
   letter-spacing: -0.02em;
@@ -26,13 +26,13 @@
 
 .home-date {
   font-size: 10px;
-  color: var(--text-secondary); /* var(--DARK_GRAY) 대신 의미적 변수 사용 권장 */
+  color: var(--text-secondary); /* Recommend using semantic variable instead of var(--DARK_GRAY) */
   font-weight: 500;
   margin-bottom: 16px;
   text-transform: uppercase;
 }
 
-/* 프로필 섹션 */
+/* Profile section */
 .home-profile {
   display: flex;
   align-items: center;
@@ -44,7 +44,7 @@
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: var(--bg-secondary); /* var(--PASTEL_TURQUOISE) 대신 의미적 변수 사용 권장 */
+  background: var(--bg-secondary); /* Recommend using semantic variable instead of var(--PASTEL_TURQUOISE) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -54,7 +54,7 @@
 .home-profile-name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary); /* var(--BLACK) 대신 의미적 변수 사용 권장 */
+  color: var(--text-primary); /* Recommend using semantic variable instead of var(--BLACK) */
   margin-bottom: 2px;
   line-height: 1.2;
 }
@@ -69,20 +69,20 @@
 
 .home-profile-subtitle {
   font-size: 9px;
-  color: var(--text-secondary); /* var(--DARK_GRAY) 대신 의미적 변수 사용 권장 */
+  color: var(--text-secondary); /* Recommend using semantic variable instead of var(--DARK_GRAY) */
   font-weight: 400;
   line-height: 1.2;
 }
 
-/* 성취 카드 */
+/* Achievement card */
 .achievement-card {
   background: var(--TURQUOISE_GRADIENT);
-  color: var(--button-primary-text); /* var(--WHITE) 대신 의미적 변수 사용 권장 */
+  color: var(--button-primary-text); /* Recommend using semantic variable instead of var(--WHITE) */
   border-radius: 12px;
   padding: 18px;
   margin-bottom: 12px;
   text-align: center;
-  box-shadow: var(--shadow-medium); /* 기존 rgba(69, 181, 170, 0.25)는 변수로 대체 */
+  box-shadow: var(--shadow-medium); /* Replaced existing rgba(69, 181, 170, 0.25) with variable */
 }
 
 .achievement-content {
@@ -106,10 +106,10 @@
   line-height: 1.2;
 }
 
-/* 통계 카드 */
+/* Stats card */
 .stats-card {
-  background: var(--bg-secondary); /* var(--PASTEL_TURQUOISE) 대신 의미적 변수 사용 권장 */
-  border: var(--border-turquoise); /* 1px solid rgba(69, 181, 170, 0.1)는 변수로 대체 */
+  background: var(--bg-secondary); /* Recommend using semantic variable instead of var(--PASTEL_TURQUOISE) */
+  border: var(--border-turquoise); /* Replaced 1px solid rgba(69, 181, 170, 0.1) with variable */
   border-radius: 12px;
   padding: 14px;
   margin-bottom: 8px;
@@ -130,7 +130,7 @@
 
 .stats-card-label-text {
   font-size: 10px;
-  color: var(--text-secondary); /* var(--DARK_GRAY) 대신 의미적 변수 사용 권장 */
+  color: var(--text-secondary); /* Recommend using semantic variable instead of var(--DARK_GRAY) */
   font-weight: 500;
   line-height: 1.2;
 }
@@ -142,14 +142,14 @@
   line-height: 1.2;
 }
 
-/* 주간 캘린더 */
+/* Weekly calendar */
 .weekly-calendar {
-  background: var(--bg-primary); /* var(--WHITE) 대신 의미적 변수 사용 권장 */
+  background: var(--bg-primary); /* Recommend using semantic variable instead of var(--WHITE) */
   border-radius: 12px;
   padding: 14px;
   margin-bottom: 20px;
-  box-shadow: var(--shadow-light); /* 0 2px 12px rgba(0, 0, 0, 0.08)는 변수로 대체 */
-  border: 1px solid rgba(0, 0, 0, 0.04); /* 이 값은 변수로 대체되지 않았으므로 수동 변경 필요 */
+  box-shadow: var(--shadow-light); /* Replaced 0 2px 12px rgba(0, 0, 0, 0.08) with variable */
+  border: 1px solid rgba(0, 0, 0, 0.04); /* This value wasn't replaced with variable, needs manual change */
 }
 
 .weekly-calendar-grid {
@@ -171,12 +171,12 @@
   line-height: 1;
 }
 
-/* 드가자 버튼 */
+/* Start button */
 .start-button {
   width: 100%;
   padding: 14px;
-  background: var(--button-primary-bg); /* var(--TURQUOISE) 대신 의미적 변수 사용 권장 */
-  color: var(--button-primary-text); /* var(--WHITE) 대신 의미적 변수 사용 권장 */
+  background: var(--button-primary-bg); /* Recommend using semantic variable instead of var(--TURQUOISE) */
+  color: var(--button-primary-text); /* Recommend using semantic variable instead of var(--WHITE) */
   border: none;
   border-radius: 12px;
   font-size: 14px;
@@ -187,6 +187,6 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  box-shadow: var(--shadow-strong); /* 0 4px 16px rgba(69, 181, 170, 0.3)는 변수로 대체 */
+  box-shadow: var(--shadow-strong); /* Replaced 0 4px 16px rgba(69, 181, 170, 0.3) with variable */
   font-family: var(--FONT_FAMILY);
 }

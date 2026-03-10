@@ -1,4 +1,4 @@
-// src/screens/StatsScreen.tsx - 간소화 버전
+// src/screens/StatsScreen.tsx - simplified version
 import React, { useState } from "react";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
@@ -6,7 +6,7 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import isoWeek from "dayjs/plugin/isoWeek";
 import updateLocale from 'dayjs/plugin/updateLocale';
-import { validateTimeSettings, logTimeInfo } from "../utils/timeValidation"; // import 추가
+import { validateTimeSettings, logTimeInfo } from "../utils/timeValidation"; // added import
 
 import Header from "../components/Header";
 import LaurelLeftIcon from "../assets/icons/laurel_L.svg?react";
@@ -15,7 +15,7 @@ import LaurelRightIcon from "../assets/icons/laurel_R.svg?react";
 import { usePracticeData, PracticeRecord } from "../contexts/PracticeDataContext";
 import { TimePickModal } from "./TimePickModal";
 
-// ✅ 분리된 컴포넌트들 import
+// Import separated components
 import { SessionDeleteModal } from "../components/SessionDeleteModal";
 import { SessionMemoModal } from "../components/SessionMemoModal";
 import { SessionCard } from "../components/SessionCard";
@@ -32,13 +32,13 @@ dayjs.updateLocale('ko', { weekStart: 1 });
 function StatsScreen() {
   const { tracks, practiceRecords, practiceChecks, setPracticeRecords } = usePracticeData();
   
-  // UI 상태들
+  // UI states
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [currentMonth, setCurrentMonth] = useState<dayjs.Dayjs>(dayjs());
   const [expandedSessionId, setExpandedSessionId] = useState<string | null>(null);
   const [showMonthYearPicker, setShowMonthYearPicker] = useState(false);
 
-  // 모달 관련 상태들
+  // Modal related states
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<SessionData | null>(null);
   const [showTimeEditModal, setShowTimeEditModal] = useState(false);
@@ -52,7 +52,7 @@ function StatsScreen() {
     MozOsxFontSmoothing: "grayscale" as const
   };
 
-  // ✅ 함수들을 먼저 정의
+  // Define functions first
   const getSessionsForDate = (date: string): SessionData[] => {
     const dayRecords = practiceRecords.filter(r => r.date === date);
     dayRecords.sort((a, b) => a.startTime - b.startTime);
@@ -88,7 +88,7 @@ function StatsScreen() {
     const notCompletedOrCompletedAfter = !track.completedDate || 
                                         dayjs(track.completedDate).isSameOrAfter(date, 'day');
     
-    // 🔧 추가: 해당 날짜에 연습 기록이 있으면 포함
+    // Added: Include if there's practice record on that date
     const hasPracticeOnDate = practiceChecks[date] && 
                              Object.keys(practiceChecks[date]).some(trackId => 
                                parseInt(trackId) === track.id && practiceChecks[date][parseInt(trackId)]
@@ -98,7 +98,7 @@ function StatsScreen() {
   });
 };
 
-  // 이제 계산된 값들 정의
+  // Now define calculated values
   const totalMinutes = practiceRecords.reduce((sum, record) => sum + (record.practiceTime || 0), 0);
   const totalHours = Math.floor(totalMinutes / 60);
   const selectedSessions = getSessionsForDate(selectedDate);
@@ -106,7 +106,7 @@ function StatsScreen() {
   const today = dayjs().format("YYYY-MM-DD");
   const koreanHolidays = getKoreanHolidays(currentMonth.year());
 
-  // ✅ 핸들러 함수들
+  // Handler functions
   const handleSessionClick = (sessionId: string) => {
     setExpandedSessionId(prevId => (prevId === sessionId ? null : sessionId));
   };
@@ -137,7 +137,7 @@ function StatsScreen() {
     }
   };
 
-// ✅ 수정된 시간 업데이트 핸들러 - 타임스탬프 기반 + 날짜 동기화
+// Modified time update handler - timestamp based + date sync
   const handleTimeUpdate = (startTimestamp: number, endTimestamp: number) => {
     if (!sessionToEdit) return;
 
@@ -154,9 +154,9 @@ function StatsScreen() {
       currentSelectedDate: selectedDate
     });
 
-    // ✅ 강화된 미래 시간 검증 (HomeScreen과 동일)
+    // Enhanced future time validation (same as HomeScreen)
     const now = Date.now();
-    const oneMinuteLater = now + 60 * 1000; // 1분 여유
+    const oneMinuteLater = now + 60 * 1000; // 1 minute buffer
 
     if (startTimestamp > oneMinuteLater) {
       alert("피출 시간은 현재 시간보다 미래로 설정할 수 없습니다.");
@@ -168,11 +168,11 @@ function StatsScreen() {
       return;
     }
 
-    // ✅ 타임스탬프를 직접 사용하여 정확한 날짜/시간 반영
+    // Use timestamp directly for accurate date/time reflection
     const newStartTime = startTimestamp;
     const newEndTime = endTimestamp;
     
-    // 기간 계산 (밀리초 → 초 → 분)
+    // Calculate duration (milliseconds → seconds → minutes)
 const validation = validateTimeSettings(startTimestamp, endTimestamp);
 if (!validation.isValid) {
   alert(validation.error);
@@ -185,11 +185,11 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
     
 
 
-    // ✅ 날짜도 업데이트 (시작 시간 기준)
+    // Also update date (based on start time)
     const newDate = dayjs(startTimestamp).format('YYYY-MM-DD');
     const dateChanged = newDate !== originalRecord.date;
 
-    // ✅ 날짜가 바뀐 경우 selectedDate도 업데이트
+    // Update selectedDate if date changed
     if (dateChanged) {
       console.log('📅 StatsScreen 날짜 변경 감지:', {
         기존날짜: originalRecord.date,
@@ -211,13 +211,13 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
 
     const updatedRecord: PracticeRecord = {
       ...originalRecord,
-      date: newDate, // ✅ 날짜도 업데이트
+      date: newDate, // Also update date
       startTime: newStartTime,
       endTime: newEndTime,
       practiceTime: newPracticeTime
     };
 
-    // 레코드 업데이트
+    // Update record
     const updatedRecords = practiceRecords.map(record => 
       record.id === sessionToEdit.id ? updatedRecord : record
     );
@@ -264,7 +264,7 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
         <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
       </div>
 
-      {/* 총 연습 시간 */}
+      {/* Total practice time */}
       <div style={{
         width: "100%", height: 24, margin: "80px auto 0 auto", display: "flex",
         alignItems: "center", justifyContent: "center", gap: "8px", boxSizing: "border-box"
@@ -276,7 +276,7 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
         <LaurelRightIcon style={{ color: "var(--MIMOSA)" }} width="13" height="20" />
       </div>
 
-{/* ✅ 캘린더 컴포넌트 */}
+{/* Calendar component */}
 <StatsCalendar
   currentMonth={currentMonth}
   setCurrentMonth={setCurrentMonth}
@@ -294,7 +294,7 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
   commonFontStyle={commonFontStyle}
 />
 
-{/* ✅ 세션 카드들 - 캘린더 바로 아래에 붙이기 */}
+{/* Session cards - attach directly below calendar */}
 <div style={{ marginTop: -5, padding: "0 16px 16px 16px", border: "var(--border-light)", borderTop: "none", borderRadius: "0 0 5px 5px", background: "var(--bg-primary)" }}>
   {selectedSessions.map((session, index) => (
     <SessionCard
@@ -312,14 +312,14 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
   ))}
 </div>
 
-      {/* ✅ 차트 컴포넌트 */}
+      {/* Chart component */}
       <StatsCharts
         weekData={weekData}
         today={today}
         commonFontStyle={commonFontStyle}
       />
 
-      {/* ✅ 모달들 */}
+      {/* Modals */}
       <SessionDeleteModal
         isOpen={showDeleteModal}
         sessionInfo={sessionToDelete ? `${sessionToDelete.duration} (${sessionToDelete.timeRange})` : ""}

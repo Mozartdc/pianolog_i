@@ -37,14 +37,14 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  // react-easy-crop 상태
+  // react-easy-crop state
   const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
-  // avatar prop 변경시 currentAvatar 동기화
+  // Sync currentAvatar when avatar prop changes
   useEffect(() => {
-    console.log('ProfileUploader: avatar prop 변경됨:', avatar);
+    console.log('ProfileUploader: avatar prop changed:', avatar);
     setCurrentAvatar(avatar || '');
   }, [avatar]);
 
@@ -52,7 +52,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
     triggerFileInput: () => fileInputRef.current?.click(),
   }));
 
-  // 파일 처리 로직
+  // File handling logic
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
@@ -78,7 +78,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
         setImageToCrop(reader.result as string);
         setCropModalOpen(true);
         
-        // 크롭 상태 초기화
+        // Reset crop state
         setCrop({ x: 0, y: 0 });
         setZoom(1);
         setCroppedAreaPixels(null);
@@ -95,12 +95,12 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
     }
   };
 
-  // 크롭 완료 콜백
+  // Crop completion callback
   const onCropComplete = useCallback((croppedArea: Area, croppedAreaPixels: Area) => {
     setCroppedAreaPixels(croppedAreaPixels);
   }, []);
 
-  // Canvas를 사용한 이미지 크롭 함수
+  // Image cropping function using Canvas
   const getCroppedImg = (imageSrc: string, pixelCrop: Area): Promise<string> => {
     return new Promise((resolve, reject) => {
       const image = new Image();
@@ -113,7 +113,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
           return;
         }
 
-        // 출력 크기를 512x512로 고정 (고품질)
+        // Fixed output size to 512x512 (high quality)
         canvas.width = 512;
         canvas.height = 512;
 
@@ -145,7 +145,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
     });
   };
 
-  // 크롭 저장 처리
+  // Handle crop save
   const handleCropSave = async () => {
     if (!imageToCrop || !croppedAreaPixels) {
       alert('크롭 영역을 설정해주세요.');
@@ -163,7 +163,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
     }
   };
 
-  // 크롭 취소 처리
+  // Handle crop cancel
   const handleCropCancel = () => {
     setCropModalOpen(false);
     setImageToCrop(undefined);
@@ -180,7 +180,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
 
   return (
     <>
-      {/* 프로필 이미지 표시 영역 */}
+      {/* Profile image display area */}
       <div
         style={{
           width: `${size}px`,
@@ -206,7 +206,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
             }} 
           />
         ) : (
-          // ✅ 빈 상태에서는 텍스트만 표시 (업로드 아이콘 제거)
+          // Show only text in empty state (removed upload icon)
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -223,7 +223,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
           </div>
         )}
         
-        {/* 로딩 오버레이 */}
+        {/* Loading overlay */}
         {isLoading && (
           <div style={{
             position: 'absolute',
@@ -258,7 +258,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
         )}
       </div>
 
-      {/* 숨겨진 파일 입력창 */}
+      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -268,7 +268,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
         disabled={isLoading}
       />
 
-      {/* 이미지 크롭 모달 - react-easy-crop 사용 */}
+      {/* Image crop modal - using react-easy-crop */}
       {cropModalOpen && (
         <div style={{ 
           position: 'fixed', 
@@ -298,7 +298,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
             position: 'relative',
             border: 'var(--modal-border)',
           }}>
-            {/* 헤더 */}
+            {/* Header */}
             <div style={{
               display: 'flex',
               alignItems: 'center',
@@ -318,7 +318,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
               </span>
             </div>
             
-            {/* 크롭 영역 */}
+            {/* Crop area */}
             <div style={{ 
               position: 'relative',
               width: '100%',
@@ -333,7 +333,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
                   image={imageToCrop}
                   crop={crop}
                   zoom={zoom}
-                  aspect={1} // 정사각형 비율 고정
+                  aspect={1} // Fixed square aspect ratio
                   onCropChange={setCrop}
                   onZoomChange={setZoom}
                   onCropComplete={onCropComplete}
@@ -350,7 +350,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
               )}
             </div>
             
-            {/* 안내 텍스트 */}
+            {/* Instruction text */}
             <div style={{
               fontSize: 12,
               color: 'var(--text-secondary)',
@@ -363,14 +363,14 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
               두 손가락을 벌리고 좁혀서 확대/축소하세요
             </div>
             
-            {/* 버튼 영역 - HomeStopModal과 동일한 스타일 */}
+            {/* Button area - same style as HomeStopModal */}
             <div style={{ 
               display: 'flex', 
               justifyContent: 'space-between', 
               gap: 12, 
               marginTop: 'auto'
             }}>
-              {/* Cancel 버튼 - 왼쪽 */}
+              {/* Cancel button - left */}
               <button
                 onClick={handleCropCancel}
                 style={{
@@ -394,7 +394,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
                 <span style={{ color: 'currentColor' }}>Cancel</span>
               </button>
               
-              {/* Upload 버튼 - 오른쪽 */}
+              {/* Upload button - right */}
               <button
                 onClick={handleCropSave}
                 style={{
@@ -420,7 +420,7 @@ const ProfileUploader = forwardRef<AvatarCropperHandles, ProfileUploaderProps>((
         </div>
       )}
 
-      {/* 스피너 애니메이션 CSS */}
+      {/* Spinner animation CSS */}
       <style>
         {`
           @keyframes spin {

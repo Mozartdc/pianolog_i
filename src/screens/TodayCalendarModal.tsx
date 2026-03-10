@@ -5,7 +5,7 @@ import "dayjs/locale/ko";
 import ConfettiAnimation from "../components/ConfettiAnimation";
 import { usePracticeData } from "../contexts/PracticeDataContext";
 
-// 아이콘 imports
+// Icon imports
 import SongNoteIcon from "../assets/icons/song_note.svg?react";
 import CompleteIcon from "../assets/icons/complete.svg?react";
 import DonotIcon from "../assets/icons/donot.svg?react";
@@ -42,14 +42,14 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
   const [currentMonth, setCurrentMonth] = useState<Dayjs>(dayjs());
   const [showYearPicker, setShowYearPicker] = useState(false);
 
-  // ✅ 컨텍스트에서 데이터와 함수들 가져오기 (ensureTrackAddedDate 추가)
+  // Get data and functions from context (including ensureTrackAddedDate)
   const { 
     tracks, 
     practiceChecks, 
     toggleCheck, 
     markTrackComplete, 
     unmarkTrackComplete,
-    updateTrackAddedDate  // 새로 추가할 액션
+    updateTrackAddedDate  // New action to add
   } = usePracticeData();
 
   const track = tracks.find((t) => t.id === trackId);
@@ -77,10 +77,10 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
     const todayStr = toDateStr(dayjs());
     if (dateStr > todayStr) return;
 
-    // ✅ 컨텍스트 함수 사용으로 간소화 - 자동으로 모든 페이지 동기화됨!
+    // Simplified using context function - automatically syncs all pages!
     toggleCheck(dateStr, trackId!);
     
-    // ✅ 곡 추가일 보정은 컨텍스트에 위임
+    // Delegate track added date correction to context
     if (track && track.addedDate > dateStr) {
       updateTrackAddedDate(trackId!, dateStr);
     }
@@ -94,15 +94,15 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
       setShowUncompleteConfirm(true);
     } else {
       const today = toDateStr(dayjs());
-      // ✅ 컨텍스트 함수 사용
+      // Use context function
       markTrackComplete(trackId!, today);
       setShowCompleteConfirm(true);
-      setShowConfetti(true); // 색종이 효과 시작
+      setShowConfetti(true); // Start confetti effect
     }
   };
 
   const handleUncomplete = () => {
-    // ✅ 컨텍스트 함수 사용
+    // Use context function
     unmarkTrackComplete(trackId!);
     setShowUncompleteConfirm(false);
     if (onPracticeUpdate) onPracticeUpdate();
@@ -111,7 +111,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
 
   const handleConfettiComplete = () => {
   setShowConfetti(false);
-  setShowCompleteConfirm(false); // 축하 모달만 닫기 (전체 모달은 유지)
+  setShowCompleteConfirm(false); // Close congrats modal only (keep main modal open)
 };
 
   const goToPrevMonth = () => setCurrentMonth(currentMonth.subtract(1, "month"));
@@ -167,7 +167,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
     <>
       <ConfettiAnimation 
   isActive={showConfetti} 
-  onComplete={handleConfettiComplete} // 새 함수로 변경
+  onComplete={handleConfettiComplete} // Changed to new function
 />
       
       <div
@@ -202,7 +202,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* 곡명 */}
+          {/* Song title */}
           <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10 }}>
             <SongNoteIcon style={{ color: "var(--VERY_PERI)" }} width="16" height="16" />
             <span
@@ -217,7 +217,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
             </span>
           </div>
 
-          {/* 총 연습 일수 */}
+          {/* Total practice days */}
           <div
             style={{
               fontSize: 16,
@@ -230,7 +230,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
             총 {totalPracticeDays}일 연습
           </div>
 
-          {/* 곡 완성 체크박스 */}
+          {/* Song completion checkbox */}
           <div
             style={{
               display: "flex",
@@ -280,9 +280,9 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
             </span>
           </div>
 
-          {/* 캘린더 */}
+          {/* Calendar */}
           <div style={{ marginTop: 16 }}>
-            {/* 캘린더 헤더 */}
+            {/* Calendar header */}
             <div
               style={{
                 display: "flex",
@@ -362,7 +362,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
               </button>
             </div>
 
-            {/* 요일 헤더 */}
+            {/* Day of week header */}
             <div
               style={{
                 display: "flex",
@@ -390,7 +390,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
               ))}
             </div>
 
-            {/* 캘린더 그리드 */}
+            {/* Calendar grid */}
             <div
               style={{
                 display: "flex",
@@ -411,7 +411,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                   {week.map((date, dayIndex) => {
                     const { checked, isFuture, existed, isCurrentMonth } = getDayStatus(date);
                     const dateStr = toDateStr(date);
-                    const isToday = dateStr === toDateStr(dayjs()); // ✅ 오늘 날짜 체크
+                    const isToday = dateStr === toDateStr(dayjs()); // Check if it's today
 
                     return (
                       <div
@@ -428,7 +428,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                         }}
                         onClick={() => !isFuture && isCurrentMonth && handleDayClick(date)}
                       >
-                        {/* 수정: existed 조건을 더 포괄적으로 */}
+                        {/* Modified: Make existed condition more inclusive */}
                         {(existed || (!isFuture && isCurrentMonth)) && (
                           checked
                             ? <CompleteIcon style={{
@@ -449,7 +449,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                               }} />
                         )}
                         
-                        {/* ✅ 오늘 날짜 원형 표시 추가 */}
+                        {/* Add circular indicator for today's date */}
                         {isToday && (
                           <div style={{
                             position: "absolute",
@@ -465,11 +465,11 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
                         <span
                           style={{
                             fontSize: 16,
-                            fontWeight: isToday ? "bold" : "bold", // ✅ 오늘 날짜 굵게
+                            fontWeight: isToday ? "bold" : "bold", // Make today's date bold
                             zIndex: 2,
                             position: "relative",
                             color: isToday 
-                              ? "var(--VIVA_MAGENTA)"  // ✅ 오늘 날짜 색상
+                              ? "var(--VIVA_MAGENTA)"  // Today's date color
                               : dayIndex === 6 
                                 ? "var(--VIVA_MAGENTA)" 
                                 : "var(--text-primary)",
@@ -486,7 +486,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
             </div>
           </div>
 
-          {/* 닫기 버튼 */}
+          {/* Close button */}
           <div
             style={{
               display: "flex",
@@ -515,7 +515,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           </div>
         </div>
 
-        {/* 곡 완성 확인 모달 */}
+        {/* Song completion confirmation modal */}
         {showCompleteConfirm && (
           <div style={{
             position: 'fixed',
@@ -555,7 +555,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           </div>
         )}
 
-       {/* 곡 완성 해제 확인 모달 */}
+       {/* Song un-completion confirmation modal */}
 {showUncompleteConfirm && (
   <div style={{
     position: 'fixed',
@@ -565,35 +565,35 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1001,
-    padding: "40px 16px", // 좌우 여백 추가
+    padding: "40px 16px", // Add left/right padding
   }}>
-    {/* ==== CHANGED: 내부 여백(padding)을 늘려 더 넓고 보기 좋게 수정 ==== */}
+    {/* CHANGED: Increased internal padding for better look */}
     <div style={{
       background: 'var(--bg-primary)',
-      padding: '24px', // 기존 10px에서 수정
-      borderRadius: 12, // 조금 더 부드러운 인상
+      padding: '24px', // Changed from 10px
+      borderRadius: 12, // Softer look
       textAlign: 'center',
       boxShadow: 'var(--modal-shadow)',
       width: '100%',
-      maxWidth: '320px' // 모달 최대 너비 설정
+      maxWidth: '320px' // Set modal max width
     }}>
       
 
-      {/* ==== CHANGED: 더 중요하게 강조되도록 스타일 변경 ==== */}
+      {/* CHANGED: Modified style to emphasize importance */}
       <div style={{
         fontSize: 18,
-        fontWeight: 600, // 굵은 굵기
+        fontWeight: 600, // Bold weight
         color: 'var(--text-primary)',
         textAlign: 'center',
-        marginBottom: '28px', // 버튼과의 간격
-        lineHeight: 3.0, // 메시지 자체의 행간
+        marginBottom: '28px', // Space between message and buttons
+        lineHeight: 3.0, // Line height for the message itself
       }}>
         다시 연습하시겠습니까?
       </div>
 
-      {/* 버튼 영역 */}
+      {/* Button area */}
 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
- {/* 취소 버튼 */}
+ {/* Cancel button */}
  <button
    onClick={() => setShowUncompleteConfirm(false)}
    style={{
@@ -616,7 +616,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
    cancel
  </button>
 
- {/* 재등록 버튼 */}
+ {/* Re-register button */}
 <button 
  onClick={handleUncomplete} 
  style={{

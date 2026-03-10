@@ -1,0 +1,203 @@
+/* src/screens/Metronome.css */
+
+/* Metronome-specific styles - Living Coral + existing variables */
+.metronome-container {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--FONT_FAMILY);
+}
+
+/* Note icon */
+.note-icon {
+  color: var(--text-primary);
+  font-family: "Noto Music", var(--FONT_FAMILY), serif;
+  line-height: 1;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.note-icon:hover {
+  transform: scale(1.05);
+}
+
+/* Triplet indicator */
+.note-icon .triplet-indicator {
+  color: var(--LIVING_CORAL);
+  font-weight: 600;
+  font-family: var(--FONT_FAMILY);
+}
+
+/* Metronome control buttons */
+.metronome-control-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--FONT_FAMILY);
+  color: var(--text-primary);
+}
+
+.metronome-control-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(243, 111, 99, 0.15);
+}
+
+.metronome-control-button:focus-visible {
+  outline: 2px solid var(--LIVING_CORAL);
+  outline-offset: 4px;
+}
+
+.metronome-control-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Info display area */
+.metronome-info-display {
+  background: var(--bg-secondary, #f8f9fa);
+  border: 1px solid var(--DARK_GRAY);
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Pattern selection modal */
+.pattern-selection-modal {
+  background: var(--bg-primary);
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  font-family: var(--FONT_FAMILY);
+}
+
+.pattern-selection-modal .modal-handle {
+  background: var(--DARK_GRAY);
+  opacity: 0.3;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  margin: 0 auto 24px auto;
+}
+
+.pattern-selection-modal .modal-title {
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 24px 0;
+}
+
+.pattern-selection-modal .category-title {
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+}
+
+/* Pattern buttons */
+.pattern-button {
+  background: var(--bg-secondary, #f8f9fa);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--FONT_FAMILY);
+  padding: 16px 8px;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pattern-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.pattern-button.selected {
+  background: var(--LIVING_CORAL);
+  border-color: var(--LIVING_CORAL);
+}
+
+.pattern-button.selected .note-icon {
+  color: white;
+}
+
+.pattern-button.selected .pattern-name {
+  color: white;
+}
+
+.pattern-button .pattern-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-align: center;
+  line-height: 1.2;
+  margin-top: 8px;
+}
+
+/* Confirm button */
+.metronome-confirm-button {
+  background: var(--LIVING_CORAL);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  cursor: pointer;
+  font-family: var(--FONT_FAMILY);
+  font-size: 18px;
+  font-weight: 700;
+  height: 48px;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 2px 8px rgba(243, 111, 99, 0.3);
+}
+
+.metronome-confirm-button:hover {
+  opacity: 0.9;
+}
+
+/* Modal animations */
+.modal-backdrop {
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .metronome-info-display {
+  background: var(--bg-secondary, #2c2c2c);
+  border: 1px solid var(--DARK_GRAY);
+}
+
+html[data-theme="dark"] .pattern-button {
+  background: var(--bg-secondary, #2c2c2c);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .metronome-info-display {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}

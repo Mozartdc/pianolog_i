@@ -1,10 +1,10 @@
-# Netlify SPA 라우팅 설정
-# React Router의 모든 경로를 index.html로 리다이렉트
+# Netlify SPA routing setup
+# Redirect all React Router paths to index.html
 
-# API 경로나 static 파일은 제외하고 모든 경로를 SPA로 처리
+# Process all routes as SPA except API paths or static files
 /*    /index.html   200
 
-# 추가 보안 헤더 (선택사항)
+# Additional security headers (optional)
 /*
   X-Frame-Options: DENY
   X-XSS-Protection: 1; mode=block

@@ -64,7 +64,7 @@ export const SessionMemoModal: React.FC<SessionMemoModalProps> = ({
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* 헤더 */}
+        {/* Header */}
         <div style={{
           display: "flex",
           alignItems: "center",
@@ -83,7 +83,7 @@ export const SessionMemoModal: React.FC<SessionMemoModalProps> = ({
           </span>
         </div>
 
-        {/* 메모 입력 영역 */}
+        {/* Memo input area */}
         <textarea
           value={memo}
           onChange={(e) => setMemo(e.target.value)}
@@ -105,7 +105,7 @@ export const SessionMemoModal: React.FC<SessionMemoModalProps> = ({
           maxLength={200}
         />
 
-        {/* 글자 수 표시 */}
+        {/* Character count display */}
         <div style={{
           fontSize: 12,
           color: "var(--text-secondary)",
@@ -116,14 +116,14 @@ export const SessionMemoModal: React.FC<SessionMemoModalProps> = ({
           {memo.length}/200
         </div>
 
-        {/* ✅ HomeStopModal과 동일한 버튼 스타일 */}
+        {/* Same button style as HomeStopModal */}
         <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           gap: 12, 
           marginTop: "auto"
         }}>
-          {/* Cancel 버튼 - 왼쪽, 아이콘 없음 */}
+          {/* Cancel button - left, no icon */}
           <button
             onClick={onClose}
             style={{
@@ -147,7 +147,7 @@ export const SessionMemoModal: React.FC<SessionMemoModalProps> = ({
             <span style={{ color: "currentColor" }}>cancel</span>
           </button>
 
-          {/* Save 버튼 - 오른쪽, Save2 아이콘 포함 */}
+          {/* Save button - right, includes Save2 icon */}
           <button
             onClick={handleSave}
             style={{

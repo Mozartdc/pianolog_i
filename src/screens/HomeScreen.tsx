@@ -23,7 +23,7 @@ import { useLocation } from "react-router-dom";
 import { specialEvents, getTodayEvents, getTodayCheerData, CheerData } from "../utils/specialEvents";
 import { validateTimeSettings, logTimeInfo } from "../utils/timeValidation";
 
-// 타입 정의
+// Type definitions
 interface PracticeRecord {
   date: string;
   practiceTime: number;
@@ -47,7 +47,7 @@ type PracticeChecks = {
   };
 };
 
-// 한국 공휴일 계산 함수
+// Korean holidays calculation function
 const getKoreanHolidays = (year: number): string[] => {
   const holidays = [
     `${year}-01-01`, `${year}-03-01`, `${year}-05-05`, `${year}-06-06`,
@@ -62,7 +62,7 @@ const getKoreanHolidays = (year: number): string[] => {
   return holidays;
 };
 
-// localStorage 안전 함수들
+// Safe localStorage functions
 const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
   try {
     const item = localStorage.getItem(key);
@@ -93,7 +93,7 @@ const safeLocalStorageSet = (key: string, value: any) => {
   }
 };
 
-// 임시 데이터 정리 함수
+// Temporary data cleanup function
 const cleanupTemporaryData = () => {
   try {
     const savedCheers = localStorage.getItem('temporaryCheers');
@@ -126,14 +126,14 @@ const cleanupTemporaryData = () => {
 function HomeScreen() {
   const location = useLocation();
 
-  // ✅ Context에서 타이머 상태와 메서드들 가져오기
+  // Get timer state and methods from Context
   const { 
     practiceRecords, setPracticeRecords, tracks, practiceChecks,
     timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime,
     startSession, pauseSession, resumeSession, completeSession, updateTimerStartTime
   } = usePracticeData();
 
-  // 스크롤 방지
+  // Prevent scrolling
   useEffect(() => {
     if (location.pathname === '/' || location.pathname === '/home') {
       const originalBodyStyle = document.body.style.cssText;
@@ -154,14 +154,14 @@ function HomeScreen() {
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
 
-  // 모달 상태들
+  // Modal states
   const [showTimePickModal, setShowTimePickModal] = useState(false);
   const [showHomeStopModal, setShowHomeStopModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const playLottieRef = useRef<any>(null);
 
-  // ✅ 제거된 상태들: 모든 타이머 관련 로컬 상태 제거
-  // - timerMilliseconds, timerRef, actualStartTime, pausedDuration, isCompleting, fromStopModal 등
+  // Removed states: All timer-related local states removed
+  // - timerMilliseconds, timerRef, actualStartTime, pausedDuration, isCompleting, fromStopModal, etc.
 
   const [fromStopModal, setFromStopModal] = useState(false);
 
@@ -169,9 +169,9 @@ function HomeScreen() {
     cleanupTemporaryData();
   }, []);
 
-  // ✅ 타이머 복원 로직 완전 제거 - Context가 담당
+  // Timer restoration logic completely removed - Context handles it
 
-  // 응원 메시지 롤링
+  // Cheer message rolling
   useEffect(() => {
     const cheerInterval = setInterval(() => {
       setCheerData(getTodayCheerData());
@@ -179,7 +179,7 @@ function HomeScreen() {
     return () => clearInterval(cheerInterval);
   }, []);
 
-  // localStorage 변경 감지 (닉네임, 아바타)
+  // localStorage change detection (nickname, avatar)
   useEffect(() => {
     const interval = setInterval(() => {
       const currentAvatar = localStorage.getItem("avatar") || "";
@@ -190,7 +190,7 @@ function HomeScreen() {
     return () => { clearInterval(interval); };
   }, [avatar, nickname]);
 
-  // 기타
+  // Other effects
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -202,11 +202,11 @@ function HomeScreen() {
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
-      // ✅ timerRef 정리 로직 제거 - Context가 담당
+      // timerRef cleanup logic removed - Context handles it
     };
   }, []);
 
-  // ✅ 새로운 단순화된 타이머 메서드들 - Context 메서드 직접 호출
+  // New simplified timer methods - directly call Context methods
   const handleStartTimer = () => {
     console.log('🎯 HomeScreen: 타이머 시작 요청');
     startSession();
@@ -233,7 +233,7 @@ function HomeScreen() {
     setShowTimePickModal(true);
   };
 
-  // ✅ 수정된 시간 업데이트 핸들러 - Context의 timerV2와 연동
+  // Modified time update handler - integrated with Context's timerV2
   const handleTimeSave = (startTimestamp: number, endTimestamp: number) => {
     console.log('HomeScreen 시간 저장:', {
       startTimestamp,
@@ -243,7 +243,7 @@ function HomeScreen() {
       currentSelectedDate: selectedDate
     });
 
-    // ✅ 강화된 미래 시간 검증
+    // Enhanced future time validation
     const now = Date.now();
     const oneMinuteLater = now + 60 * 1000;
 
@@ -278,7 +278,7 @@ function HomeScreen() {
       setSelectedDate(recordDate);
     }
 
-    // ✅ Context에서 timerV2 상태 읽어서 sessionId 가져오기
+    // Read sessionId from timerV2 state in Context
     const timerV2 = safeLocalStorageGet('timerV2', {});
     const sessionId = timerV2.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
 
@@ -303,8 +303,8 @@ function HomeScreen() {
       return updatedRecords;
     });
 
-    // ✅ Context의 timerV2 상태 업데이트 (수동으로 localStorage 조작)
-    // ✅ Context 메서드로 시작시간 수정
+    // Update Context's timerV2 state (manual localStorage manipulation)
+    // Update start time using Context method
     updateTimerStartTime(startTimestamp);
 
     if (!fromStopModal) {
@@ -322,11 +322,11 @@ function HomeScreen() {
   const handlePracticeComplete = () => {
     console.log('🎯 HomeScreen: 연습 완료 처리');
     
-    // ✅ HomeStopModal에서 저장한 memo 읽기
+    // Read memo saved by HomeStopModal
     const timerV2 = safeLocalStorageGet('timerV2', {});
     const memo = timerV2.memo || '';
     
-    // ✅ Context 메서드로 완료 처리
+    // Handle completion using Context method
     completeSession(memo);
     
     setShowHomeStopModal(false);
@@ -346,7 +346,7 @@ function HomeScreen() {
     setShowHomeStopModal(true);
   };
 
-  // ✅ 나머지 계산 로직들 (변경 없음)
+  // Rest of the calculation logic (no changes)
   const today = dayjs();
   const todayStr = today.format("YYYY-MM-DD");
   const displayDate = dayjs(selectedDate);
@@ -421,7 +421,7 @@ function HomeScreen() {
   const handleDateClick = (dateStr: string) => { setSelectedDate(dateStr); };
   const handleExport = () => { setShowExportModal(true); };
 
-  // 공통 폰트 스타일
+  // Common font styles
   const commonFontStyle = {
     fontFamily: "var(--FONT_FAMILY)",
     WebkitFontSmoothing: "antialiased" as const,
@@ -533,7 +533,7 @@ function HomeScreen() {
         themePastelColor="var(--PASTEL_TURQUOISE)"
       />
 
-      {/* Start Button - ✅ 단순화된 로직 */}
+      {/* Start Button - Simplified logic */}
       {!timerActive && (
         <div style={{
           width: 100,
@@ -579,7 +579,7 @@ function HomeScreen() {
         </div>
       )}
 
-      {/* Modals - ✅ 새로운 핸들러들 사용 */}
+      {/* Modals - Using new handlers */}
       {timerActive && (
         <HomeStartTimerModal
           timerSeconds={timerSeconds}
@@ -631,7 +631,7 @@ function HomeScreen() {
   );
 }
 
-// 임시 응원 메시지 추가 함수
+// Temporary cheer message add function
 export function addTemporaryCheer(cheerData: CheerData) {
   const savedCheers = safeLocalStorageGet('temporaryCheers', []);
   let cheers: CheerData[] = Array.isArray(savedCheers) ? savedCheers : [];

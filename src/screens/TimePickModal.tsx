@@ -12,13 +12,13 @@ import { validateTimeSettings, logTimeInfo, formatDuration } from "../utils/time
 interface TimePickModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // ✅ 수정: 타임스탬프 기반으로 변경
+  // Modified: Changed to timestamp-based
   onSave: (startTimestamp: number, endTimestamp: number) => void;
 
-  // ✅ 수정: 실제 시작/종료 시간을 timestamp로 받기
+  // Modified: Receive actual start/end time as timestamp
   actualStartTime: number | null;
   actualEndTime: number | null;
-  // 기존 props들
+  // Existing props
   fromStopModal?: boolean;
   onReturnToStopModal?: () => void;
 }
@@ -36,11 +36,11 @@ export function TimePickModal({
   const [endTime, setEndTime] = useState<Dayjs>(dayjs());
   const [error, setError] = useState("");
 
-  // 숨겨진 input refs
+  // Hidden input refs
   const startInputRef = useRef<HTMLInputElement>(null);
   const endInputRef = useRef<HTMLInputElement>(null);
 
-  // ✅ 수정: 모달이 열릴 때만 초기값 설정 (의존성에서 actualStartTime, actualEndTime 제거)
+  // Modified: Set initial values only when modal opens (removed actualStartTime, actualEndTime from dependencies)
   useEffect(() => {
     if (isOpen && actualStartTime && actualEndTime) {
       const initialStartMoment = dayjs(actualStartTime);
@@ -57,7 +57,7 @@ export function TimePickModal({
       setEndTime(initialEndMoment);
       setError("");
     }
-  }, [isOpen]); // ✅ actualStartTime, actualEndTime 의존성 제거로 사용자 입력 후 리셋 방지
+  }, [isOpen]); // Removed actualStartTime, actualEndTime dependencies to prevent reset after user input
 
   const commonFontStyle = {
     fontFamily: "var(--FONT_FAMILY)",
@@ -65,22 +65,22 @@ export function TimePickModal({
     MozOsxFontSmoothing: "grayscale" as const,
   };
 
-  // ✅ 브라우저 호환성 개선된 타임픽커 트리거 함수
+  // Improved browser compatibility time picker trigger function
   const triggerTimePicker = (inputRef: React.RefObject<HTMLInputElement>) => {
     const input = inputRef.current;
     if (!input) return;
 
     try {
-      // Safari 호환성을 위해 focus 먼저
+      // Focus first for Safari compatibility
       input.focus();
       
-      // 약간의 지연 후 showPicker 호출 (Safari 안정성 향상)
+      // Call showPicker after slight delay (improves Safari stability)
       setTimeout(() => {
         try {
           if (input.showPicker) {
             input.showPicker();
           } else {
-            // fallback: click 이벤트
+            // fallback: click event
             input.click();
           }
         } catch (error) {
@@ -93,7 +93,7 @@ export function TimePickModal({
     }
   };
 
-  // ✅ 개선된 시간 변경 핸들러 (Safari 호환성 향상)
+  // Improved time change handler (enhanced Safari compatibility)
   const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     console.log('피출 시간 변경:', value);
@@ -114,7 +114,7 @@ export function TimePickModal({
     }
   };
 
-  // ✅ 개선된 시간 변경 핸들러 (Safari 호환성 향상)
+  // Improved time change handler (enhanced Safari compatibility)
   const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     console.log('피퇴 시간 변경:', value);
@@ -135,12 +135,12 @@ export function TimePickModal({
     }
   };
 
-  // ✅ 통합 유틸리티를 사용한 저장 핸들러
+  // Save handler using integrated utility
   const handleSave = () => {
     const startTimestamp = startTime.valueOf();
     const endTimestamp = endTime.valueOf();
 
-    // ✅ 통합 유효성 검사 사용
+    // Use integrated validation
     const validation = validateTimeSettings(startTimestamp, endTimestamp);
     
     if (!validation.isValid) {
@@ -148,17 +148,17 @@ export function TimePickModal({
       return;
     }
 
-    // ✅ 디버깅 로그
+    // Debug logging
     logTimeInfo('TimePickModal 저장', startTimestamp, endTimestamp);
     
-    // ✅ 타임스탬프로 전달
+    // Pass as timestamp
     onSave(startTimestamp, endTimestamp);
 
-    // 피퇴 모달에서 온 경우 피퇴 모달로 돌아가기
+    // Return to stop modal if coming from there
     if (fromStopModal && onReturnToStopModal) {
       onReturnToStopModal();
     } else {
-      // 일반적인 경우 모달 닫기
+      // Close modal in normal case
       onClose();
     }
   };
@@ -207,12 +207,12 @@ export function TimePickModal({
           연습시간 수정
         </h3>
 
-        {/* ✅ 피출 시간 - 행간 두배로 늘림 */}
+        {/* Start time - doubled line spacing */}
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
           gap: 12, 
-          marginBottom: 32, // 16에서 32로 늘림
+          marginBottom: 32, // increased from 16 to 32
           lineHeight: "100%",
           position: "relative" 
         }}>
@@ -225,7 +225,7 @@ export function TimePickModal({
             {startTime.format("YY.MM.DD")}
           </span>
           
-          {/* 편집 아이콘 + 숨겨진 input */}
+          {/* Edit icon + hidden input */}
           <div 
             style={{ 
               marginLeft: "auto", 
@@ -259,12 +259,12 @@ export function TimePickModal({
           </div>
         </div>
 
-        {/* ✅ 피퇴 시간 - 행간 두배로 늘림 */}
+        {/* End time - doubled line spacing */}
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
           gap: 12, 
-          marginBottom: 32, // 16에서 32로 늘림
+          marginBottom: 32, // increased from 16 to 32
           lineHeight: "100%",
           position: "relative" 
         }}>
@@ -277,7 +277,7 @@ export function TimePickModal({
             {endTime.format("YY.MM.DD")}
           </span>
           
-          {/* 편집 아이콘 + 숨겨진 input */}
+          {/* Edit icon + hidden input */}
           <div 
             style={{ 
               marginLeft: "auto", 
@@ -311,12 +311,12 @@ export function TimePickModal({
           </div>
         </div>
 
-        {/* ✅ 총 연습 시간 - 행간 두배로 늘림 */}
+        {/* Total practice time - doubled line spacing */}
         <div style={{ 
           display: "flex", 
           alignItems: "center", 
           gap: 12, 
-          marginBottom: 32, // 20에서 32로 늘림
+          marginBottom: 32, // increased from 20 to 32
           lineHeight: "100%"
         }}>
           <TotalIcon width="20" height="20" style={{ color: "var(--DARK_GRAY)" }} />
@@ -326,7 +326,7 @@ export function TimePickModal({
           </span>
         </div>
 
-        {/* ✅ 에러 메시지 */}
+        {/* Error message */}
         {error && (
           <div style={{ 
             color: "var(--error-color)", 
@@ -341,7 +341,7 @@ export function TimePickModal({
           </div>
         )}
 
-        {/* ✅ 저장/취소 버튼 - HomeStopModal과 동일한 크기/간격 */}
+        {/* Save/Cancel buttons - same size/spacing as HomeStopModal */}
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 20 }}>
           <button
             onClick={handleSave}

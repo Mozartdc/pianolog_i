@@ -1,13 +1,13 @@
 /// <reference types="vite/client" />
 
-// 이미지 파일
+// Image files
 declare module '*.png' { const src: string; export default src; }
 declare module '*.jpg' { const src: string; export default src; }
 declare module '*.jpeg' { const src: string; export default src; }
 declare module '*.gif' { const src: string; export default src; }
 declare module '*.webp' { const src: string; export default src; }
 
-// CSS 모듈
+// CSS modules
 declare module '*.module.css' {
   const classes: Record<string, string>;
   export default classes;
@@ -17,7 +17,7 @@ declare module '*.module.scss' {
   export default classes;
 }
 
-// 환경변수
+// Environment variables
 interface ImportMetaEnv {
   readonly VITE_APP_TITLE?: string;
   readonly VITE_API_URL?: string;
@@ -31,18 +31,18 @@ interface ImportMeta {
 }
 
 // File System Access API
-// -> lib.dom에 이미 정의됨. 충돌 방지 위해 직접 선언은 삭제 권장.
-// 꼭 확장이 필요하면 아래처럼 '추가 메서드'만 선언하세요.
+// -> Already included in lib.dom, so no need to redeclare. Could cause conflicts.
+// If I really need to extend it, I should only add the methods I actually use.
 /*
 declare global {
   interface FileSystemFileHandle {
-    // 여기에 프로젝트에서 실제로 추가 확장할 메서드만 선언
+    // Only declare the methods I actually plan to use
   }
 }
 */
 
-// gapi 사용 계획이 없으면 제거 권장.
-// 사용할 경우, 타입 패키지 설치를 권장(@types/gapi 등).
+// If I don’t plan to use gapi, I should just remove it.
+// If I do, it’s better to install the type package (@types/gapi, etc.).
 /*
 declare namespace gapi {
   namespace client {

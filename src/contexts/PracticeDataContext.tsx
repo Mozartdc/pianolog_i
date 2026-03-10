@@ -28,7 +28,7 @@ export type PartialCounts = {
   [date: string]: { [key: string]: number };
 };
 
-// ✅ 새로운 타이머 상태 V2
+// New timer state V2
 interface TimerStateV2 {
   version: 2;
   startTimeMs: number | null;
@@ -41,7 +41,7 @@ interface TimerStateV2 {
   lastUpdatedMs: number;
 }
 
-// ✅ Context 타입에 새로운 타이머 상태 및 메서드 추가
+// Add new timer state and methods to context type
 interface PracticeDataContextType {
   // Basic data management
   tracks: Track[];
@@ -55,21 +55,21 @@ interface PracticeDataContextType {
   updateTrackAddedDate: (id: number, dateStr: string) => void;
 
   
-  // ✅ 새로운 타이머 상태 (V2)
-  timerActive: boolean;          // 세션 진행 중 (일시정지 포함)
-  timerSeconds: number;          // 초 단위 (기존 호환)
-  timerMilliseconds: number;     // 밀리초 단위 (정밀도)
-  timerRunning: boolean;         // 틱 진행 여부
-  timerStartTime: number | null; // ← 이 줄 추가
+  // New timer state (V2)
+  timerActive: boolean;          // Session in progress (including paused)
+  timerSeconds: number;          // In seconds (legacy compatibility)
+  timerMilliseconds: number;     // In milliseconds (precision)
+  timerRunning: boolean;         // Whether ticking is active
+  timerStartTime: number | null; // Start time
   
-  // ✅ 새로운 타이머 메서드들
+  // New timer methods
   startSession: () => void;
   pauseSession: () => void;
   resumeSession: () => void;
   completeSession: (memo?: string) => void;
   updateTimerStartTime: (newStartTimeMs: number) => void;
   
-  // ✅ 기존 호환을 위한 setter들 (HomeScreen에서 사용 중)
+  // Legacy compatibility setters (still used by HomeScreen)
   setTimerActive: (active: boolean) => void;
   setTimerSeconds: (seconds: number) => void;
   setTimerRunning: (running: boolean) => void;
@@ -87,7 +87,7 @@ interface PracticeDataContextType {
 
 const PracticeDataContext = createContext<PracticeDataContextType | undefined>(undefined);
 
-// ✅ 안전한 localStorage 유틸리티 함수들
+// Safe localStorage utility functions
 const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
   try {
     const item = localStorage.getItem(key);
@@ -128,7 +128,7 @@ const safeLocalStorageSet = (key: string, value: any) => {
   }
 };
 
-// ✅ 타이머 부트스트랩 로직
+// Timer bootstrap logic
 const initializeTimerState = (): TimerStateV2 => {
   const timerV2 = safeLocalStorageGet('timerV2', null);
   const oldTimerState = safeLocalStorageGet('timerState', null);
@@ -140,7 +140,7 @@ const initializeTimerState = (): TimerStateV2 => {
     console.log('🔄 구 타이머에서 memo만 마이그레이션:', oldTimerState);
     const memo = oldTimerState.memo || '';
     
-    // 구 키 삭제
+    // Delete old keys
     localStorage.removeItem('timerState');
     localStorage.removeItem('pauseStartTime');
     
@@ -179,26 +179,26 @@ const initializeTimerState = (): TimerStateV2 => {
 };
 
 export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) => {
-  // ✅ 기존 상태들 (변경 없음)
+  // Existing states (no changes)
   const [tracks, setTracks] = useState<Track[]>(() => safeLocalStorageGet("tracks", []));
   const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>(() => safeLocalStorageGet("practiceRecords", []));
   const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>(() => safeLocalStorageGet("practiceChecks", {}));
   const [partialCounts, setPartialCounts] = useState<PartialCounts>(() => safeLocalStorageGet("partialCounts", {}));
 
-  // ✅ 새로운 타이머 상태들
+  // New timer states
   const [timerStateV2, setTimerStateV2] = useState<TimerStateV2>(() => initializeTimerState());
   const [timerMilliseconds, setTimerMilliseconds] = useState<number>(0);
   
-  // ✅ 타이머 인터벌 관리
+  // Timer interval management
   const intervalRef = useRef<number | null>(null);
   
-  // ✅ 기존 호환을 위한 computed 값들
+  // Computed values for legacy compatibility
   const timerActive = timerStateV2.isActive;
   const timerRunning = timerStateV2.isRunning;
   const timerSeconds = Math.floor(timerMilliseconds / 1000);
-  const timerStartTime = timerStateV2.startTimeMs; // ← 이 줄 추가
+  const timerStartTime = timerStateV2.startTimeMs;
 
-  // ✅ 타이머 상태 저장 함수
+  // Timer state save function
   const saveTimerState = useCallback((newState: TimerStateV2) => {
     const stateToSave = {
       ...newState,
@@ -208,7 +208,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     safeLocalStorageSet('timerV2', stateToSave);
   }, []);
 
-  // ✅ 타이머 틱 관리
+  // Timer tick management
   useEffect(() => {
     if (timerStateV2.isActive && timerStateV2.isRunning && timerStateV2.startTimeMs) {
       console.log('⏱️ 타이머 틱 시작');
@@ -219,7 +219,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
         const elapsedMs = Math.max(0, elapsed);
         
         setTimerMilliseconds(elapsedMs);
-      }, 100); // 100ms 정밀도
+      }, 100); // 100ms precision
       
       return () => {
         if (intervalRef.current) {
@@ -235,7 +235,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     }
   }, [timerStateV2.isActive, timerStateV2.isRunning, timerStateV2.startTimeMs, timerStateV2.pausedAccumMs]);
 
-  // ✅ 앱 시작시 타이머 복원 로직
+  // Timer restoration logic on app start
   useEffect(() => {
     if (timerStateV2.isActive && timerStateV2.startTimeMs) {
       console.log('🔄 앱 시작시 타이머 복원');
@@ -243,7 +243,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
       
       let currentPausedAccum = timerStateV2.pausedAccumMs;
       
-      // 일시정지 상태에서 앱이 종료되었다면 일시정지 시간 누적
+      // If app was closed while paused, accumulate pause time
       if (!timerStateV2.isRunning && timerStateV2.pausedAtMs) {
         const additionalPausedTime = now - timerStateV2.pausedAtMs;
         currentPausedAccum += additionalPausedTime;
@@ -254,7 +254,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
           총누적: Math.floor(currentPausedAccum / 1000) + '초'
         });
         
-        // 상태 업데이트
+        // Update state
         saveTimerState({
           ...timerStateV2,
           pausedAccumMs: currentPausedAccum,
@@ -262,7 +262,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
         });
       }
       
-      // 현재 경과 시간 계산 및 설정
+      // Calculate and set current elapsed time
       const totalElapsed = now - timerStateV2.startTimeMs;
       const actualRunTime = totalElapsed - currentPausedAccum;
       const elapsedMs = Math.max(0, actualRunTime);
@@ -278,9 +278,9 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
         실행중: timerStateV2.isRunning
       });
     }
-  }, []); // 최초 한 번만 실행
+  }, []); // Run only once on mount
 
-  // ✅ 새로운 타이머 메서드들
+  // New timer methods
   const startSession = useCallback(() => {
     const now = Date.now();
     const sessionId = crypto.randomUUID?.() || `${dayjs().valueOf()}_${Math.random().toString(36).substring(2, 8)}`;
@@ -364,7 +364,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     const now = Date.now();
     let finalPausedAccum = timerStateV2.pausedAccumMs;
     
-    // 일시정지 상태에서 완료하는 경우 마지막 일시정지 시간도 누적
+    // If completing while paused, accumulate the final pause time
     if (!timerStateV2.isRunning && timerStateV2.pausedAtMs) {
       finalPausedAccum += now - timerStateV2.pausedAtMs;
     }
@@ -373,10 +373,10 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     const actualRunTime = totalElapsed - finalPausedAccum;
     const durationMinutes = Math.floor(actualRunTime / 60000);
     
-    // 메모 처리 (파라미터가 없으면 현재 상태의 메모 사용)
+    // Handle memo (use parameter if provided, otherwise use current state memo)
     const finalMemo = memo !== undefined ? memo : timerStateV2.memo;
     
-    // 연습 기록 추가
+    // Add practice record
     if (durationMinutes > 0) {
       const newRecord: PracticeRecord = {
         id: timerStateV2.sessionId,
@@ -407,7 +407,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
       });
     }
     
-    // 타이머 상태 리셋
+    // Reset timer state
     const resetState: TimerStateV2 = {
       version: 2,
       startTimeMs: null,
@@ -425,6 +425,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     
     console.log('🏁 세션 완료 및 리셋');
   }, [timerStateV2, setPracticeRecords, saveTimerState]);
+  
   const updateTimerStartTime = useCallback((newStartTimeMs: number) => {
     if (!timerStateV2.isActive) {
       console.log('⚠️ 비활성 세션 - 시작시간 수정 불가');
@@ -439,7 +440,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     
     saveTimerState(newState);
     
-    // 현재 시간 기준으로 경과시간 재계산
+    // Recalculate elapsed time based on current time
     const now = Date.now();
     const totalElapsed = now - newStartTimeMs;
     const actualRunTime = totalElapsed - timerStateV2.pausedAccumMs;
@@ -453,23 +454,23 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     });
   }, [timerStateV2, saveTimerState]);
 
-  // ✅ 기존 호환을 위한 setter들 (HomeScreen이 아직 사용 중)
+  // Legacy compatibility setters (still used by HomeScreen)
   const setTimerActive = useCallback((active: boolean) => {
     console.log('🔧 호환: setTimerActive', active);
-    // 필요시 구현, 현재는 새 메서드 사용 권장
+    // Implement if needed, recommend using new methods
   }, []);
 
   const setTimerSecondsCompat = useCallback((seconds: number) => {
     console.log('🔧 호환: setTimerSeconds', seconds);
-    // timerMilliseconds를 통해 자동 계산되므로 직접 설정 불필요
+    // Auto-calculated through timerMilliseconds, no direct setting needed
   }, []);
 
   const setTimerRunning = useCallback((running: boolean) => {
     console.log('🔧 호환: setTimerRunning', running);
-    // pauseSession/resumeSession 사용 권장
+    // Recommend using pauseSession/resumeSession
   }, []);
 
-  // ✅ 디바운스된 localStorage 저장 함수 (기존 데이터용)
+  // Debounced localStorage save function (for existing data)
   const debouncedSave = useCallback((key: string, value: any) => {
     const timeoutId = setTimeout(() => {
       safeLocalStorageSet(key, value);
@@ -477,7 +478,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // ✅ 기존 데이터 localStorage 동기화 (변경 없음)
+  // Existing data localStorage sync (no changes)
   useEffect(() => {
     const cleanup = debouncedSave("tracks", tracks);
     return cleanup;
@@ -498,7 +499,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     return cleanup;
   }, [partialCounts, debouncedSave]);
 
-  // ✅ 기존 액션들 (변경 없음)
+  // Existing actions (no changes)
   const addTrack = useCallback((title: string) => {
     if (!title.trim()) return;
     const newTrack: Track = { 
@@ -562,7 +563,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     setTracks(prev => prev.map(t => t.id === trackId ? { ...t, completedDate: undefined } : t));
   }, []);
 
-  // ✅ Storage change listener (기존과 동일, timerV2 추가)
+  // Storage change listener (same as before, with timerV2 added)
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       console.log('🔄 Storage 이벤트:', { key: event.key, hasNewValue: !!event.newValue });
@@ -615,7 +616,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
         }
       }
       
-      // ✅ 새로운 timerV2 동기화
+      // New timerV2 sync
       if (event.key === "timerV2" && event.newValue) {
         try {
           const newTimerState = JSON.parse(event.newValue);
@@ -643,13 +644,13 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     updateTrackAddedDate,
 
     
-    // ✅ 새로운 타이머 상태
-    timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime, // ← timerStartTime 추가
+    // New timer state
+    timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime,
     
-    // ✅ 새로운 타이머 메서드
+    // New timer methods
     startSession, pauseSession, resumeSession, completeSession, updateTimerStartTime,
     
-    // ✅ 기존 호환 setter들
+    // Legacy compatibility setters
     setTimerActive, setTimerSeconds: setTimerSecondsCompat, setTimerRunning,
     
     addTrack, removeTrack, updateTrackTitle,

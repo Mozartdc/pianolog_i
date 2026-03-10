@@ -9,31 +9,31 @@ interface Props {
 const ConfettiAnimation: React.FC<Props> = ({ isActive, onComplete }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const hasRunRef = useRef(false); // ✅ 한 번만 실행되도록 하는 플래그
+  const hasRunRef = useRef(false); // Flag to make sure it only runs once
 
-  // ✅ isActive만 의존성으로 하고, onComplete는 useRef로 관리
+  // Only depend on isActive, manage onComplete with useRef
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
   useEffect(() => {
     if (!isActive || !canvasRef.current || hasRunRef.current) return;
 
-    hasRunRef.current = true; // ✅ 실행 플래그 설정
+    hasRunRef.current = true; // Set the run flag
 
-    // confetti 인스턴스 생성
+    // Create confetti instance
     const myConfetti = confetti.create(canvasRef.current, {
       resize: true,
       useWorker: true,
     });
 
-    // 애니메이션 시퀀스 함수
+    // Animation sequence function
     const runAnimationSequence = () => {
-      const duration = 4 * 1000; // 전체 애니메이션 시간 (4초)
+      const duration = 4 * 1000; // Total animation time (4 seconds)
       const animationEnd = Date.now() + duration;
 
       const colors = ["#45b5aa", "#6b778d", "#D2649A", "#f0c05a", "#FFC107"];
 
-      // 1. 오프닝: 양쪽에서 가볍게 시작
+      // 1. Opening: gentle start from both sides
       setTimeout(() => {
         myConfetti({
           particleCount: 100,
@@ -53,7 +53,7 @@ const ConfettiAnimation: React.FC<Props> = ({ isActive, onComplete }) => {
         });
       }, 0);
 
-      // 2. 메인 버스트: 중앙에서 풍성하게
+      // 2. Main burst: big explosion from center
       setTimeout(() => {
         myConfetti({
           particleCount: 150,
@@ -67,7 +67,7 @@ const ConfettiAnimation: React.FC<Props> = ({ isActive, onComplete }) => {
         });
       }, 300);
 
-      // 3. 피날레: 화면 전체에 반짝이는 효과
+      // 3. Finale: sparkly effect across the whole screen
       const finaleInterval = setInterval(() => {
         const timeLeft = animationEnd - Date.now();
         if (timeLeft <= 0) {
@@ -89,26 +89,26 @@ const ConfettiAnimation: React.FC<Props> = ({ isActive, onComplete }) => {
         });
       }, 200);
 
-      // 모든 애니메이션이 끝난 후 정리
+      // Clean up after all animations are done
       const cleanupTimer = setTimeout(() => {
         myConfetti.reset();
-        hasRunRef.current = false; // ✅ 다음에 다시 실행할 수 있도록 리셋
-        onCompleteRef.current?.(); // ✅ ref를 통해 onComplete 호출
+        hasRunRef.current = false; // Reset so it can run again next time
+        onCompleteRef.current?.(); // Call onComplete through ref
       }, duration + 1000);
 
-      // 타이머 ID 저장
+      // Store timer IDs
       animationRef.current.push(finaleInterval, cleanupTimer);
     };
 
     runAnimationSequence();
 
-    // 컴포넌트 언마운트 시 모든 타이머 정리
+    // Clean up all timers when component unmounts
     return () => {
       animationRef.current.forEach((timer) => clearTimeout(timer));
       animationRef.current = [];
-      hasRunRef.current = false; // ✅ 정리 시 플래그도 리셋
+      hasRunRef.current = false; // Reset flag during cleanup too
     };
-  }, [isActive]); // ✅ onComplete 제거
+  }, [isActive]); // Removed onComplete from dependencies
 
   if (!isActive) return null;
 

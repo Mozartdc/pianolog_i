@@ -38,7 +38,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
   const GAP = 8;
   const TOTAL_CARD_WIDTH = CARD_WIDTH + GAP;
 
-  // 화면 폭 추적(리사이즈/회전 대응)
+  // Track screen width (handle resize/rotation)
   const [screenWidth, setScreenWidth] = useState<number>(343);
   useEffect(() => {
     const ro = new ResizeObserver(([entry]) => {
@@ -48,7 +48,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     return () => ro.disconnect();
   }, []);
 
-  // 기준일(오늘) ± 365일 생성. 메모이제이션으로 재생성 방지
+  // Generate base date (today) ± 365 days. Memoized to prevent regeneration
   const generateContinuousDates = () => {
     const baseDate = dayjs();
     const dates: dayjs.Dayjs[] = [];
@@ -61,7 +61,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
   const contentWidth = allDates.length * TOTAL_CARD_WIDTH;
   const maxLeft = Math.max(0, contentWidth - screenWidth);
 
-  // 선택된 날짜가 변경되면 화면 중앙으로 스크롤
+  // Scroll to center when selected date changes
   useEffect(() => {
     const idx = allDates.findIndex((d) => d.format("YYYY-MM-DD") === selectedDate);
     if (idx < 0) return;
@@ -72,13 +72,13 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     });
   }, [selectedDate, screenWidth, controls]);
 
-  // 클릭 처리(로컬 저장 포함)
+  // Handle click (including local storage)
   const handleDateClick = (dateStr: string) => {
     localStorage.setItem("lastSelectedDate", dateStr);
     onDateClick(dateStr);
   };
 
-  // 공휴일 연도별 캐시
+  // Holiday cache by year
   const holidayCache = useRef(new Map<number, Set<string>>());
   const getHolidaySet = (y: number) => {
     if (!holidayCache.current.has(y)) {
@@ -87,7 +87,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
     return holidayCache.current.get(y)!;
   };
 
-  // 배경색 헬퍼
+  // Background color helper
   const getCardBackground = (isToday: boolean, isSelected: boolean): string => {
     if (isToday) return themePastelColor;
     if (isSelected) return "var(--info-bg)";
@@ -132,7 +132,7 @@ const WeekCalendar: React.FC<WeekCalendarProps> = ({
         onDrag={(e, info) => {
           if (Math.abs(info.delta.x) > 3) dragged.current = true;
         }}
-        // flag는 onDragEnd에서 굳이 초기화하지 않고 pointerDown 시 초기화
+        // Flag is reset on pointerDown, not in onDragEnd
         animate={controls}
         initial={false}
         style={{

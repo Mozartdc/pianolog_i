@@ -11,13 +11,13 @@ interface ExportCardModalProps {
   onClose: () => void;
 }
 
-// ✅ [수정] generateExportImage 함수가 themeColors 객체를 인자로 받도록 변경
+// Modified generateExportImage function to accept themeColors object as parameter
 export const generateExportImage = async (
   nickname: string,
   date: string,
   practiceTime: string,
   avatar: string | undefined,
-  themeColors: { [key: string]: string } // 현재 테마의 실제 색상 값들을 담을 객체
+  themeColors: { [key: string]: string } // Object containing actual color values from current theme
 ): Promise<string> => {
   return new Promise((resolve, reject) => {
     try {
@@ -25,13 +25,13 @@ export const generateExportImage = async (
       const ctx = canvas.getContext('2d');
       const scale = 3;
       
-      // ✅ 새로운 캔버스 사이즈: 380 * 590 (그림자 포함한 전체 프레임)
+      // New canvas size: 380 * 590 (full frame including shadow)
       const totalWidth = 380;
       const totalHeight = 590;
-      // ✅ 실제 카드 사이즈: 360 * 570
+      // Actual card size: 360 * 570
       const cardWidth = 360;
       const cardHeight = 570;
-      const shadowOffset = 10; // 그림자를 위한 여백
+      const shadowOffset = 10; // Margin for shadow
       
       canvas.width = totalWidth * scale;
       canvas.height = totalHeight * scale;
@@ -45,16 +45,16 @@ export const generateExportImage = async (
       ctx.imageSmoothingQuality = 'high';
       ctx.scale(scale, scale);
 
-      // ✅ 전체 배경을 투명하게 설정
+      // Set entire background to transparent
       ctx.clearRect(0, 0, totalWidth, totalHeight);
 
-      // ✅ 그림자 효과 생성
+      // Create shadow effect
       ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
       ctx.shadowBlur = 8;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 4;
 
-      // ✅ 카드 배경 그리기 (5px 라운딩)
+      // Draw card background (5px rounding)
       ctx.fillStyle = themeColors.bgPrimary || '#FFFFFF';
       if (ctx.roundRect) {
         ctx.beginPath();
@@ -65,17 +65,17 @@ export const generateExportImage = async (
         ctx.fillRect(shadowOffset, shadowOffset, cardWidth, cardHeight);
       }
 
-      // ✅ 그림자 효과 제거 (이후 요소들에는 그림자 적용 안함)
+      // Remove shadow effect (don't apply shadow to subsequent elements)
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
 
-      // ✅ 프로필 사진 중앙 좌표 계산 (카드 내에서의 정중앙)
+      // Calculate profile photo center coordinates (exact center within card)
       const cardCenterX = shadowOffset + (cardWidth / 2);
       const cardCenterY = shadowOffset + (cardHeight / 2);
       
-      // ✅ 프로필 사진 위치 (카드의 정중앙)
+      // Profile photo position (center of card)
       const profileSize = 80;
       const profileX = cardCenterX - (profileSize / 2);
       const profileY = cardCenterY - (profileSize / 2);
@@ -88,31 +88,31 @@ export const generateExportImage = async (
         if (!finished) { finished = true; reject(err); }
       };
 
-      // ✅ 7. SVG 아이콘 + "오늘 피출 기록" (프로필 사진 상단에서 위로 75px)
+      // 7. SVG icon + "오늘 피출 기록" (75px above profile photo top)
       const starImg = new window.Image();
       starImg.onload = () => {
         if (ctx) {
           const iconSize = 20;
           const text = '오늘 피출 기록';
-          const gap = 5; // 아이콘과 텍스트 간격
+          const gap = 5; // Gap between icon and text
           
-          // 텍스트 너비 측정
+          // Measure text width
           ctx.font = '12px Pretendard';
           const textWidth = ctx.measureText(text).width;
           
-          // 전체 그룹 너비 계산
+          // Calculate total group width
           const groupWidth = iconSize + gap + textWidth;
           
-          // 그룹의 시작 X 좌표 (카드 중앙 정렬)
+          // Group start X coordinate (center align in card)
           const groupStartX = cardCenterX - (groupWidth / 2);
-          const groupY = profileY - 75; // 프로필 사진 상단에서 위로 75px
+          const groupY = profileY - 75; // 75px above profile photo top
           
-          // 아이콘 그리기
+          // Draw icon
           const iconX = groupStartX;
-          const iconY = groupY - (iconSize / 2); // 수직 중앙 정렬
+          const iconY = groupY - (iconSize / 2); // Vertical center align
           ctx.drawImage(starImg, iconX, iconY, iconSize, iconSize);
           
-          // 텍스트 그리기
+          // Draw text
           ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
           ctx.font = '12px Pretendard';
           ctx.textAlign = 'left';
@@ -130,15 +130,15 @@ export const generateExportImage = async (
         const logoImg = new window.Image();
         logoImg.onload = () => {
           if (ctx) {
-            // ✅ 5. 로고 이미지 (프로필 사진 하단에서 아래로 170px)
+            // 5. Logo image (170px below profile photo bottom)
             const logoWidth = 37;
             const logoHeight = 24;
-            const logoX = cardCenterX - (logoWidth / 2); // 중앙 정렬
-            const logoY = profileY + profileSize + 170; // 프로필 사진 하단에서 170px 아래
+            const logoX = cardCenterX - (logoWidth / 2); // Center align
+            const logoY = profileY + profileSize + 170; // 170px below profile photo bottom
             
             ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight);
             
-            // ✅ 6. "digital piano gallery" 텍스트 (프로필 사진 하단에서 아래로 200px)
+            // 6. "digital piano gallery" text (200px below profile photo bottom)
             ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
             ctx.font = '12px Pretendard';
             ctx.textAlign = 'center';
@@ -149,7 +149,7 @@ export const generateExportImage = async (
         };
         logoImg.onerror = () => {
           if (ctx) {
-            // 로고 로드 실패 시 텍스트만 표시
+            // Show only text if logo fails to load
             ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
             ctx.font = '12px Pretendard';
             ctx.textAlign = 'center';
@@ -164,7 +164,7 @@ export const generateExportImage = async (
       function drawProfileAndTexts() {
         if (!ctx) { safeReject(new Error('Canvas context not available')); return; }
 
-        // ✅ 1. 프로필 사진 (카드의 정중앙)
+        // 1. Profile photo (center of card)
         if (avatar) {
           const avatarImg = new window.Image();
           avatarImg.onload = () => {
@@ -206,21 +206,21 @@ export const generateExportImage = async (
           
           ctx.textAlign = 'center';
           
-          // ✅ 2. 닉네임 (프로필 사진 하단에서 아래로 5px)
-          const nicknameY = profileY + profileSize + 5 + 24; // +24는 폰트 높이 고려
+          // 2. Nickname (5px below profile photo bottom)
+          const nicknameY = profileY + profileSize + 5 + 24; // +24 considers font height
           ctx.fillStyle = themeColors.textPrimary || '#2D2D2A';
           ctx.font = 'bold 24px Pretendard';
           ctx.textBaseline = 'alphabetic';
           ctx.fillText(nickname, cardCenterX, nicknameY);
 
-          // ✅ 3. 오늘 날짜 (프로필 사진 하단에서 아래로 55px)
-          const dateY = profileY + profileSize + 55 + 16; // +16은 폰트 높이 고려
+          // 3. Today's date (55px below profile photo bottom)
+          const dateY = profileY + profileSize + 55 + 16; // +16 considers font height
           ctx.fillStyle = themeColors.textSecondary || '#9E9C98';
           ctx.font = '16px Pretendard';
           ctx.fillText(date, cardCenterX, dateY);
 
-          // ✅ 4. 피출 시간 (프로필 사진 하단에서 아래로 80px)
-          const timeY = profileY + profileSize + 80 + 48; // +48은 폰트 높이 고려
+          // 4. Practice time (80px below profile photo bottom)
+          const timeY = profileY + profileSize + 80 + 48; // +48 considers font height
           const hourMatch = practiceTime.match(/(\d+)시간/);
           const minuteMatch = practiceTime.match(/(\d+)분/);
           let hourNum = hourMatch ? hourMatch[1] : null;
@@ -311,17 +311,17 @@ export function ExportCardModal({
     if (hasExecutedRef.current !== true) return;
     setIsLoading(true);
     try {
-      // ✅ [수정] 현재 테마의 CSS 변수 값을 읽어옵니다.
+      // Read current theme CSS variable values
       const rootStyle = getComputedStyle(document.documentElement);
       const themeColors = {
         bgPrimary: rootStyle.getPropertyValue('--bg-primary').trim(),
         textPrimary: rootStyle.getPropertyValue('--text-primary').trim(),
         textSecondary: rootStyle.getPropertyValue('--text-secondary').trim(),
         turquoise: rootStyle.getPropertyValue('--TURQUOISE').trim(),
-        borderLight: rootStyle.getPropertyValue('--border-light').trim().split(' ')[2] || '#E0E0E0' // '0.5px solid #E0E0E0'에서 색상만 추출
+        borderLight: rootStyle.getPropertyValue('--border-light').trim().split(' ')[2] || '#E0E0E0' // Extract color from '0.5px solid #E0E0E0'
       };
       
-      // ✅ [수정] 읽어온 색상 값을 generateExportImage 함수에 전달합니다.
+      // Pass the color values to generateExportImage function
       const dataUrl = await generateExportImage(nickname, date, practiceTime, avatar, themeColors); 
       const filename = `피출기록_${date.replace(/\./g, '').replace(/\s/g, '_')}_${nickname}.png`;
       downloadImage(dataUrl, filename);
@@ -349,7 +349,7 @@ export function ExportCardModal({
     >
       <div
         style={{
-          // ✅ [수정] 모달 UI도 CSS 변수를 사용하도록 변경
+          // Modified modal UI to also use CSS variables
           background: "var(--bg-primary)",
           borderRadius: 8,
           padding: "40px",

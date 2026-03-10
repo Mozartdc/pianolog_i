@@ -10,7 +10,7 @@ dayjs.extend(isSameOrAfter);
 
 import Header from "../components/Header";
 import AvatarCropper, { AvatarCropperHandles } from "../components/ProfileUploader";
-// ✅ [수정] 모든 아이콘을 React 컴포넌트로 불러옵니다.
+// Import all icons as React components
 import ExportIcon from "../assets/icons/s_export.svg?react";
 import ImportIcon from "../assets/icons/s_import.svg?react";
 import SaveIcon from "../assets/icons/save.svg?react";
@@ -27,20 +27,20 @@ import Logo from "../utils/img/logo.png";
 import UserIcon from '../assets/icons/user.svg?react';
 
 type Theme = "light" | "dark" | "system";
-// ✅ [수정] icon의 타입을 string에서 React.ElementType으로 변경합니다.
+// Change icon type from string to React.ElementType
 const themeOptions: { value: Theme; label: string; icon: React.ElementType }[] = [
   { value: "light", label: "light", icon: DayIcon },
   { value: "dark", label: "dark", icon: NightIcon },
   { value: "system", label: "system", icon: SystemIcon },
 ];
 
-// 타입 정의 (변경 없음)
+// Type definitions (no changes)
 interface PracticeRecord { id: string; date: string; practiceTime: number; startTime: number; endTime: number; memo?: string; track?: string; }
 type Track = { id: number; title: string; addedDate: string; completedDate?: string; };
 type PracticeChecks = { [date: string]: { [trackId: number]: boolean; }; };
 type PartialCounts = { [date: string]: { [key: string]: number; }; };
 
-// 전체 데이터 타입 정의
+// Full data type definition
 interface FullBackupData {
   tracks: Track[];
   practiceRecords: PracticeRecord[];
@@ -52,7 +52,7 @@ interface FullBackupData {
   version: string;
 }
 
-// CSV 함수 (변경 없음)
+// CSV functions (no changes)
 function toCSV(practiceRecords: PracticeRecord[], allTracks: Track[], practiceChecks: PracticeChecks): string {
     let csvContent = "";
     const sessionHeaders = ["날짜", "요일", "연습시간", "시작시간", "종료시간", "메모", "해당일_곡_목록"];
@@ -144,7 +144,7 @@ export default function SettingScreen({ theme, handleThemeChange }: SettingsScre
   const [tooltip2Visible, setTooltip2Visible] = useState(false);
   const avatarCropperRef = useRef<AvatarCropperHandles>(null);
   
-  // 스크롤 방지
+  // Prevent scrolling
 useEffect(() => {
   const original = document.body.style.overflow;
   document.body.style.overflow = "hidden";
@@ -164,7 +164,7 @@ useEffect(() => {
     localStorage.setItem("nickname", e.target.value);
   };
   
-  // 기존 CSV 내보내기
+  // Existing CSV export
   const handleExport = () => {
     try {
         const practiceRecordsString = localStorage.getItem("practiceRecords");
@@ -185,7 +185,7 @@ useEffect(() => {
     } catch (error) { console.error("CSV 내보내기 실패:", error); alert("CSV 파일 내보내기에 실패했습니다."); }
   };
 
-  // 기존 CSV 가져오기
+  // Existing CSV import
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -202,7 +202,7 @@ useEffect(() => {
     }
   };
 
-  // 새 기능: 전체 데이터 백업
+  // New feature: Full data backup
   const handleFullBackup = () => {
     try {
       const allData: FullBackupData = {
@@ -230,7 +230,7 @@ useEffect(() => {
     }
   };
 
-  // 새 기능: 전체 데이터 복원
+  // New feature: Full data restore
   const handleFullRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -240,12 +240,12 @@ useEffect(() => {
           const jsonData = reader.result as string;
           const data: FullBackupData = JSON.parse(jsonData);
           
-          // 데이터 검증
+          // Data validation
           if (!data.version || !data.timestamp) {
             throw new Error("올바른 백업 파일이 아닙니다.");
           }
           
-          // 모든 데이터 복원
+          // Restore all data
           localStorage.setItem("tracks", JSON.stringify(data.tracks || []));
           localStorage.setItem("practiceRecords", JSON.stringify(data.practiceRecords || []));
           localStorage.setItem("practiceChecks", JSON.stringify(data.practiceChecks || {}));
@@ -282,14 +282,14 @@ useEffect(() => {
       color: "var(--text-primary)", overflow: "hidden",  position: "fixed",
     }}>
       <div style={{
-  width: "calc(100% - 32px)", // ✅ 좌우 16px 여백 추가
-  margin: "0 auto" // ✅ 중앙 정렬
+  width: "calc(100% - 32px)", // Add 16px margin on left and right
+  margin: "0 auto" // Center alignment
 }}>
   <Header title="app setting" color="var(--VIVA_MAGENTA)" />
 </div>
 
       
-{/* ✅ 수정된 프로필 영역 - 수직 정렬 맞춤 */}
+{/* Modified profile area - vertical alignment adjusted */}
       <div style={{ 
         display: "flex", 
         flexDirection: "column", 
@@ -305,7 +305,7 @@ useEffect(() => {
           width: "100%", 
           justifyContent: "flex-start" 
         }}>
-          {/* ProfileUploader - 80px (기준점) */}
+          {/* ProfileUploader - 80px (reference point) */}
           <AvatarCropper 
             ref={avatarCropperRef} 
             onAvatarChange={(v) => {
@@ -321,15 +321,15 @@ useEffect(() => {
             size={80} 
           />
           
-          {/* ✅ 우측 영역: 사진 박스 위치에 맞춰 정렬 */}
+          {/* Right area: aligned to photo box position */}
           <div style={{ 
             display: "flex", 
             flexDirection: "column", 
             flex: 1, 
-            height: 80,  // ✅ ProfileUploader와 동일한 높이
-            justifyContent: "space-between"  // ✅ 위아래 정렬
+            height: 80,  // Same height as ProfileUploader
+            justifyContent: "space-between"  // Align top and bottom
           }}>
-            {/* ✅ 닉네임 입력창 - 사진 박스 위쪽과 정렬 */}
+            {/* Nickname input - aligned to top of photo box */}
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
               <input 
                 value={nickname} 
@@ -350,7 +350,7 @@ useEffect(() => {
                 }} 
               />
               
-              {/* 닉네임 설명 텍스트 */}
+              {/* Nickname description text */}
               <div style={{ 
                 fontSize: 12, 
                 color: "var(--DARK_GRAY)", 
@@ -362,12 +362,12 @@ useEffect(() => {
               </div>
             </div>
             
-            {/* ✅ 등록/삭제 버튼 - 사진 박스 아래쪽과 정렬 */}
+            {/* Register/Delete buttons - aligned to bottom of photo box */}
             <div style={{ 
               display: "flex", 
               gap: 20, 
               alignItems: "center",
-              alignSelf: "flex-start"  // ✅ 왼쪽 정렬
+              alignSelf: "flex-start"  // Left align
             }}>
               <button 
                 onClick={handleRegisterAvatarClick} 
@@ -407,21 +407,21 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* 데이터 관리 섹션 */}
+      {/* Data management section */}
       <div style={{ width: "90%", maxWidth: 327, display: "flex", alignItems: "center", gap: 8, margin: "32px auto 20px auto" }}>
         <div style={{ flex: 1, height: 0.5, background: "var(--VIVA_MAGENTA)" }} />
         <span style={{ fontSize: 14, fontWeight: 400, ...commonFontStyle }}>data</span>
         <div style={{ flex: 1, height: 0.5, background: "var(--VIVA_MAGENTA)" }} />
       </div>
 
-      {/* 2x2 그리드 - 완전히 새로운 코드 */}
+      {/* 2x2 grid - completely new code */}
       <div style={{ width: "90%", maxWidth: 327, marginBottom: 40 }}>
         <div style={{ 
           display: "grid", 
           gridTemplateColumns: "1fr 1fr", 
           gap: "20px 16px"
         }}>
-          {/* 첫 번째 행 */}
+          {/* First row */}
           <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
             <button onClick={handleExport} style={{ 
               display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", 
@@ -510,7 +510,7 @@ useEffect(() => {
             </div>
           </div>
 
-          {/* 두 번째 행 */}
+          {/* Second row */}
           <label style={{ 
             display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", 
             color: "var(--text-primary)", fontSize: 14, cursor: "pointer", padding: 0, ...commonFontStyle 
@@ -537,9 +537,9 @@ useEffect(() => {
         <div style={{ flex: 1, height: 0.5, background: "var(--VIVA_MAGENTA)" }} />
       </div>
 
-      {/* Display 섹션 - 3개 아이콘 간격 넓히기 */}
+      {/* Display section - widen gap between 3 icons */}
       <div style={{ display: "flex", width: "90%", maxWidth: 327, justifyContent: "space-between", alignItems: "center", marginBottom: 32 }}>
-        {/* ✅ [수정] 테마 선택 아이콘 렌더링 로직 수정 */}
+        {/* Modified theme selection icon rendering logic */}
         {themeOptions.map(opt => {
           const checked = theme === opt.value;
           const Icon = opt.icon;
@@ -554,7 +554,7 @@ useEffect(() => {
         })}
       </div>
 
-      {/* 로고 - 원래 위치 유지 */}
+      {/* Logo - keep original position */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 10 }}>
         <img src={Logo} alt="logo" width={100} height={65} />
         <span style={{ textAlign: "center", fontSize: 14, lineHeight: "100%", marginTop: 0, ...commonFontStyle }}>digital piano gallery</span>

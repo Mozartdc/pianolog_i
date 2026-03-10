@@ -56,7 +56,7 @@ export const StatsCalendar: React.FC<StatsCalendarProps> = ({
       border: "var(--border-light)", borderRadius: 5, background: "var(--bg-primary)", 
       boxSizing: "border-box"
     }}>
-      {/* 캘린더 헤더 */}
+      {/* Calendar header */}
       <div style={{
         display: "flex", justifyContent: "space-between", alignItems: "center",
         marginBottom: 16, padding: "0 16px",
@@ -192,7 +192,7 @@ export const StatsCalendar: React.FC<StatsCalendarProps> = ({
         </div>
       ))}
       
-      {/* 선택된 날짜 정보 UI */}
+      {/* Selected date info section */}
       <div style={{
         margin: "16px auto 0 auto", padding: "16px", width: "calc(100% - 36px)",
         background: "transparent", border: "0.7px solid var(--MIMOSA)",

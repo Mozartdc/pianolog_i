@@ -83,7 +83,7 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ✅ 헤더 - 다른 모달과 일관된 스타일 */}
+        {/* Header - consistent style with other modals */}
         <div style={{
           display: "flex", 
           alignItems: "center", 
@@ -103,7 +103,7 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
           </span>
         </div>
         
-        {/* 안내 텍스트 */}
+        {/* Instruction text */}
         <div style={{
           fontSize: 12,
           color: "var(--text-secondary)",
@@ -115,7 +115,7 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
           오늘 날짜의 피출기록만 선택 가능합니다.
         </div>
 
-        {/* 세션 목록 */}
+        {/* Session list */}
         <div style={{ 
           display: "flex", 
           flexDirection: "column", 
@@ -171,21 +171,21 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
                   {duration} ({timeRange})
                 </div>
                 
-                {/* 선택 표시 */}
+                {/* Selection indicator */}
               
               </div>
             );
           })}
         </div>
 
-        {/* ✅ 버튼 영역 - HomeStopModal과 동일한 스타일 */}
+        {/* Button area - same style as HomeStopModal */}
         <div style={{ 
           display: "flex", 
           justifyContent: "space-between", 
           gap: 12, 
           marginTop: "auto"
         }}>
-          {/* Cancel 버튼 - 왼쪽 */}
+          {/* Cancel button - left */}
           <button
             onClick={onClose}
             style={{
@@ -209,7 +209,7 @@ const SessionSelectModal: React.FC<SessionSelectModalProps> = ({
             <span style={{ color: "currentColor" }}>cancel</span>
           </button>
           
-          {/* Export 버튼 - 오른쪽 */}
+          {/* Export button - right */}
           <button
             onClick={handleConfirmClick}
             style={{

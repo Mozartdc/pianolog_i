@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-// SVG 아이콘 import
+// SVG icon imports
 import CheckIcon from "../assets/icons/check.svg?react";
 import UncheckIcon from "../assets/icons/uncheck.svg?react";
 import NumberPlusIcon from "../assets/icons/numberplus.svg?react";
@@ -21,7 +21,7 @@ interface PracticeItemProps {
   onCountClick?: () => void;
 }
 
-// 삭제 확인 모달 타입
+// Delete confirmation modal type
 interface DeleteConfirmModalProps {
   isOpen: boolean;
   title: string;
@@ -227,7 +227,7 @@ export default function PracticeItem({
           <div style={{ position: "relative", marginLeft: 4 }}>
             <button
               onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-              aria-label="더보기"
+              aria-label="More options"
               style={{
                 background: "none", border: "none", padding: 2, cursor: "pointer",
                 borderRadius: 8, width: 16, height: 16,
@@ -265,7 +265,7 @@ export default function PracticeItem({
         </div>
       </div>
 
-      {/* 삭제 확인 모달 */}
+      {/* Delete confirmation modal */}
       <DeleteConfirmModal
         isOpen={showDeleteConfirm}
         title={deleteTargetTitle}

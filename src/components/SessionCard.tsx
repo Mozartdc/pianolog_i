@@ -101,7 +101,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
 
   return (
     <div key={session.id}>
-      {/* 메인 세션 카드 - 확장 가능 */}
+      {/* Main session card - expandable */}
       <div 
         onClick={() => onSessionClick(session.id)}
         style={{
@@ -120,7 +120,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           transition: "all 0.2s ease"
         }}
       >
-        {/* 기존 세션 정보 헤더 */}
+        {/* Existing session info header */}
         <div style={{
           display: "flex", 
           alignItems: "center", 
@@ -150,7 +150,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
           />
         </div>
         
-        {/* 확장된 영역 - 아이콘 + 메모 */}
+        {/* Expanded area - icons + memo */}
         {isExpanded && (
           <div style={{
             marginTop: 12,
@@ -158,14 +158,14 @@ export const SessionCard: React.FC<SessionCardProps> = ({
             flexDirection: "column",
             gap: 12
           }}>
-            {/* ✅ 액션 아이콘들 - 그레이 색상으로 변경 */}
+            {/* Action icons - changed to gray color */}
             <div style={{
               display: "flex",
               alignItems: "center",
               gap: 16,
               paddingLeft: 4
             }}>
-              {/* 수정 아이콘 */}
+              {/* Edit icon */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -189,7 +189,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 />
               </button>
 
-              {/* 공유 아이콘 */}
+              {/* Share icon */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -213,7 +213,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
                 />
               </button>
 
-              {/* 삭제 아이콘 */}
+              {/* Delete icon */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -238,7 +238,7 @@ export const SessionCard: React.FC<SessionCardProps> = ({
               </button>
             </div>
             
-            {/* 메모 영역 - 클릭 가능 */}
+            {/* Memo area - clickable */}
             <div 
               onClick={(e) => {
                 e.stopPropagation();

@@ -1,16 +1,16 @@
 /* src/index.css */
 
-/* Pretendard 폰트 로드 (여기서 한 번만 로드) */
+/* Load Pretendard font (load only once here) */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 
-/* 스타일 모듈 임포트 (순서 중요: 변수 -> 기본 -> 레이아웃 -> 컴포넌트별) */
-@import './styles/_variables.css'; /* 색상 및 테마 변수 (가장 먼저) */
-@import './styles/_base.css';     /* 글로벌 리셋, 기본 폰트 설정 등 */
-@import './styles/_layout.css';   /* 앱 전반적인 레이아웃 */
+/* Import style modules (order matters: variables -> base -> layout -> component-specific) */
+@import './styles/_variables.css'; /* Color and theme variables (first) */
+@import './styles/_base.css';     /* Global reset, basic font settings, etc. */
+@import './styles/_layout.css';   /* Overall app layout */
 
-/* App.css를 정리/삭제했다면, 이 임포트도 제거합니다. */
+/* If I already deleted App.css, I should remove this import as well */
 /* @import './App.css'; */ 
 
-/* Home.css는 해당 스크린 컴포넌트에서 임포트하는 것이 더 적합할 수 있습니다. */
-/* 만약 HomeScreen.tsx에서 import './Home.css';를 사용한다면 여기서 제거합니다. */
+/* Home.css probably belongs in the HomeScreen component itself */
+/* If I import './Home.css' directly in HomeScreen.tsx, I don’t need it here */
 /* @import './screens/Home.css'; */

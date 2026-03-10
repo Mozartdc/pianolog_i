@@ -62,7 +62,7 @@ export function Today() {
   };
 
   const handlePracticeUpdate = () => {
-    // Context 사용으로 더 이상 필요 없음
+    // No longer needed since we're using Context
   };
 
   const visibleTracks = tracks.filter(
@@ -71,7 +71,7 @@ export function Today() {
     const notCompletedOrCompletedAfter = !track.completedDate || 
                                         dayjs(track.completedDate).isSameOrAfter(selectedDate, "day");
     
-    // 🔧 추가: 해당 날짜에 연습 기록이 있으면 보이게 함
+    // Also show tracks if there's a practice record on this date
     const hasPracticeOnDate = practiceChecks[selectedDate] && 
                              practiceChecks[selectedDate][track.id];
     
@@ -94,7 +94,7 @@ return (
         fontFamily: "var(--FONT_FAMILY)",
       }}
     >
-      {/* 헤더만 고정 */}
+      {/* Fixed header only */}
       <div style={{ 
         position: "fixed",
         top: 0,
@@ -113,7 +113,7 @@ return (
         />
       </div>
 
-      {/* 스크롤되는 콘텐츠 영역 */}
+      {/* Scrollable content area */}
       <div
         style={{
           width: "100%",
@@ -125,7 +125,7 @@ return (
           gap: 4,
         }}
       >
-        {/* 캘린더를 콘텐츠 영역 맨 위에 배치 */}
+        {/* Calendar placed at the top of content area */}
         <div style={{ 
           width: "100%",
           marginBottom: 20,
@@ -168,7 +168,7 @@ return (
 
       <button
         onClick={() => {setShowSongPlusModal(true);
-              // ✅ 배경 스크롤 완전 차단
+              // Completely block background scrolling
     document.body.style.overflow = 'hidden';
     document.body.style.position = 'fixed';
     document.body.style.width = '100%';
@@ -202,8 +202,8 @@ return (
             justifyContent: "center",
             zIndex: 1000,
             paddingTop: "20vh",
-            height: "100vh", // 고정 높이
-            overflow: "hidden", // 스크롤 방지
+            height: "100vh", // Fixed height
+            overflow: "hidden", // Prevent scrolling
           }}
         >
           <div
@@ -263,7 +263,7 @@ onKeyPress={(e) => {
     addTrack((e.target as HTMLInputElement).value);
     (e.target as HTMLInputElement).value = "";
     setShowSongPlusModal(false);
-    // ✅ 추가: Enter로 곡 추가 후 맨 위로 스크롤
+    // After adding track with Enter, scroll to top
     setTimeout(() => {
       window.scrollTo(0, 0);
     }, 100);
@@ -285,7 +285,7 @@ onKeyPress={(e) => {
 <button
   onClick={() => {
     setShowSongPlusModal(false);
-    // ✅ 스타일 복구
+    // Restore styles
     document.body.style.overflow = '';
     document.body.style.position = '';
     document.body.style.width = '';
@@ -326,7 +326,7 @@ onKeyPress={(e) => {
       input.value = "";
       setShowSongPlusModal(false);
       
-      // ✅ 스타일 복구
+      // Restore styles
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.width = '';
@@ -346,11 +346,11 @@ onKeyPress={(e) => {
   style={{
     flex: 1,
     height: 43,
-    background: "transparent", // 👈 배경 제거
+    background: "transparent", // Remove background
     border: "none",
     borderRadius: "var(--border-radius-small)",
     fontSize: 16,
-    color: "var(--VERY_PERI)", // 👈 텍스트 색상을 버튼 원래 배경색으로
+    color: "var(--VERY_PERI)", // Use original button background color for text
     cursor: "pointer",
     fontFamily: "var(--FONT_FAMILY)",
     display: "flex",

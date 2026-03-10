@@ -6,7 +6,7 @@ import playpianoAnimation from "../assets/Playpiano.json";
 
 interface HomeStartTimerModalProps {
   timerSeconds: number;
-  timerMilliseconds: number; // 추가
+  timerMilliseconds: number; // Added
   isRunning: boolean;
   onPause: () => void;
   onResume: () => void;
@@ -16,21 +16,21 @@ interface HomeStartTimerModalProps {
 
 export function HomeStartTimerModal({
   timerSeconds,
-  timerMilliseconds, // 추가
+  timerMilliseconds, // Added
   isRunning,
   onPause,
   onResume,
   onComplete,
   onEdit
 }: HomeStartTimerModalProps) {
-  const totalMs = timerMilliseconds; // HomeScreen에서 받은 값 사용
+  const totalMs = timerMilliseconds; // Use value received from HomeScreen
   const hours = Math.floor(totalMs / 3600000);
   const minutes = Math.floor((totalMs % 3600000) / 60000);
   const totalSecondsOnly = Math.floor((totalMs % 60000) / 1000);
   const centiseconds = Math.floor((totalMs % 1000) / 10);
   const lottieRef = useRef<LottieRefCurrentProps>(null);
 
-  // 일시정지 시 애니메이션도 제어
+  // Control animation when paused
   useEffect(() => {
     if (lottieRef.current) {
       if (isRunning) {
@@ -70,7 +70,7 @@ export function HomeStartTimerModal({
     gap: 16,
     pointerEvents: "auto"
   }}>
-        {/* Lottie 피아노 애니메이션 */}
+        {/* Lottie piano animation */}
         <div
           style={{
             width: 40,
@@ -92,7 +92,7 @@ export function HomeStartTimerModal({
           />
         </div>
 
-        {/* 중앙 상태 및 시간 표시 */}
+        {/* Center status and time display */}
         <div style={{
           flex: 1,
           display: "flex",
@@ -139,7 +139,7 @@ export function HomeStartTimerModal({
           </div>
         </div>
 
-        {/* ✅ 수정된 부분: 퍼즈/리플레이 버튼 - 모두 MIMOSA 색상으로 통일 */}
+        {/* Modified: Pause/Replay button - unified with MIMOSA color */}
         <button
           onClick={isRunning ? onPause : onResume}
           aria-label={isRunning ? "일시정지" : "다시시작"}
@@ -160,7 +160,7 @@ export function HomeStartTimerModal({
           }
         </button>
 
-        {/* ✅ 정원 버튼들 - 직사각형의 가로 너비를 지름으로 사용 */}
+        {/* Circle buttons - use rectangle width as diameter */}
         <div style={{
           display: "flex",
           gap: 8,
@@ -169,11 +169,11 @@ export function HomeStartTimerModal({
           <button
             onClick={onComplete}
             style={{
-              width: 32, // 원래 버튼의 대략적인 가로 너비
-              height: 32, // width와 동일하게 설정하여 정원 생성
+              width: 32, // Approximate width of original button
+              height: 32, // Set equal to width to create perfect circle
               background: "var(--bg-secondary)",
               border: "none",
-              borderRadius: "50%", // 정원을 만드는 핵심
+              borderRadius: "50%", // Key to creating circle
               fontSize: 12,
               color: "var(--text-primary)",
               lineHeight: "14px",
@@ -189,11 +189,11 @@ export function HomeStartTimerModal({
           <button
             onClick={onEdit}
             style={{
-              width: 32, // 원래 버튼의 대략적인 가로 너비
-              height: 32, // width와 동일하게 설정하여 정원 생성
+              width: 32, // Approximate width of original button
+              height: 32, // Set equal to width to create perfect circle
               background: "var(--bg-secondary)",
               border: "none",
-              borderRadius: "50%", // 정원을 만드는 핵심
+              borderRadius: "50%", // Key to creating circle
               fontSize: 12,
               color: "var(--text-primary)",
               lineHeight: "14px",

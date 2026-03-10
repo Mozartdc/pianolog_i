@@ -3,12 +3,12 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 
-// 아이콘 imports
+// Icon imports
 import AppleSongIcon from "../assets/icons/applesong.svg?react";
-// ✅ [변경] 새로운 아이콘들로 교체
+// Replaced with new icons
 import DownIcon from "../assets/icons/down.svg?react";
 import ResetIcon from "../assets/icons/reset.svg?react";
-// ✅ [수정] 중앙 데이터 관리소에서 필요한 함수들을 추가로 가져옵니다.
+// Import additional functions from central data management
 import { usePracticeData } from "../contexts/PracticeDataContext";
 
 function useQuery() {
@@ -20,7 +20,7 @@ const query = useQuery();
 const trackIdParam = query.get("trackId");
 const trackId = trackIdParam ? Number(trackIdParam) : null;
 
-// ✅ [수정] 중앙 관리소에서 toggleCheck 함수를 추가로 가져옵니다.
+// Import toggleCheck function from central management
 const { tracks, partialCounts, practiceChecks, incPartial, decPartial, setPartialCounts, toggleCheck } = usePracticeData();
 const [count, setCount] = useState(0);
 
@@ -36,30 +36,29 @@ const today = dayjs().format("YYYY-MM-DD");
 
 useEffect(() => {
   const todayCounts = partialCounts[today] || {};
-  // ✅ trackId가 있으면 해당 곡의 카운트를, 없으면 'practice'의 카운트를 가져옴
+  // If trackId exists, get that track's count; otherwise get 'practice' count
   const key = trackId !== null ? trackId : 'practice';
   setCount(todayCounts[key] || 0);
 }, [partialCounts, trackId, today]);
 
-// ✅ [수정] +1 핸들러에 체크박스 연동 로직 추가
-// ✅ [수정] +1 핸들러에 체크박스 연동 로직 추가
+// Add checkbox integration logic to +1 handler
   const handlePlus = () => {
-    // UI에 즉시 반영되도록 count 상태를 먼저 업데이트합니다.
+    // Update count state first for immediate UI reflection
     const newCount = count + 1;
     setCount(newCount);
 
     if (trackId !== null) {
-      // --- 특정 곡이 선택된 경우 ---
-      // 체크박스 연동 로직
+      // --- When specific track is selected ---
+      // Checkbox integration logic
       const isChecked = !!(practiceChecks[today] && practiceChecks[today][trackId]);
       if (count === 0 && !isChecked) {
         toggleCheck(today, trackId);
       }
-      // 중앙 관리 데이터 업데이트
+      // Update central management data
       incPartial(today, trackId);
     } else {
-      // --- 특정 곡이 선택되지 않은 경우 (일반 practice) ---
-      // 중앙 관리 데이터를 직접 수정하여 'practice' 키의 카운트를 올립니다.
+      // --- When no specific track is selected (general practice) ---
+      // Directly modify central management data to increase 'practice' key count
       setPartialCounts(prev => {
         const todayCounts = prev[today] || {};
         const updatedDayCounts = { ...todayCounts, practice: newCount };
@@ -109,7 +108,7 @@ return (
   <div
     className="apple-screen"
     style={{
-      position: "fixed", // ✅ 고정
+      position: "fixed", // Fixed position
       top: 0,
       left: 0,
       width: "100vw",
@@ -122,27 +121,27 @@ return (
       alignItems: "center",
       padding: "0 16px",
       paddingTop: "calc(env(safe-area-inset-top, 0px) + 5px)",
-      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)", // ✅ 여유있게 버튼 띄움
-      overflow: "hidden", // ✅ 스크롤 완전 차단
+      paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 90px)", // Give buttons some space
+      overflow: "hidden", // Completely block scrolling
       boxSizing: "border-box",
       zIndex: 99,
       touchAction: "manipulation",
       userSelect: "none"
     }}
     onClick={(e) => {
-  // 버튼 내부 클릭이면 무시 (숫자 올라가지 않게)
+  // Ignore if clicking inside button (prevent number increment)
   if ((e.target as HTMLElement).closest("button")) return;
   handlePlus();
 }}
   >
 
-    {/* 중앙 덩어리 */}
+    {/* Center content block */}
     <div style={{
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      flex: 1, // ✅ 위 아래 사이에서 공간 균등 확보
+      flex: 1, // Evenly distribute space between top and bottom
       textAlign: "center",
       width: "100%"
     }}>
@@ -169,15 +168,15 @@ return (
       </div>
     </div>
 
-    {/* ✅ [변경] 하단 버튼 - 아이콘만, 중앙 정렬 */}
+    {/* Bottom buttons - icon only, center aligned */}
     <div style={{
       width: "100%",
       display: "flex",
       justifyContent: "center",
       alignItems: "center",
-      gap: 150 // 두 버튼 사이 간격
+      gap: 150 // Gap between two buttons
     }}>
-      {/* Reset 버튼 */}
+      {/* Reset button */}
       <button
         onClick={handleReset}
         style={{
@@ -189,7 +188,7 @@ return (
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
-          borderRadius: "50%", // 원형 터치 영역
+          borderRadius: "50%", // Circular touch area
           padding: 0
         }}
       >
@@ -200,7 +199,7 @@ return (
         />
       </button>
 
-      {/* Minus 버튼 */}
+      {/* Minus button */}
       <button
         onClick={handleMinus}
         style={{
@@ -212,7 +211,7 @@ return (
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
-          borderRadius: "50%", // 원형 터치 영역
+          borderRadius: "50%", // Circular touch area
           padding: 0
         }}
       >

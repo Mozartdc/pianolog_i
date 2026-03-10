@@ -27,7 +27,7 @@ export function HomeStopModal({
 
   useEffect(() => {
     if (isOpen) {
-      // ✅ 새로운 timerV2 키에서 memo 읽기
+      // Read memo from new timerV2 key
       const timerState = localStorage.getItem("timerV2");
       if (timerState) {
         try {
@@ -42,14 +42,14 @@ export function HomeStopModal({
     }
   }, [isOpen]);
 
-  // ✅ 새로운 timerV2 키로 memo 저장
+  // Save memo to new timerV2 key
   const persistMemo = () => {
     try {
       const s = localStorage.getItem("timerV2");
       if (s) {
         const p = JSON.parse(s);
         p.memo = practiceNote;
-        p.lastUpdatedMs = Date.now(); // ✅ 업데이트 시간도 갱신
+        p.lastUpdatedMs = Date.now(); // Also update timestamp
         localStorage.setItem("timerV2", JSON.stringify(p));
         console.log('📝 HomeStopModal: memo 저장 완료', practiceNote);
       }
@@ -64,14 +64,14 @@ export function HomeStopModal({
     onClose();
   };
 
-  // 피퇴 버튼 클릭 처리
+  // Handle finish button click
   const handleLikeClick = () => {
     if (isCompleting || isLikeAnimating) return;
     
     setIsLikeAnimating(true);
     setIsCompleting(true);
     
-    // Lottie 애니메이션 시작 - 약간의 딜레이 후 확실히 시작
+    // Start Lottie animation - ensure it starts after slight delay
     setTimeout(() => {
       if (lottieRef.current) {
         lottieRef.current.goToAndStop(0, true);
@@ -80,7 +80,7 @@ export function HomeStopModal({
     }, 100);
   };
 
-  // Lottie 애니메이션 완료 처리
+  // Handle Lottie animation completion
   const handleLottieComplete = () => {
     persistMemo();
     onComplete();
@@ -120,7 +120,7 @@ export function HomeStopModal({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 닫기 */}
+        {/* Close button */}
         <button
           onClick={handleCloseAndSave}
           aria-label="닫기"
@@ -137,7 +137,7 @@ export function HomeStopModal({
           <X style={{ color: "var(--text-secondary)" }} width={20} height={20} />
         </button>
 
-        {/* 헤더 */}
+        {/* Header */}
         <div style={{
           display: "flex", alignItems: "center", justifyContent: "center",
           gap: 8, marginBottom: 24, marginTop: 4, ...commonFontStyle,
@@ -148,7 +148,7 @@ export function HomeStopModal({
           </span>
         </div>
 
-        {/* 메모 */}
+        {/* Memo textarea */}
         <textarea
           value={practiceNote}
           onChange={(e) => setPracticeNote(e.target.value)}
@@ -166,9 +166,9 @@ export function HomeStopModal({
           }}
         />
 
-        {/* 버튼 영역 */}
+        {/* Button area */}
         <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 20 }}>
-          {/* 피퇴 버튼: Lottie 애니메이션 */}
+          {/* Finish button: Lottie animation */}
           <button
             onClick={handleLikeClick}
             disabled={isCompleting}
@@ -184,13 +184,13 @@ export function HomeStopModal({
             aria-label="피퇴"
           >
             {!isLikeAnimating ? (
-              // 기본 상태: Power 아이콘 + "피퇴" 텍스트
+              // Default state: Power icon + "피퇴" text
               <>
                 <PowerIcon width={16} height={16} style={{ color: "currentColor" }} />
                 <span style={{ fontSize: 16, fontWeight: 600 }}>피퇴</span>
               </>
             ) : (
-              // 애니메이션 상태: Lottie (크기 225%, 미모사 색상)
+              // Animation state: Lottie (225% size, mimosa color)
               <div style={{ 
                 width: 90, 
                 height: 90,
@@ -212,7 +212,7 @@ export function HomeStopModal({
             )}
           </button>
 
-          {/* 시간 수정 버튼 */}
+          {/* Edit time button */}
           <button
             onClick={() => { if (!isCompleting) { persistMemo(); onEditTime(); } }}
             disabled={isCompleting}

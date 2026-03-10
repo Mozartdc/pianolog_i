@@ -1,12 +1,12 @@
 /* src/App.css */
 
-/* Pretendard 폰트 로드는 index.css에서 이미 처리하고 있으므로 여기서 제거합니다. */
+/* Pretendard font loading is already handled in index.css, so we remove it here. */
 /* @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css'); */
 
-/* colors.css는 삭제하거나, 필요한 스타일을 옮긴 후 이 import를 제거합니다. */
+/* Delete colors.css or move necessary styles, then remove this import. */
 /* @import './colors.css'; */
 
-/* 글로벌 리셋 및 통일된 폰트 설정은 _base.css에서 이미 처리하고 있으므로 여기서 제거합니다. */
+/* Global reset and unified font settings are already handled in _base.css, so we remove them here. */
 /*
 * {
   box-sizing: border-box;
@@ -40,5 +40,5 @@ body {
 }
 */
 
-/* 만약 App.css에 다른 App 수준의 유니크한 스타일이 있다면 여기에 유지합니다. */
-/* 비워두는 것이 가장 좋습니다. */
+/* If I ever have other app-only styles, I’ll just keep them here */
+/* Probably better to leave this empty though */

@@ -34,7 +34,7 @@ export const StatsCharts: React.FC<StatsChartsProps> = ({
       justifyContent: "space-between", 
       alignItems: "flex-start" 
     }}>
-      {/* 주간 피출 시간 차트 */}
+      {/* Weekly practice time chart */}
       <div style={{ 
         flex: 1, 
         minWidth: "calc(50% - min(12px, 3vw) / 2)", 
@@ -96,7 +96,7 @@ export const StatsCharts: React.FC<StatsChartsProps> = ({
         </div>
       </div>
 
-      {/* 주간 연습 곡 차트 */}
+      {/* Weekly practice songs chart */}
       <div style={{ 
         flex: 1, minWidth: "calc(50% - min(12px, 3vw) / 2)", height: 161, 
         padding: 10, border: "var(--border-light)", borderRadius: 5, 
