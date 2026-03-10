@@ -31,7 +31,7 @@ export class MetronomeEngine {
   private timeSignature: TimeSignature = { numerator: 4, denominator: 4 };
   private rhythmPatternId: string = 'one_beat';
   private isMuted: boolean = false;
-  private beatPattern: Array<0 | 1 | 2 | 'A'> = [2, 1, 1, 1];
+  private beatPattern: Array<0 | 1 | 2 | 'A'> = ['A', 2, 2, 2];
   
   // Scheduling properties
   private nextNoteTime: number = 0;

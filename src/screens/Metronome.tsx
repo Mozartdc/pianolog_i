@@ -86,19 +86,19 @@ const writeLocalStorage = (key: string, value: unknown): void => {
 };
 
 const createDefaultBeatPattern = (beatCount: number): BeatStrength[] =>
-  Array.from({ length: beatCount }, (_, index) => (index === 0 ? 2 : 1));
+  Array.from({ length: beatCount }, (_, index) => (index === 0 ? 'A' : 2));
 
 const nextBeatStrength = (current: BeatStrength): BeatStrength => {
   switch (current) {
+    case 'A':
+      return 2;
     case 2:
       return 1;
     case 1:
-      return 'A';
-    case 'A':
       return 0;
     case 0:
     default:
-      return 2;
+      return 'A';
   }
 };
 
@@ -203,7 +203,7 @@ useEffect(() => {
         setCurrentBeat(beat);
         if (!fullScreenFlashEnabledRef.current) return;
 
-        const beatType = beatPatternRef.current[beat] ?? (beat === 0 ? 2 : 1);
+        const beatType = beatPatternRef.current[beat] ?? (beat === 0 ? 'A' : 2);
         if (beatType === 0) return;
 
         const peakOpacityByBeatType = isDarkThemeRef.current
@@ -665,7 +665,7 @@ const handleTogglePlay = async () => {
   const handleBeatPatternEdit = (beatIndex: number) => {
     setEditableBeatPattern(prev => {
       const next = [...prev];
-      next[beatIndex] = nextBeatStrength(next[beatIndex] ?? (beatIndex === 0 ? 2 : 1));
+      next[beatIndex] = nextBeatStrength(next[beatIndex] ?? (beatIndex === 0 ? 'A' : 2));
       return next;
     });
   };

@@ -30,7 +30,7 @@ export class MetronomeSoundEngine {
     this.audioContextManager = AudioContextManager.getInstance();
     this.soundBank = new SoundBank();
     this.currentSettings = {
-      presetId: 'wood_block',
+      presetId: 'mechanical',
       volume: 0.7,
       accentGain: 1.5,
       muteWeakBeats: false,
@@ -260,9 +260,16 @@ export class MetronomeSoundEngine {
   }
 
   private playSound(type: 'strong' | 'weak' | 'accent', when: number): Result<void> {
+    if (this.currentSettings.presetId === 'mechanical') {
+      return this.playMechanicalSample(type, when);
+    }
+
     const buffer = this.soundBank.getCachedSound(this.currentSettings.presetId);
+
     if (!buffer) {
-      this.soundBank.loadSound(this.currentSettings.presetId);
+      this.soundBank.loadSound(this.currentSettings.presetId).catch(error => {
+        console.warn(`Failed to load sound ${this.currentSettings.presetId}:`, error);
+      });
       return this.playFallbackSound(type, when);
     }
 
@@ -273,9 +280,6 @@ export class MetronomeSoundEngine {
       const gainNode = context.createGain();
       
       source.buffer = buffer;
-      if (this.currentSettings.presetId === 'mechanical') {
-        source.playbackRate.value = type === 'weak' ? 1.05 : 1.0;
-      }
       source.connect(gainNode);
       gainNode.connect(this.masterGain!);
       
@@ -283,29 +287,19 @@ export class MetronomeSoundEngine {
       if (type === 'strong' || type === 'accent') {
         volume *= this.currentSettings.accentGain;
       }
-      if (this.currentSettings.presetId === 'mechanical' && type === 'weak') {
-        volume *= 0.6;
-      }
       gainNode.gain.value = volume;
 
+      const attackTime = this.currentSettings.attackTime / 1000;
+      const releaseTime = this.currentSettings.releaseTime / 1000;
       const duration = buffer.duration;
 
-      if (this.currentSettings.presetId === 'mechanical') {
-        gainNode.gain.setValueAtTime(volume, when);
-        source.start(when, 0, Math.min(duration, 0.085));
-        source.stop(when + Math.min(duration, 0.085));
-      } else {
-        const attackTime = this.currentSettings.attackTime / 1000;
-        const releaseTime = this.currentSettings.releaseTime / 1000;
+      gainNode.gain.setValueAtTime(0, when);
+      gainNode.gain.linearRampToValueAtTime(volume, when + attackTime);
+      gainNode.gain.setValueAtTime(volume, when + duration - releaseTime);
+      gainNode.gain.linearRampToValueAtTime(0, when + duration);
 
-        gainNode.gain.setValueAtTime(0, when);
-        gainNode.gain.linearRampToValueAtTime(volume, when + attackTime);
-        gainNode.gain.setValueAtTime(volume, when + duration - releaseTime);
-        gainNode.gain.linearRampToValueAtTime(0, when + duration);
-
-        source.start(when);
-        source.stop(when + duration);
-      }
+      source.start(when);
+      source.stop(when + duration);
       
       return { success: true, data: undefined };
     } catch (error) {
@@ -314,6 +308,53 @@ export class MetronomeSoundEngine {
         success: false,
         error: AudioError.NodeCreationFailed
       };
+    }
+  }
+
+  private playMechanicalSample(type: 'strong' | 'weak' | 'accent', when: number): Result<void> {
+    const context = this.audioContextManager.getCurrentContext();
+    if (!context || !this.masterGain) {
+      return { success: false, error: AudioError.ContextCreationFailed };
+    }
+
+    const bufferId = type === 'accent' ? 'mechanical_accent' : 'mechanical';
+    const buffer = this.soundBank.getCachedSound(bufferId);
+    if (!buffer) {
+      this.soundBank.loadSound(bufferId).catch((error) => {
+        console.warn(`Failed to load sound ${bufferId}:`, error);
+      });
+      return this.playFallbackSound(type, when);
+    }
+
+    try {
+      const source = context.createBufferSource();
+      const toneFilter = context.createBiquadFilter();
+      const gainNode = context.createGain();
+
+      source.buffer = buffer;
+      source.connect(toneFilter);
+      toneFilter.connect(gainNode);
+      gainNode.connect(this.masterGain);
+
+      // Weak beat is based on strong sample with reduced tone/level.
+      if (type === 'weak') {
+        source.playbackRate.value = 1.02;
+        toneFilter.type = 'lowpass';
+        toneFilter.frequency.setValueAtTime(2600, when);
+        gainNode.gain.setValueAtTime(0.58, when);
+      } else {
+        toneFilter.type = 'lowpass';
+        toneFilter.frequency.setValueAtTime(7200, when);
+        const base = type === 'accent' ? this.currentSettings.accentGain : 1.0;
+        gainNode.gain.setValueAtTime(base, when);
+      }
+
+      source.start(when);
+      source.stop(when + buffer.duration);
+      return { success: true, data: undefined };
+    } catch (error) {
+      console.error('Failed to play mechanical sample sound:', error);
+      return { success: false, error: AudioError.NodeCreationFailed };
     }
   }
 

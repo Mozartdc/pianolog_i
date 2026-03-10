@@ -75,13 +75,13 @@ export const useMetronomeStore = () => {
     return `${state.timeSignature.numerator}/${state.timeSignature.denominator}`;
   }, [state.timeSignature]);
 
-  // Generate beat pattern (strong/weak beats)
+  // Generate beat pattern (accent/strong beats)
   const getBeatPattern = useCallback(() => {
     const { numerator } = state.timeSignature;
-    const pattern: number[] = [];
+    const pattern: Array<0 | 1 | 2 | 'A'> = [];
     
     for (let i = 0; i < numerator; i++) {
-      pattern.push(i === 0 ? 2 : 1); // First beat is strong (2), others are weak (1)
+      pattern.push(i === 0 ? 'A' : 2); // First beat accent, others strong
     }
     
     return pattern;

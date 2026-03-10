@@ -60,7 +60,15 @@ export class SoundBank {
   }
 
   async preloadBasicSounds(): Promise<Result<void>> {
-    const basicPresets = ['wood_block', 'shaker', 'beep', 'mechanical', 'marimba'];
+    const basicPresets = [
+      'wood_block',
+      'shaker',
+      'beep',
+      'mechanical',
+      'mechanical_accent',
+      'mechanical_weak',
+      'marimba'
+    ];
     const loadPromises = basicPresets.map(presetId => this.loadSound(presetId));
     
     try {

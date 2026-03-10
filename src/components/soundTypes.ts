@@ -92,7 +92,21 @@ export const SOUND_PRESETS: SoundPreset[] = [
     category: 'mechanical',
     name: '기계식',
     description: '전통 메트로놈',
-    audioFile: '/sounds/mechanical_tick.wav'
+    audioFile: '/sounds/mechanical_strong.wav'
+  },
+  {
+    id: 'mechanical_accent',
+    category: 'mechanical',
+    name: '기계식 강박',
+    description: '기계식 강박 샘플',
+    audioFile: '/sounds/mechanical_accent.wav'
+  },
+  {
+    id: 'mechanical_weak',
+    category: 'mechanical',
+    name: '기계식 약박',
+    description: '기계식 약박 샘플',
+    audioFile: '/sounds/mechanical_weak.wav'
   },
   {
     id: 'pendulum',
@@ -125,7 +139,7 @@ export const CATEGORY_LABELS: Record<SoundCategory, string> = {
 };
 
 export const DEFAULT_SOUND_SETTINGS: SoundSettings = {
-  presetId: 'wood_block',
+  presetId: 'mechanical',
   volume: 0.7,
   accentGain: 1.5,
   muteWeakBeats: false,
