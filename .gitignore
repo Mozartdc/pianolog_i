@@ -112,3 +112,7 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*dist/
 __MACOSX/
 .DS_Store
+
+.DS_Store
+*.zip
+repomix-output.xml
