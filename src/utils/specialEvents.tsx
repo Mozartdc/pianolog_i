@@ -42,12 +42,7 @@ const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
 };
 
 export const specialEvents: SpecialEvent[] = [
-<<<<<<< HEAD
-  
-// Special period event (August 31 - September 7)
-=======
-  // ==================== 특별 기간 이벤트 (8월 31일 ~ 9월 7일) ====================
->>>>>>> origin/main
+  // Special period event (August 31 - September 7)
 {
   type: 'textWithImage',
   message: (
@@ -58,41 +53,11 @@ export const specialEvents: SpecialEvent[] = [
   imageUrl: '/happy.gif',
   imageAlt: '특별한 날',
   date: '2025-08-31',
-<<<<<<< HEAD
   expiresAt: '2025-09-08T00:00:00',
   category: 'special'
 },
 
   // New Year & International holidays
-=======
-  category: 'special'
-},
-  {
-  type: 'textWithImage',
-  message: (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-      <span><strong>aasdf43 전국 3위</strong><br />전국 피아노 콩쿠르 입상을 축하합니다.</span>
-    </div>
-  ),
-  imageUrl: '/happy.gif',
-  imageAlt: '특별한 날',
-  date: '2025-09-01',
-  category: 'special'
-},
-    {
-  type: 'textWithImage',
-  message: (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
-      <span><strong>aasdf43 전국 3위</strong><br />전국 피아노 콩쿠르 입상을 축하합니다.</span>
-    </div>
-  ),
-  imageUrl: '/happy.gif',
-  imageAlt: '특별한 날',
-  date: '2025-09-02',
-  category: 'special'
-},
-  // ==================== 신년 & 국제 기념일 ====================
->>>>>>> origin/main
   {
     type: 'textWithImage',
     message: (
