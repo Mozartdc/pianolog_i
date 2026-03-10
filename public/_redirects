@@ -1,12 +1,1 @@
-# Netlify SPA routing setup
-# Redirect all React Router paths to index.html
-
-# Process all routes as SPA except API paths or static files
-/*    /index.html   200
-
-# Additional security headers (optional)
-/*
-  X-Frame-Options: DENY
-  X-XSS-Protection: 1; mode=block
-  X-Content-Type-Options: nosniff
-  Referrer-Policy: strict-origin-when-cross-origin
+/* /index.html 200
