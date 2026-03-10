@@ -107,10 +107,8 @@ export const useSoundEngine = () => {
 
   useEffect(() => {
     return () => {
-      if (engineRef.current) {
-        engineRef.current.dispose().catch(console.error);
-        engineRef.current = null;
-      }
+      // MetronomeSoundEngine is a shared singleton used by the main metronome engine.
+      // Do not dispose it when the settings panel unmounts.
     };
   }, []);
 
