@@ -113,10 +113,21 @@ export class AudioContextManager {
 
   // Set up listeners for page events
   private setupEventListeners(): void {
-    // Pause audio when page is hidden (user switched tabs)
+    // Keep audio context alive in background; only recover on foreground.
+    // Some browsers may still throttle/suspend audio due to OS policy.
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden && this.context?.state === 'running') {
-        this.suspend();
+      if (!document.hidden && this.context?.state === 'suspended') {
+        this.context.resume().catch((error) => {
+          console.warn('Failed to resume AudioContext on visibilitychange:', error);
+        });
+      }
+    });
+
+    window.addEventListener('pageshow', () => {
+      if (this.context?.state === 'suspended') {
+        this.context.resume().catch((error) => {
+          console.warn('Failed to resume AudioContext on pageshow:', error);
+        });
       }
     });
 
