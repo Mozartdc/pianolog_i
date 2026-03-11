@@ -18,7 +18,6 @@ import { useMetronomeStore, TimeSignature } from '../components/useMetronomeStor
 import { useRhythmTraining, RhythmTrainingMode } from '../components/useRhythmTraining';
 import { MetronomeEngine, TapTempo } from '../components/MetronomeEngine';
 import { MetronomeSoundEngine } from '../components/MetronomeSoundEngine';
-import { RHYTHM_PATTERNS } from '../utils/rhythmUtils';
 import { usePracticeData } from '../contexts/PracticeDataContext';
 import PracticeIcon from '../assets/icons/MS_practice.svg?react';
 import TapIcon from '../assets/icons/MS_tap.svg?react';
@@ -765,16 +764,7 @@ const handleTogglePlay = async () => {
     });
   }, [timeSignature.numerator]);
 
-  const visualizerBeatPattern = (() => {
-    const selectedPattern = RHYTHM_PATTERNS.find(pattern => pattern.id === selectedRhythmId);
-    const firstSubdivisionSounds = selectedPattern?.getTickPattern()[0] === 1;
-
-    if (isMuted || !firstSubdivisionSounds) {
-      return editableBeatPattern.map(() => 0 as const);
-    }
-
-    return editableBeatPattern;
-  })();
+  const visualizerBeatPattern = editableBeatPattern;
 
   useEffect(() => {
     return () => {
