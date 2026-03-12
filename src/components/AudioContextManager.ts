@@ -30,11 +30,14 @@ export class AudioContextManager {
         });
       }
 
-      // Wake up the context if it's sleeping
-      if (this.context.state === 'suspended') {
+      // Wake up the context when it's not running (Safari may report "interrupted")
+      if (this.context.state !== 'running') {
         if (!this.resumePromise) {
           this.resumePromise = this.context.resume().then(() => {
             this.resumePromise = null;
+          }).catch((error) => {
+            this.resumePromise = null;
+            throw error;
           });
         }
         await this.resumePromise;
@@ -113,10 +116,8 @@ export class AudioContextManager {
 
   // Set up listeners for page events
   private setupEventListeners(): void {
-    // Keep audio context alive in background; only recover on foreground.
-    // Some browsers may still throttle/suspend audio due to OS policy.
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && this.context?.state === 'suspended') {
+      if (!document.hidden && this.context && this.context.state !== 'running') {
         this.context.resume().catch((error) => {
           console.warn('Failed to resume AudioContext on visibilitychange:', error);
         });
@@ -124,7 +125,7 @@ export class AudioContextManager {
     });
 
     window.addEventListener('pageshow', () => {
-      if (this.context?.state === 'suspended') {
+      if (this.context && this.context.state !== 'running') {
         this.context.resume().catch((error) => {
           console.warn('Failed to resume AudioContext on pageshow:', error);
         });

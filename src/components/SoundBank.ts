@@ -93,6 +93,38 @@ export class SoundBank {
     }
   }
 
+  async preloadPresetFamily(presetId: string): Promise<Result<void>> {
+    const presetIds =
+      presetId === 'mechanical'
+        ? ['mechanical', 'mechanical_accent', 'mechanical_weak']
+        : [presetId];
+
+    const loadPromises = presetIds.map((id) => this.loadSound(id));
+
+    try {
+      const results = await Promise.allSettled(loadPromises);
+      const failures = results
+        .filter(
+          (result) =>
+            result.status === 'rejected' ||
+            (result.status === 'fulfilled' && !result.value.success)
+        )
+        .map((_, index) => presetIds[index]);
+
+      if (failures.length > 0) {
+        console.warn('Failed to preload preset family:', failures);
+      }
+
+      return { success: true, data: undefined };
+    } catch (error) {
+      console.error('Failed to preload preset family:', error);
+      return {
+        success: false,
+        error: AudioError.FileLoadFailed
+      };
+    }
+  }
+
   getCachedSound(presetId: string): AudioBuffer | null {
     return this.audioBufferCache.get(presetId) || null;
   }

@@ -4,7 +4,6 @@ import { AudioContextManager } from './AudioContextManager';
 import { MetronomeSoundEngine } from './MetronomeSoundEngine';
 import { RHYTHM_PATTERNS } from '../utils/rhythmUtils';
 import { TimeSignature } from './useMetronomeStore';
-import { RhythmTrainingMode } from './useRhythmTraining';
 
 export interface MetronomeEngineConfig {
   bpm: number;
@@ -23,28 +22,29 @@ export interface MetronomeEngineCallbacks {
 export class MetronomeEngine {
   private audioContextManager: AudioContextManager;
   private soundEngine: MetronomeSoundEngine;
-  private isPlaying: boolean = false;
-  private isInitialized: boolean = false;
-  
-  // Timing properties
-  private currentBPM: number = 120;
+  private isPlaying = false;
+  private isInitialized = false;
+
+  private currentBPM = 120;
   private timeSignature: TimeSignature = { numerator: 4, denominator: 4 };
-  private rhythmPatternId: string = 'one_beat';
-  private isMuted: boolean = false;
+  private rhythmPatternId = 'one_beat';
+  private isMuted = false;
   private beatPattern: Array<0 | 1 | 2 | 'A'> = ['A', 2, 2, 2];
-  
-  // Scheduling properties
-  private nextNoteTime: number = 0;
-  private scheduledBeat: number = 0; // Beat being scheduled for playback
-  private currentBeat: number = 0;   // Beat being displayed in UI
-  private lookaheadTime: number = 25; // milliseconds
+
+  private nextNoteTime = 0;
+  private scheduledBeat = 0;
+  private currentBeat = 0;
+  private foregroundLookaheadTime = 25;
+  private foregroundScheduleHorizonSec = 0.1;
   private scheduleInterval: number | null = null;
-  private startTime: number = 0;
+  private startTime = 0;
   private uiTimeouts: number[] = [];
-  
-  // Callbacks
+  private lastResumeAttemptAt = 0;
+  private lastUiBeatContextTime = 0;
+  private transportStartPerfMs = 0;
+
   private callbacks: MetronomeEngineCallbacks | null = null;
-  
+
   constructor() {
     this.audioContextManager = AudioContextManager.getInstance();
     this.soundEngine = MetronomeSoundEngine.getInstance();
@@ -54,15 +54,12 @@ export class MetronomeEngine {
     if (this.isInitialized) return;
 
     try {
-      // Initialize audio context
       const contextResult = await this.audioContextManager.ensureContext();
       if (!contextResult.success) {
         throw new Error('Failed to initialize audio context');
       }
 
-      // Initialize sound engine
       await this.soundEngine.initialize();
-      
       this.isInitialized = true;
       console.log('🎵 MetronomeEngine 초기화 완료');
     } catch (error) {
@@ -83,16 +80,22 @@ export class MetronomeEngine {
 
     if (config.bpm !== undefined && config.bpm !== this.currentBPM) {
       this.currentBPM = config.bpm;
-      // BPM changes are applied continuously by getBeatDuration().
-      // Avoid forced reschedule here to prevent audible hiccups.
+      if (this.isPlaying) {
+        this.resetTransportAnchorFromCurrentBeat();
+      }
       console.log('🎯 BPM 변경:', this.currentBPM);
     }
 
     if (config.timeSignature !== undefined) {
-      if (config.timeSignature.numerator !== this.timeSignature.numerator ||
-          config.timeSignature.denominator !== this.timeSignature.denominator) {
+      if (
+        config.timeSignature.numerator !== this.timeSignature.numerator ||
+        config.timeSignature.denominator !== this.timeSignature.denominator
+      ) {
         this.timeSignature = { ...config.timeSignature };
-        this.currentBeat = 0; // Reset beat when time signature changes
+        this.currentBeat = 0;
+        if (this.isPlaying) {
+          this.resetTransportAnchorFromCurrentBeat();
+        }
         needsReschedule = true;
         needsTimeGridReschedule = true;
         console.log('🎼 박자표 변경:', `${this.timeSignature.numerator}/${this.timeSignature.denominator}`);
@@ -114,7 +117,6 @@ export class MetronomeEngine {
       console.log('🔇 음소거 상태:', this.isMuted);
     }
 
-    // If playing and critical parameters changed, reschedule
     if (this.isPlaying && needsReschedule && needsTimeGridReschedule) {
       this.reschedule();
     }
@@ -127,33 +129,27 @@ export class MetronomeEngine {
 
     if (this.isPlaying) return;
 
-    const context = this.audioContextManager.getCurrentContext();
-    if (!context) {
+    const contextResult = await this.audioContextManager.ensureContext();
+    if (!contextResult.success) {
       throw new Error('Audio context not available');
     }
 
-    // iOS에서 재생 시 AudioContext 다시 한번 resume
-    if (context.state === 'suspended') {
-      console.log('재생 시 AudioContext suspended, resuming...');
+    const context = contextResult.data;
+    if (context.state !== 'running') {
+      await context.resume();
     }
 
     this.isPlaying = true;
     this.scheduledBeat = 0;
     this.currentBeat = 0;
-    this.nextNoteTime = context.currentTime;
+    this.transportStartPerfMs = performance.now();
+    this.lastUiBeatContextTime = context.currentTime;
+    this.nextNoteTime = context.currentTime + 0.01;
     this.startTime = context.currentTime;
     this.callbacks?.onBeatChange(0);
 
-    console.log('메트로놈 시작 상태:', {
-      contextState: context.state,
-      currentTime: context.currentTime,
-      startTime: this.startTime
-    });
-
-    // Start the scheduling loop
-    this.scheduleInterval = window.setInterval(() => {
-      this.scheduleNotes();
-    }, this.lookaheadTime);
+    this.restartScheduleLoop();
+    this.scheduleNotes();
 
     console.log('▶️ 메트로놈 시작:', {
       bpm: this.currentBPM,
@@ -166,20 +162,15 @@ export class MetronomeEngine {
     if (!this.isPlaying) return;
 
     this.isPlaying = false;
-    
-    if (this.scheduleInterval) {
-      clearInterval(this.scheduleInterval);
-      this.scheduleInterval = null;
-    }
-
+    this.clearScheduleLoop();
     this.soundEngine.stopAll();
     this.scheduledBeat = 0;
     this.currentBeat = 0;
+    this.transportStartPerfMs = 0;
+    this.lastUiBeatContextTime = 0;
     this.clearUITimeouts();
 
     console.log('⏹️ 메트로놈 정지');
-    
-    // Notify callback
     this.callbacks?.onStop();
   }
 
@@ -197,28 +188,29 @@ export class MetronomeEngine {
     const context = this.audioContextManager.getCurrentContext();
     if (!context) return;
 
-    // Schedule notes that need to be played in the lookahead window
-    const lookaheadSeconds = this.lookaheadTime / 1000;
-    
-    while (this.nextNoteTime < context.currentTime + lookaheadSeconds) {
+    if (context.state !== 'running') {
+      this.requestContextResume();
+      return;
+    }
+
+    this.catchUpIfBehind(context.currentTime);
+
+    while (this.nextNoteTime < context.currentTime + this.foregroundScheduleHorizonSec) {
       this.playNote(this.nextNoteTime, this.scheduledBeat);
       this.advanceNote();
     }
-
   }
 
   private playNote(when: number, beatIndex: number): void {
     if (this.isMuted) return;
 
-    const pattern = RHYTHM_PATTERNS.find(p => p.id === this.rhythmPatternId);
+    const pattern = RHYTHM_PATTERNS.find((p) => p.id === this.rhythmPatternId);
     if (!pattern) {
-      // Fallback to simple metronome
       this.playSimpleBeat(when, beatIndex);
       this.scheduleUIBeat(beatIndex, when);
       return;
     }
 
-    // Play subdivision pattern
     this.playSubdivisionPattern(pattern, when, beatIndex);
     this.scheduleUIBeat(beatIndex, when);
   }
@@ -237,32 +229,21 @@ export class MetronomeEngine {
     const subdivisionDuration = this.getBeatDuration() / tickPattern.length;
 
     tickPattern.forEach((tick: number, index: number) => {
-      if (tick === 1) { // Sound this subdivision
-        const tickTime = when + (index * subdivisionDuration);
-        let beatType: 'strong' | 'weak' | 'accent';
-        
-        if (index === 0) {
-          beatType = beatTypeForBeat;
-        } else {
-          beatType = 'weak'; // Other subdivisions
-        }
-        
-        this.soundEngine.playBeat(beatType, tickTime);
-      }
+      if (tick !== 1) return;
+
+      const tickTime = when + index * subdivisionDuration;
+      const beatType: 'strong' | 'weak' | 'accent' = index === 0 ? beatTypeForBeat : 'weak';
+      this.soundEngine.playBeat(beatType, tickTime);
     });
   }
 
   private advanceNote(): void {
     const beatDuration = this.getBeatDuration();
     this.nextNoteTime += beatDuration;
-    
-    // Advance the beat counter for scheduling purposes
     this.scheduledBeat = (this.scheduledBeat + 1) % this.timeSignature.numerator;
-    console.log(`스케줄 박자 진행: ${this.scheduledBeat + 1}/${this.timeSignature.numerator}`);
   }
 
   private getBeatDuration(): number {
-    // Duration of one beat based on BPM and time signature denominator
     const quarterNoteDuration = 60.0 / this.currentBPM;
     return quarterNoteDuration * (4 / this.timeSignature.denominator);
   }
@@ -273,7 +254,6 @@ export class MetronomeEngine {
     const context = this.audioContextManager.getCurrentContext();
     if (!context) return;
 
-    // Smoothly transition to new timing
     this.nextNoteTime = context.currentTime;
     this.scheduledBeat = this.currentBeat;
     this.clearUITimeouts();
@@ -288,6 +268,7 @@ export class MetronomeEngine {
     const timeoutId = window.setTimeout(() => {
       if (!this.isPlaying) return;
       this.currentBeat = beatIndex;
+      this.lastUiBeatContextTime = when;
       this.callbacks?.onBeatChange(beatIndex);
     }, delayMs);
 
@@ -295,8 +276,45 @@ export class MetronomeEngine {
   }
 
   private clearUITimeouts(): void {
-    this.uiTimeouts.forEach(timeoutId => window.clearTimeout(timeoutId));
+    this.uiTimeouts.forEach((timeoutId) => window.clearTimeout(timeoutId));
     this.uiTimeouts = [];
+  }
+
+  private restartScheduleLoop(): void {
+    this.clearScheduleLoop();
+    this.scheduleInterval = window.setInterval(() => {
+      this.scheduleNotes();
+    }, this.foregroundLookaheadTime);
+  }
+
+  private clearScheduleLoop(): void {
+    if (this.scheduleInterval) {
+      clearInterval(this.scheduleInterval);
+      this.scheduleInterval = null;
+    }
+  }
+
+  private catchUpIfBehind(currentTime: number): void {
+    if (this.nextNoteTime >= currentTime) return;
+
+    const beatDuration = this.getBeatDuration();
+    if (beatDuration <= 0) return;
+
+    const beatsBehind = Math.floor((currentTime - this.nextNoteTime) / beatDuration);
+    if (beatsBehind <= 0) return;
+
+    this.nextNoteTime += beatsBehind * beatDuration;
+    this.scheduledBeat = (this.scheduledBeat + beatsBehind) % this.timeSignature.numerator;
+  }
+
+  private requestContextResume(): void {
+    const now = Date.now();
+    if (now - this.lastResumeAttemptAt < 800) return;
+    this.lastResumeAttemptAt = now;
+
+    this.audioContextManager.ensureContext().catch((error) => {
+      console.warn('AudioContext resume attempt failed:', error);
+    });
   }
 
   private getBeatTypeForIndex(beatIndex: number): 'strong' | 'weak' | 'accent' | null {
@@ -313,43 +331,39 @@ export class MetronomeEngine {
     this.isInitialized = false;
     console.log('🗑️ MetronomeEngine 정리 완료');
   }
+
+  private resetTransportAnchorFromCurrentBeat(): void {
+    const beatDuration = this.getBeatDuration();
+    this.transportStartPerfMs = performance.now() - this.currentBeat * beatDuration * 1000;
+  }
 }
 
-// Tap Tempo implementation
 export class TapTempo {
   private tapTimes: number[] = [];
-  private maxTaps: number = 8;
-  private maxInterval: number = 3000; // 3 seconds max between taps
+  private maxTaps = 8;
+  private maxInterval = 3000;
 
   tap(): number | null {
     const now = Date.now();
-    
-    // Remove old taps
-    this.tapTimes = this.tapTimes.filter(time => now - time < this.maxInterval);
-    
-    // Add current tap
+    this.tapTimes = this.tapTimes.filter((time) => now - time < this.maxInterval);
     this.tapTimes.push(now);
-    
-    // Need at least 2 taps to calculate BPM
+
     if (this.tapTimes.length < 2) {
       return null;
     }
 
-    // Keep only recent taps
     if (this.tapTimes.length > this.maxTaps) {
       this.tapTimes = this.tapTimes.slice(-this.maxTaps);
     }
 
-    // Calculate average interval
     const intervals: number[] = [];
-    for (let i = 1; i < this.tapTimes.length; i++) {
+    for (let i = 1; i < this.tapTimes.length; i += 1) {
       intervals.push(this.tapTimes[i] - this.tapTimes[i - 1]);
     }
 
     const averageInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
     const bpm = Math.round(60000 / averageInterval);
 
-    // Validate BPM range
     if (bpm < 20 || bpm > 400) {
       return null;
     }

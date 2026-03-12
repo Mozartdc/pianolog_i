@@ -137,6 +137,7 @@ function Metronome() {
   // MetronomeEngine and TapTempo instances
   const engineRef = useRef<MetronomeEngine | null>(null);
   const tapTempoRef = useRef<TapTempo | null>(null);
+  const isPlayingRef = useRef<boolean>(isPlaying);
 
   // Modal states
   const [isTimeSignatureModalOpen, setIsTimeSignatureModalOpen] = useState(false);
@@ -241,6 +242,30 @@ useEffect(() => {
 }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    let warmed = false;
+    const warmup = () => {
+      if (warmed) return;
+      warmed = true;
+      MetronomeSoundEngine.getInstance().unlockAudio();
+      engineRef.current?.initialize().catch((error) => {
+        console.warn('메트로놈 사전 예열 실패:', error);
+      });
+      window.removeEventListener('pointerdown', warmup);
+      window.removeEventListener('keydown', warmup);
+    };
+
+    window.addEventListener('pointerdown', warmup, { passive: true });
+    window.addEventListener('keydown', warmup);
+
+    return () => {
+      window.removeEventListener('pointerdown', warmup);
+      window.removeEventListener('keydown', warmup);
+    };
+  }, []);
+
+  useEffect(() => {
     beatPatternRef.current = editableBeatPattern;
   }, [editableBeatPattern]);
 
@@ -251,6 +276,10 @@ useEffect(() => {
   useEffect(() => {
     isDarkThemeRef.current = isDarkTheme;
   }, [isDarkTheme]);
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -593,8 +622,7 @@ useEffect(() => {
     }
   }, [activeSession, bpm, pendingOpenLibraryAfterSave, persistLastViewed, timeSignature.denominator, timeSignature.numerator]);
 
-  // Main play/stop handler with lazy initialization
-const handleTogglePlay = async () => {
+  const startEngine = useCallback(async () => {
     // 동기 함수로 바뀐 unlockAudio를 가장 먼저 호출
     MetronomeSoundEngine.getInstance().unlockAudio();
 
@@ -603,29 +631,42 @@ const handleTogglePlay = async () => {
     }
 
     try {
-      if (isPlaying) {
-        engineRef.current.stop();
-        setIsPlaying(false);
-      } else {
-        // Initialize engine only when user first clicks (user gesture required)
-        console.log('첫 재생 시도 - 엔진 초기화 중...');
-        await engineRef.current.initialize();
-        
-        // Apply current configuration
-        engineRef.current.updateConfig({
-          bpm,
-          timeSignature,
-          rhythmPatternId: selectedRhythmId,
-          isMuted,
-          beatPattern: editableBeatPattern
-        });
-        
-        await engineRef.current.start();
-        setIsPlaying(true);
-        console.log('메트로놈 시작됨');
-      }
+      // Initialize engine only when user first clicks (user gesture required)
+      console.log('첫 재생 시도 - 엔진 초기화 중...');
+      await engineRef.current.initialize();
+      
+      engineRef.current.updateConfig({
+        bpm,
+        timeSignature,
+        rhythmPatternId: selectedRhythmId,
+        isMuted,
+        beatPattern: editableBeatPattern
+      });
+      
+      await engineRef.current.start();
+      setIsPlaying(true);
+      console.log('메트로놈 시작됨');
     } catch (error) {
       console.error('메트로놈 재생/정지 실패:', error);
+      throw error;
+    }
+  }, [bpm, editableBeatPattern, isMuted, selectedRhythmId, setIsPlaying, timeSignature]);
+
+  const stopEngine = useCallback(() => {
+    if (!engineRef.current) return;
+    engineRef.current.stop();
+    setIsPlaying(false);
+  }, [setIsPlaying]);
+
+  // Main play/stop handler with lazy initialization
+  const handleTogglePlay = async () => {
+    if (isPlayingRef.current) {
+      stopEngine();
+      return;
+    }
+    try {
+      await startEngine();
+    } catch {
       alert('메트로놈을 시작할 수 없습니다. 오디오 권한을 확인해주세요.');
     }
   };

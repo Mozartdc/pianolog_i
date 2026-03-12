@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useSoundEngine } from './useSoundEngine';
+import { MetronomeSoundEngine } from './MetronomeSoundEngine';
 import {
   SoundSettings,
   DEFAULT_SOUND_SETTINGS,
@@ -50,6 +51,10 @@ interface SoundSettingsPanelProps {
 const SoundSettingsPanel: React.FC<SoundSettingsPanelProps> = ({
   onFullScreenFlashEnabledChange
 }) => {
+  const engineSnapshot = useMemo(
+    () => MetronomeSoundEngine.getInstance().getCurrentSettingsSnapshot(),
+    []
+  );
   const {
     isInitialized,
     initialize,
@@ -58,8 +63,8 @@ const SoundSettingsPanel: React.FC<SoundSettingsPanelProps> = ({
     stopAll
   } = useSoundEngine();
 
-  const [settings, setSettings] = useState<SoundSettings>(DEFAULT_SOUND_SETTINGS);
-  const [localSettings, setLocalSettings] = useState(settings);
+  const [settings, setSettings] = useState<SoundSettings>(engineSnapshot ?? DEFAULT_SOUND_SETTINGS);
+  const [localSettings, setLocalSettings] = useState<SoundSettings>(engineSnapshot ?? DEFAULT_SOUND_SETTINGS);
   const [previewingPresetId, setPreviewingPresetId] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return DEFAULT_SOUND_SETTINGS.volume > 0;
@@ -90,6 +95,13 @@ const SoundSettingsPanel: React.FC<SoundSettingsPanelProps> = ({
       initialize();
     }
   }, [isInitialized, initialize]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    const latest = MetronomeSoundEngine.getInstance().getCurrentSettingsSnapshot();
+    setSettings(latest);
+    setLocalSettings(latest);
+  }, [isInitialized]);
 
   useEffect(() => {
     if (isInitialized) {

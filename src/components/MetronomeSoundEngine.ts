@@ -44,27 +44,10 @@ export class MetronomeSoundEngine {
   }
 
   public unlockAudio(): void {
-    // 1. 동기적으로 컨텍스트 가져오기 (없으면 즉시 생성)
     const context = this.audioContextManager.getOrCreateContext();
-
-    // 2. 즉시 resume (iOS 보안 통과 핵심: await 없이 실행되어야 함)
-    if (context.state === 'suspended') {
+    if (context.state !== 'running') {
       context.resume();
     }
-
-    // 3. MediaSession 설정 (무음 스위치 우회)
-    if ('mediaSession' in navigator) {
-      navigator.mediaSession.playbackState = 'playing';
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: 'Piano Metronome',
-        artist: 'Pianolog',
-      });
-      // 더미 핸들러 등록
-      navigator.mediaSession.setActionHandler('play', () => {});
-      navigator.mediaSession.setActionHandler('pause', () => {});
-    }
-
-    // 4. 아주 짧은 무음 사운드 재생 (오디오 하드웨어 강제 활성화)
     try {
       const buffer = context.createBuffer(1, 1, 22050);
       const source = context.createBufferSource();
@@ -104,7 +87,7 @@ export class MetronomeSoundEngine {
         };
       }
 
-      await this.soundBank.preloadBasicSounds();
+      await this.soundBank.preloadPresetFamily(this.currentSettings.presetId);
 
       this.isInitialized = true;
       return { success: true, data: undefined };
@@ -134,8 +117,8 @@ export class MetronomeSoundEngine {
       this.currentSettings = { ...settings };
 
       if (settings.presetId !== previousPresetId) {
-        this.soundBank.loadSound(settings.presetId).catch(error => {
-          console.warn(`Failed to preload sound ${settings.presetId}:`, error);
+        this.soundBank.preloadPresetFamily(settings.presetId).catch(error => {
+          console.warn(`Failed to preload sound family ${settings.presetId}:`, error);
         });
       }
 
@@ -237,6 +220,10 @@ export class MetronomeSoundEngine {
     return this.activePreviewHandle?.isActive() || false;
   }
 
+  getCurrentSettingsSnapshot(): SoundSettings {
+    return { ...this.currentSettings };
+  }
+
   async dispose(): Promise<Result<void>> {
     try {
       this.stopAll();
@@ -317,7 +304,12 @@ export class MetronomeSoundEngine {
       return { success: false, error: AudioError.ContextCreationFailed };
     }
 
-    const bufferId = type === 'accent' ? 'mechanical_accent' : 'mechanical';
+    const bufferId =
+      type === 'accent'
+        ? 'mechanical_accent'
+        : type === 'weak'
+          ? 'mechanical_weak'
+          : 'mechanical';
     const buffer = this.soundBank.getCachedSound(bufferId);
     if (!buffer) {
       this.soundBank.loadSound(bufferId).catch((error) => {
@@ -330,27 +322,39 @@ export class MetronomeSoundEngine {
       const source = context.createBufferSource();
       const toneFilter = context.createBiquadFilter();
       const gainNode = context.createGain();
+      let baseGain = 1.0;
 
       source.buffer = buffer;
       source.connect(toneFilter);
       toneFilter.connect(gainNode);
       gainNode.connect(this.masterGain);
 
-      // Weak beat is based on strong sample with reduced tone/level.
+      const playbackDuration =
+        type === 'accent'
+          ? Math.min(buffer.duration, 0.6)
+          : buffer.duration;
+      const fadeOutDuration =
+        type === 'accent'
+          ? Math.min(0.04, Math.max(0.01, playbackDuration * 0.2))
+          : 0.01;
+
       if (type === 'weak') {
-        source.playbackRate.value = 1.02;
         toneFilter.type = 'lowpass';
         toneFilter.frequency.setValueAtTime(2600, when);
-        gainNode.gain.setValueAtTime(0.58, when);
+        baseGain = 0.58;
       } else {
         toneFilter.type = 'lowpass';
         toneFilter.frequency.setValueAtTime(7200, when);
-        const base = type === 'accent' ? this.currentSettings.accentGain : 1.0;
-        gainNode.gain.setValueAtTime(base, when);
+        baseGain = type === 'accent' ? this.currentSettings.accentGain : 1.0;
       }
 
+      gainNode.gain.cancelScheduledValues(when);
+      gainNode.gain.setValueAtTime(baseGain, when);
+      gainNode.gain.setValueAtTime(baseGain, when + Math.max(0, playbackDuration - fadeOutDuration));
+      gainNode.gain.linearRampToValueAtTime(0.0001, when + playbackDuration);
+
       source.start(when);
-      source.stop(when + buffer.duration);
+      source.stop(when + playbackDuration);
       return { success: true, data: undefined };
     } catch (error) {
       console.error('Failed to play mechanical sample sound:', error);
