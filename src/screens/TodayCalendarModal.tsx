@@ -52,7 +52,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
     updateTrackAddedDate  // New action to add
   } = usePracticeData();
 
-  const track = tracks.find((t) => t.id === trackId);
+  const track = trackId !== undefined ? (tracks.find((t) => t.id === trackId) ?? null) : null;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

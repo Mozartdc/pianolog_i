@@ -5,7 +5,7 @@ import { HomeStartTimerModal } from "./HomeStartTimerModal";
 import { TimePickModal } from "./TimePickModal";
 import { HomeStopModal } from "./HomeStopModal";
 import { ExportCardModal } from "./ExportCardModal";
-import { usePracticeData } from "../contexts/PracticeDataContext";
+import { usePracticeData, type PracticeRecord, type Track, type PracticeChecks } from "../contexts/PracticeDataContext";
 import Header from "../components/Header";
 import ProfileSection from "../components/ProfileSection";
 import StatsCard from "../components/StatsCard";
@@ -21,101 +21,32 @@ import Lottie from 'lottie-react';
 import playButtonAnimation from '../assets/playbutton.json';
 import { useLocation } from "react-router-dom";
 import { specialEvents, getTodayEvents, getTodayCheerData, CheerData } from "../utils/specialEvents";
+import { getStoredJson, getStoredString, setStoredJson } from "../utils/localStorage";
+import { getKoreanHolidays } from "../utils/statsUtils";
 import { validateTimeSettings, logTimeInfo } from "../utils/timeValidation";
-
-// Type definitions
-interface PracticeRecord {
-  date: string;
-  practiceTime: number;
-  startTime: number;
-  endTime: number;
-  id: string;
-  memo?: string;
-  track?: string;
-}
-
-type Track = {
-  id: number;
-  title: string;
-  addedDate: string;
-  completedDate?: string;
-};
-
-type PracticeChecks = {
-  [date: string]: {
-    [key: string]: boolean;
-  };
-};
-
-// Korean holidays calculation function
-const getKoreanHolidays = (year: number): string[] => {
-  const holidays = [
-    `${year}-01-01`, `${year}-03-01`, `${year}-05-05`, `${year}-06-06`,
-    `${year}-08-15`, `${year}-10-03`, `${year}-10-09`, `${year}-12-25`,
-  ];
-  if (year === 2025) {
-    holidays.push(
-      '2025-01-28', '2025-01-29', '2025-01-30',
-      '2025-05-13', '2025-09-06', '2025-09-07', '2025-09-08'
-    );
-  }
-  return holidays;
-};
-
-// Safe localStorage functions
-const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (e) {
-    console.error(`localStorage get error for key ${key}:`, e);
-    return defaultValue;
-  }
-};
-
-const safeLocalStorageSet = (key: string, value: any) => {
-  try {
-    const serialized = JSON.stringify(value);
-    if (serialized.length > 5 * 1024 * 1024) {
-      console.warn(`Data too large for localStorage key ${key}`);
-      return false;
-    }
-    localStorage.setItem(key, serialized);
-    return true;
-  } catch (e) {
-    if (e.name === 'QuotaExceededError') {
-      console.error('localStorage quota exceeded');
-      cleanupTemporaryData();
-    } else {
-      console.error(`localStorage set error for key ${key}:`, e);
-    }
-    return false;
-  }
-};
 
 // Temporary data cleanup function
 const cleanupTemporaryData = () => {
   try {
-    const savedCheers = localStorage.getItem('temporaryCheers');
-    if (savedCheers) {
-      const cheers = JSON.parse(savedCheers);
+    const cheers = getStoredJson<CheerData[]>('temporaryCheers', []);
+    if (cheers.length > 0) {
       const now = new Date();
       const validCheers = cheers.filter((cheer: CheerData) => {
         if (!cheer.expiresAt) return true;
         return new Date(cheer.expiresAt) > now;
       });
       if (validCheers.length < cheers.length) {
-        localStorage.setItem('temporaryCheers', JSON.stringify(validCheers));
+        setStoredJson('temporaryCheers', validCheers);
       }
     }
     const oneYearAgo = dayjs().subtract(1, 'year').format('YYYY-MM-DD');
-    const practiceRecords = safeLocalStorageGet('practiceRecords', []);
+    const practiceRecords = getStoredJson<PracticeRecord[]>('practiceRecords', []);
     if (Array.isArray(practiceRecords)) {
       const recentRecords = practiceRecords.filter((record: PracticeRecord) =>
         record.date >= oneYearAgo
       );
       if (recentRecords.length < practiceRecords.length) {
-        safeLocalStorageSet('practiceRecords', recentRecords);
+        setStoredJson('practiceRecords', recentRecords);
       }
     }
   } catch (e) {
@@ -129,7 +60,7 @@ function HomeScreen() {
   // Get timer state and methods from Context
   const { 
     practiceRecords, setPracticeRecords, tracks, practiceChecks,
-    timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime,
+    timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime, timerMemo, timerSessionId,
     startSession, pauseSession, resumeSession, completeSession, updateTimerStartTime
   } = usePracticeData();
 
@@ -149,8 +80,8 @@ function HomeScreen() {
     }
   }, [location.pathname]);
 
-  const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
-  const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
+  const [nickname, setNickname] = useState(getStoredString("nickname", "디붕이"));
+  const [avatar, setAvatar] = useState(getStoredString("avatar", ""));
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
 
@@ -181,13 +112,34 @@ function HomeScreen() {
 
   // localStorage change detection (nickname, avatar)
   useEffect(() => {
-    const interval = setInterval(() => {
-      const currentAvatar = localStorage.getItem("avatar") || "";
-      const currentNickname = localStorage.getItem("nickname") || "디붕이";
+    const syncProfile = () => {
+      const currentAvatar = getStoredString("avatar", "");
+      const currentNickname = getStoredString("nickname", "디붕이");
       if (currentAvatar !== avatar) setAvatar(currentAvatar);
       if (currentNickname !== nickname) setNickname(currentNickname);
-    }, 5000);
-    return () => { clearInterval(interval); };
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "avatar" || event.key === "nickname" || event.key === null) {
+        syncProfile();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        syncProfile();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("focus", syncProfile);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("focus", syncProfile);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [avatar, nickname]);
 
   // Other effects
@@ -278,9 +230,7 @@ function HomeScreen() {
       setSelectedDate(recordDate);
     }
 
-    // Read sessionId from timerV2 state in Context
-    const timerV2 = safeLocalStorageGet('timerV2', {});
-    const sessionId = timerV2.sessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
+    const sessionId = timerSessionId || dayjs().valueOf().toString() + Math.random().toString(36).substring(2, 8);
 
     const newRecord: PracticeRecord = {
       id: sessionId,
@@ -288,7 +238,7 @@ function HomeScreen() {
       practiceTime: newPracticeTime,
       startTime: startTimestamp,
       endTime: endTimestamp,
-      memo: timerV2.memo || ""
+      memo: timerMemo || ""
     };
 
     setPracticeRecords(prev => {
@@ -322,12 +272,7 @@ function HomeScreen() {
   const handlePracticeComplete = () => {
     console.log('🎯 HomeScreen: 연습 완료 처리');
     
-    // Read memo saved by HomeStopModal
-    const timerV2 = safeLocalStorageGet('timerV2', {});
-    const memo = timerV2.memo || '';
-    
-    // Handle completion using Context method
-    completeSession(memo);
+    completeSession(timerMemo);
     
     setShowHomeStopModal(false);
   };
@@ -633,11 +578,11 @@ function HomeScreen() {
 
 // Temporary cheer message add function
 export function addTemporaryCheer(cheerData: CheerData) {
-  const savedCheers = safeLocalStorageGet('temporaryCheers', []);
+  const savedCheers = getStoredJson<CheerData[]>('temporaryCheers', []);
   let cheers: CheerData[] = Array.isArray(savedCheers) ? savedCheers : [];
   const existingIndex = cheers.findIndex(cheer => cheer.date === cheerData.date);
   if (existingIndex >= 0) { cheers[existingIndex] = cheerData; } else { cheers.push(cheerData); }
-  safeLocalStorageSet('temporaryCheers', cheers);
+  setStoredJson('temporaryCheers', cheers);
 }
 
 export default HomeScreen;

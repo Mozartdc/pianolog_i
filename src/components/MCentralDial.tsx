@@ -48,6 +48,7 @@ export function MCentralControls({
   const dialProgressRef = useRef<SVGCircleElement>(null);
   const baseBPMRef = useRef<number>(currentBPM);
   const angleDeltaRef = useRef<number>(0);
+  const bpmDeltaRef = useRef<number>(0);
 
   const dragRAF = useRef<number | null>(null);
   const queuedCoords = useRef<{ x: number; y: number } | null>(null);
@@ -188,16 +189,25 @@ export function MCentralControls({
       const bpmPerTurn = 10 + (20 - 10) * t; // 10~20 BPM/turn
       const sensitivity = bpmPerTurn / 360; // BPM/deg
 
-      // Keep angleDeltaRef in 'degrees' for visual consistency
+      // Keep angleDeltaRef in degrees for visuals, but accumulate BPM separately.
+      // If we recompute BPM from total degrees * current sensitivity, a later
+      // sensitivity drop can make the value move backwards while dragging.
       const candidateDeg = angleDeltaRef.current + angleDiff;
 
-      // Calculate max/min angles based on BPM limits for current sensitivity
-      const maxUpDeg = (maxBPM - baseBPMRef.current) / sensitivity;
-      const maxDownDeg = (minBPM - baseBPMRef.current) / sensitivity;
+      const candidateBpmDelta = bpmDeltaRef.current + angleDiff * sensitivity;
+      const maxUpBpmDelta = maxBPM - baseBPMRef.current;
+      const maxDownBpmDelta = minBPM - baseBPMRef.current;
+      const clampedBpmDelta = Math.max(maxDownBpmDelta, Math.min(maxUpBpmDelta, candidateBpmDelta));
+
+      // Visual ring still follows degrees, but clamp it using the remaining
+      // BPM headroom translated through the current sensitivity.
+      const maxUpDeg = maxUpBpmDelta / sensitivity;
+      const maxDownDeg = maxDownBpmDelta / sensitivity;
       const clampedDeg = Math.max(maxDownDeg, Math.min(maxUpDeg, candidateDeg));
-      
+
+      bpmDeltaRef.current = clampedBpmDelta;
       angleDeltaRef.current = clampedDeg;
-      updateBPM(baseBPMRef.current + angleDeltaRef.current * sensitivity);
+      updateBPM(baseBPMRef.current + bpmDeltaRef.current);
       // --- Dynamic sensitivity calculation end ---
 
       if (angleDiff > 0) { setPlusActive(true); setMinusActive(false); } else { setMinusActive(true); setPlusActive(false); }
@@ -241,6 +251,7 @@ export function MCentralControls({
   
     baseBPMRef.current = currentBPM;
     angleDeltaRef.current = 0;
+    bpmDeltaRef.current = 0;
 
     // Initialize dynamic sensitivity refs
     lastTsRef.current = performance.now();

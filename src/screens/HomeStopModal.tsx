@@ -4,6 +4,7 @@ import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import EditIcon from "../assets/icons/edit.svg?react";
 import PowerIcon from "../assets/icons/power.svg?react";
 import likeAnimation from '../assets/like-animation.json';
+import { usePracticeData } from "../contexts/PracticeDataContext";
 
 interface HomeStopModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export function HomeStopModal({
   onEditTime,
   onClose,
 }: HomeStopModalProps) {
+  const { timerMemo, updateTimerMemo } = usePracticeData();
   const [practiceNote, setPracticeNote] = useState("");
   const [isCompleting, setIsCompleting] = useState(false);
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
@@ -27,35 +29,15 @@ export function HomeStopModal({
 
   useEffect(() => {
     if (isOpen) {
-      // Read memo from new timerV2 key
-      const timerState = localStorage.getItem("timerV2");
-      if (timerState) {
-        try {
-          const { memo } = JSON.parse(timerState);
-          setPracticeNote(memo || "");
-        } catch (error) {
-          console.error("메모 불러오기 실패:", error);
-        }
-      }
+      setPracticeNote(timerMemo);
       setIsCompleting(false);
       setIsLikeAnimating(false);
     }
-  }, [isOpen]);
+  }, [isOpen, timerMemo]);
 
-  // Save memo to new timerV2 key
   const persistMemo = () => {
-    try {
-      const s = localStorage.getItem("timerV2");
-      if (s) {
-        const p = JSON.parse(s);
-        p.memo = practiceNote;
-        p.lastUpdatedMs = Date.now(); // Also update timestamp
-        localStorage.setItem("timerV2", JSON.stringify(p));
-        console.log('📝 HomeStopModal: memo 저장 완료', practiceNote);
-      }
-    } catch (e) {
-      console.error("메모 저장 실패:", e);
-    }
+    updateTimerMemo(practiceNote);
+    console.log('📝 HomeStopModal: memo 저장 완료', practiceNote);
   };
 
   const handleCloseAndSave = () => {

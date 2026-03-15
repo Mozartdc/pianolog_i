@@ -10,17 +10,7 @@ import TodayCalendarModal from "./TodayCalendarModal";
 import SongPlusIcon from "../assets/icons/songplus.svg?react";
 import SongNoteIcon from "../assets/icons/song_note.svg?react";
 import { usePracticeData, Track } from "../contexts/PracticeDataContext";
-
-const getKoreanHolidays = (year: number): string[] => {
-  const holidays = [
-    `${year}-01-01`, `${year}-03-01`, `${year}-05-05`, `${year}-06-06`,
-    `${year}-08-15`, `${year}-10-03`, `${year}-10-09`, `${year}-12-25`,
-  ];
-  if (year === 2025) {
-    holidays.push('2025-01-28', '2025-01-29', '2025-01-30', '2025-05-13', '2025-09-06', '2025-09-07', '2025-09-08');
-  }
-  return holidays;
-};
+import { getKoreanHolidays } from "../utils/statsUtils";
 
 export function Today() {
   const navigate = useNavigate();

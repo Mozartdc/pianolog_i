@@ -2,6 +2,7 @@
 import React from 'react';
 import dayjs from 'dayjs';
 import { getTodayCheer } from './cheers';
+import { getStoredJson } from './localStorage';
 
 import { 
   Piano, 
@@ -29,17 +30,6 @@ export interface SpecialEvent extends CheerData {
 // Calendar standard:
 // - Composer anniversaries use proleptic Gregorian month/day.
 // - Matching is month/day recurring each year, unless expiresAt is explicitly set.
-
-// Safe localStorage functions
-const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
-  try {
-    const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (e) {
-    console.error(`localStorage get error for key ${key}:`, e);
-    return defaultValue;
-  }
-};
 
 export const specialEvents: SpecialEvent[] = [
   // Special period event (August 31 - September 7)
@@ -622,7 +612,7 @@ export const getTodayEvents = (): SpecialEvent[] => {
 // Core: Helper function to return today's events as CheerData format
 export const getTodayCheerData = (): CheerData => {
   // First check temporary cheer messages (existing logic)
-  const savedCheers = safeLocalStorageGet('temporaryCheers', []);
+  const savedCheers = getStoredJson<CheerData[]>('temporaryCheers', []);
   if (Array.isArray(savedCheers)) {
     const now = new Date();
     const validCheer = savedCheers.find((cheer: CheerData) => {

@@ -1,12 +1,11 @@
 // src/App.tsx
 
-import { Routes, Route, useLocation } from "react-router-dom"; // Remove BrowserRouter
+import { Routes, Route, useLocation, Navigate } from "react-router-dom"; // Remove BrowserRouter
 import { useState, useEffect } from "react";
 import HomeScreen from "./screens/HomeScreen";
 import Today from "./screens/Today";
 import RepeatCountScreen from "./screens/RepeatCountScreen";
 //import TodayCalendar from "./screens/TodayCalendar";
-import PracticeSessionScreen from "./screens/PracticeSessionScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import StatsScreen from './screens/StatsScreen';
 import BottomTabBar from "./components/BottomTabBar";
@@ -27,7 +26,7 @@ function getActiveTabFromPath(pathname: string): "home" | "today" | "apple" | "m
     case "/stats": return "statistic";
     case "/settings": return "setting";
     case "/calendar": return "today";
-    case "/practice": return "apple";
+    case "/practice": return "metronome";
     default: return "home";
   }
 }
@@ -46,7 +45,7 @@ function AppRoutes({ theme, handleThemeChange }: { theme: Theme, handleThemeChan
         <Route path="/" element={<HomeScreen />} />
         <Route path="/today" element={<Today />} />
         <Route path="/timer" element={<RepeatCountScreen />} />
-        <Route path="/practice" element={<PracticeSessionScreen />} />
+        <Route path="/practice" element={<Navigate to="/metronome" replace />} />
         <Route path="/settings" element={<SettingsScreen theme={theme} handleThemeChange={handleThemeChange} />} />
         <Route path="/stats" element={<StatsScreen />} />
         <Route path="/metronome" element={<Metronome />} />

@@ -1,15 +1,7 @@
 import React, { useState } from "react";
 import HistoryIcon from "../assets/icons/History.svg?react";
 import ExportIcon from "../assets/icons/export.svg?react";
-
-interface PracticeRecord {
-  id: string;
-  date: string;
-  practiceTime: number;
-  startTime: number;
-  endTime: number;
-  track?: string;
-}
+import type { PracticeRecord } from "../contexts/PracticeDataContext";
 
 interface SessionSelectModalProps {
   isOpen: boolean;

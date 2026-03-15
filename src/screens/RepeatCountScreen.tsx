@@ -30,7 +30,7 @@ WebkitFontSmoothing: "antialiased" as const,
 MozOsxFontSmoothing: "grayscale" as const
 };
 
-const track = trackId !== null ? tracks.find((t) => t.id === trackId) : null;
+const track = trackId !== null ? (tracks.find((t) => t.id === trackId) ?? null) : null;
 const displayTitle = track ? track.title : "piano";
 const today = dayjs().format("YYYY-MM-DD");
 

@@ -1,7 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-// ✅ Import additional router-related functions
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import './index.css';
 import App from './App.tsx';
 import * as Sentry from "@sentry/react";
@@ -22,22 +21,18 @@ if (sentryDsn) {
   });
 }
 
-// ✅ Create the router here
-const router = createBrowserRouter([
-  {
-    path: "*", // Set up so App component handles all routes
-    Component: App,
-  },
-]);
-
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {sentryDsn ? (
       <Sentry.ErrorBoundary fallback={<p>문제가 발생했습니다.</p>}>
-        <RouterProvider router={router} />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </Sentry.ErrorBoundary>
     ) : (
-      <RouterProvider router={router} />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     )}
   </StrictMode>
 );

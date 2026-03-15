@@ -25,6 +25,8 @@ import EditIcon from "../assets/icons/edit.svg?react";
 import QuestionIcon from "../assets/icons/question.svg?react";
 import Logo from "../utils/img/logo.png";
 import UserIcon from '../assets/icons/user.svg?react';
+import { getStoredJson, getStoredString, setStoredJson, setStoredString } from "../utils/localStorage";
+import type { PracticeRecord, Track, PracticeChecks, PartialCounts } from "../contexts/PracticeDataContext";
 
 type Theme = "light" | "dark" | "system";
 // Change icon type from string to React.ElementType
@@ -33,12 +35,6 @@ const themeOptions: { value: Theme; label: string; icon: React.ElementType }[] =
   { value: "dark", label: "dark", icon: NightIcon },
   { value: "system", label: "system", icon: SystemIcon },
 ];
-
-// Type definitions (no changes)
-interface PracticeRecord { id: string; date: string; practiceTime: number; startTime: number; endTime: number; memo?: string; track?: string; }
-type Track = { id: number; title: string; addedDate: string; completedDate?: string; };
-type PracticeChecks = { [date: string]: { [trackId: number]: boolean; }; };
-type PartialCounts = { [date: string]: { [key: string]: number; }; };
 
 // Full data type definition
 interface FullBackupData {
@@ -138,8 +134,8 @@ interface SettingsScreenProps {
 }
 
 export default function SettingScreen({ theme, handleThemeChange }: SettingsScreenProps) {
-  const [avatar, setAvatar] = useState(localStorage.getItem("avatar") || "");
-  const [nickname, setNickname] = useState(localStorage.getItem("nickname") || "디붕이");
+  const [avatar, setAvatar] = useState(getStoredString("avatar", ""));
+  const [nickname, setNickname] = useState(getStoredString("nickname", "디붕이"));
   const [tooltip1Visible, setTooltip1Visible] = useState(false);
   const [tooltip2Visible, setTooltip2Visible] = useState(false);
   const avatarCropperRef = useRef<AvatarCropperHandles>(null);
@@ -161,18 +157,15 @@ useEffect(() => {
 
   const handleNicknameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNickname(e.target.value);
-    localStorage.setItem("nickname", e.target.value);
+    setStoredString("nickname", e.target.value);
   };
   
   // Existing CSV export
   const handleExport = () => {
     try {
-        const practiceRecordsString = localStorage.getItem("practiceRecords");
-        const records: PracticeRecord[] = practiceRecordsString ? JSON.parse(practiceRecordsString) : [];
-        const tracksString = localStorage.getItem("tracks");
-        const allTracks: Track[] = tracksString ? JSON.parse(tracksString) : [];
-        const practiceChecksString = localStorage.getItem("practiceChecks");
-        const checks: PracticeChecks = practiceChecksString ? JSON.parse(practiceChecksString) : {};
+        const records = getStoredJson<PracticeRecord[]>("practiceRecords", []);
+        const allTracks = getStoredJson<Track[]>("tracks", []);
+        const checks = getStoredJson<PracticeChecks>("practiceChecks", {});
         const csvContent = toCSV(records, allTracks, checks);
         const blob = new Blob([`\uFEFF${csvContent}`], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
@@ -194,7 +187,7 @@ useEffect(() => {
         try {
           const csv = reader.result as string;
           const data = fromCSV(csv);
-          localStorage.setItem("practiceRecords", JSON.stringify(data));
+          setStoredJson("practiceRecords", data);
           alert("연습 기록(세션) 복원이 완료되었습니다. 곡 목록 및 체크 상태는 복원되지 않습니다. 페이지를 새로고침하여 적용하세요.");
         } catch (error) { console.error("Failed to parse CSV:", error); alert("CSV 파일 읽기에 실패했습니다. 올바른 형식의 파일인지 확인해주세요."); }
       };
@@ -206,12 +199,12 @@ useEffect(() => {
   const handleFullBackup = () => {
     try {
       const allData: FullBackupData = {
-        tracks: JSON.parse(localStorage.getItem("tracks") || "[]"),
-        practiceRecords: JSON.parse(localStorage.getItem("practiceRecords") || "[]"),
-        practiceChecks: JSON.parse(localStorage.getItem("practiceChecks") || "{}"),
-        partialCounts: JSON.parse(localStorage.getItem("partialCounts") || "{}"),
-        avatar: localStorage.getItem("avatar") || "",
-        nickname: localStorage.getItem("nickname") || "디붕이",
+        tracks: getStoredJson<Track[]>("tracks", []),
+        practiceRecords: getStoredJson<PracticeRecord[]>("practiceRecords", []),
+        practiceChecks: getStoredJson<PracticeChecks>("practiceChecks", {}),
+        partialCounts: getStoredJson<PartialCounts>("partialCounts", {}),
+        avatar: getStoredString("avatar", ""),
+        nickname: getStoredString("nickname", "디붕이"),
         timestamp: new Date().toISOString(),
         version: "1.0"
       };
@@ -246,13 +239,13 @@ useEffect(() => {
           }
           
           // Restore all data
-          localStorage.setItem("tracks", JSON.stringify(data.tracks || []));
-          localStorage.setItem("practiceRecords", JSON.stringify(data.practiceRecords || []));
-          localStorage.setItem("practiceChecks", JSON.stringify(data.practiceChecks || {}));
-          localStorage.setItem("partialCounts", JSON.stringify(data.partialCounts || {}));
+          setStoredJson("tracks", data.tracks || []);
+          setStoredJson("practiceRecords", data.practiceRecords || []);
+          setStoredJson("practiceChecks", data.practiceChecks || {});
+          setStoredJson("partialCounts", data.partialCounts || {});
           
-          if (data.avatar) localStorage.setItem("avatar", data.avatar);
-          if (data.nickname) localStorage.setItem("nickname", data.nickname);
+          if (data.avatar) setStoredString("avatar", data.avatar);
+          if (data.nickname) setStoredString("nickname", data.nickname);
           
           alert("전체 데이터 복원이 완료되었습니다! 페이지를 새로고침하여 적용하세요.");
         } catch (error) {
@@ -312,7 +305,7 @@ useEffect(() => {
               console.log('SettingsScreen: onAvatarChange 호출됨:', v);
               setAvatar(v);
               if (v) {
-                localStorage.setItem('avatar', v);
+                setStoredString('avatar', v);
               } else {
                 localStorage.removeItem('avatar');
               }

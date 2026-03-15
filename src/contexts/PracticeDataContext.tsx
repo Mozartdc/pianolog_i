@@ -1,6 +1,7 @@
 // src/contexts/PracticeDataContext.tsx
 import React, { createContext, useContext, useState, useEffect, PropsWithChildren, useCallback, useRef } from 'react';
 import dayjs from 'dayjs';
+import { getStoredJson, setStoredJson } from '../utils/localStorage';
 
 // Basic data types
 export type Track = {
@@ -61,6 +62,8 @@ interface PracticeDataContextType {
   timerMilliseconds: number;     // In milliseconds (precision)
   timerRunning: boolean;         // Whether ticking is active
   timerStartTime: number | null; // Start time
+  timerMemo: string;
+  timerSessionId: string;
   
   // New timer methods
   startSession: () => void;
@@ -68,11 +71,7 @@ interface PracticeDataContextType {
   resumeSession: () => void;
   completeSession: (memo?: string) => void;
   updateTimerStartTime: (newStartTimeMs: number) => void;
-  
-  // Legacy compatibility setters (still used by HomeScreen)
-  setTimerActive: (active: boolean) => void;
-  setTimerSeconds: (seconds: number) => void;
-  setTimerRunning: (running: boolean) => void;
+  updateTimerMemo: (memo: string) => void;
   
   // Basic actions
   addTrack: (title: string) => void;
@@ -87,51 +86,10 @@ interface PracticeDataContextType {
 
 const PracticeDataContext = createContext<PracticeDataContextType | undefined>(undefined);
 
-// Safe localStorage utility functions
-const safeLocalStorageGet = (key: string, defaultValue: any = null) => {
-  try {
-    const item = localStorage.getItem(key);
-    const parsed = item ? JSON.parse(item) : defaultValue;
-    console.log(`📖 localStorage 읽기 [${key}]:`, { 
-      raw: item?.substring(0, 100) + (item && item.length > 100 ? '...' : ''),
-      parsed: Array.isArray(parsed) ? `배열 ${parsed.length}개` : typeof parsed,
-      success: true 
-    });
-    return parsed;
-  } catch (e) {
-    console.error(`❌ localStorage 읽기 실패 [${key}]:`, e);
-    return defaultValue;
-  }
-};
-
-const safeLocalStorageSet = (key: string, value: any) => {
-  try {
-    const serialized = JSON.stringify(value);
-    if (serialized.length > 5 * 1024 * 1024) {
-      console.warn(`⚠️ 데이터 크기 초과 [${key}]: ${Math.floor(serialized.length / 1024)}KB`);
-      return false;
-    }
-    localStorage.setItem(key, serialized);
-    console.log(`💾 localStorage 저장 [${key}]:`, { 
-      size: `${Math.floor(serialized.length / 1024)}KB`,
-      type: Array.isArray(value) ? `배열 ${value.length}개` : typeof value,
-      success: true 
-    });
-    return true;
-  } catch (e) {
-    if (e.name === 'QuotaExceededError') {
-      console.error('❌ localStorage 용량 초과');
-    } else {
-      console.error(`❌ localStorage 저장 실패 [${key}]:`, e);
-    }
-    return false;
-  }
-};
-
 // Timer bootstrap logic
 const initializeTimerState = (): TimerStateV2 => {
-  const timerV2 = safeLocalStorageGet('timerV2', null);
-  const oldTimerState = safeLocalStorageGet('timerState', null);
+  const timerV2 = getStoredJson<TimerStateV2 | null>('timerV2', null);
+  const oldTimerState = getStoredJson<{ memo?: string } | null>('timerState', null);
   
   if (timerV2 && timerV2.version === 2) {
     console.log('🔄 타이머 V2 복원:', timerV2);
@@ -156,7 +114,7 @@ const initializeTimerState = (): TimerStateV2 => {
       lastUpdatedMs: Date.now()
     };
     
-    safeLocalStorageSet('timerV2', newState);
+    setStoredJson('timerV2', newState);
     console.log('✅ 마이그레이션 완료, 구 키 삭제');
     return newState;
   } else {
@@ -173,17 +131,17 @@ const initializeTimerState = (): TimerStateV2 => {
       lastUpdatedMs: Date.now()
     };
     
-    safeLocalStorageSet('timerV2', newState);
+    setStoredJson('timerV2', newState);
     return newState;
   }
 };
 
 export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) => {
   // Existing states (no changes)
-  const [tracks, setTracks] = useState<Track[]>(() => safeLocalStorageGet("tracks", []));
-  const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>(() => safeLocalStorageGet("practiceRecords", []));
-  const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>(() => safeLocalStorageGet("practiceChecks", {}));
-  const [partialCounts, setPartialCounts] = useState<PartialCounts>(() => safeLocalStorageGet("partialCounts", {}));
+  const [tracks, setTracks] = useState<Track[]>(() => getStoredJson<Track[]>("tracks", []));
+  const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>(() => getStoredJson<PracticeRecord[]>("practiceRecords", []));
+  const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>(() => getStoredJson<PracticeChecks>("practiceChecks", {}));
+  const [partialCounts, setPartialCounts] = useState<PartialCounts>(() => getStoredJson<PartialCounts>("partialCounts", {}));
 
   // New timer states
   const [timerStateV2, setTimerStateV2] = useState<TimerStateV2>(() => initializeTimerState());
@@ -197,6 +155,8 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
   const timerRunning = timerStateV2.isRunning;
   const timerSeconds = Math.floor(timerMilliseconds / 1000);
   const timerStartTime = timerStateV2.startTimeMs;
+  const timerMemo = timerStateV2.memo;
+  const timerSessionId = timerStateV2.sessionId;
 
   // Timer state save function
   const saveTimerState = useCallback((newState: TimerStateV2) => {
@@ -205,7 +165,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
       lastUpdatedMs: Date.now()
     };
     setTimerStateV2(stateToSave);
-    safeLocalStorageSet('timerV2', stateToSave);
+    setStoredJson('timerV2', stateToSave);
   }, []);
 
   // Timer tick management
@@ -214,8 +174,19 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
       console.log('⏱️ 타이머 틱 시작');
       
       intervalRef.current = window.setInterval(() => {
+        const startTimeMs = timerStateV2.startTimeMs;
+        if (!startTimeMs) {
+          console.warn('타이머 startTimeMs가 없어 틱을 중단합니다.');
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          setTimerMilliseconds(0);
+          return;
+        }
+
         const now = Date.now();
-        const elapsed = now - timerStateV2.startTimeMs! - timerStateV2.pausedAccumMs;
+        const elapsed = now - startTimeMs - timerStateV2.pausedAccumMs;
         const elapsedMs = Math.max(0, elapsed);
         
         setTimerMilliseconds(elapsedMs);
@@ -454,26 +425,23 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     });
   }, [timerStateV2, saveTimerState]);
 
-  // Legacy compatibility setters (still used by HomeScreen)
-  const setTimerActive = useCallback((active: boolean) => {
-    console.log('🔧 호환: setTimerActive', active);
-    // Implement if needed, recommend using new methods
-  }, []);
+  const updateTimerMemo = useCallback((memo: string) => {
+    if (!timerStateV2.isActive) {
+      console.log('⚠️ 비활성 세션 - 메모 수정 불가');
+      return;
+    }
 
-  const setTimerSecondsCompat = useCallback((seconds: number) => {
-    console.log('🔧 호환: setTimerSeconds', seconds);
-    // Auto-calculated through timerMilliseconds, no direct setting needed
-  }, []);
-
-  const setTimerRunning = useCallback((running: boolean) => {
-    console.log('🔧 호환: setTimerRunning', running);
-    // Recommend using pauseSession/resumeSession
-  }, []);
+    saveTimerState({
+      ...timerStateV2,
+      memo,
+      lastUpdatedMs: Date.now()
+    });
+  }, [timerStateV2, saveTimerState]);
 
   // Debounced localStorage save function (for existing data)
   const debouncedSave = useCallback((key: string, value: any) => {
     const timeoutId = setTimeout(() => {
-      safeLocalStorageSet(key, value);
+      setStoredJson(key, value);
     }, 100);
     return () => clearTimeout(timeoutId);
   }, []);
@@ -645,13 +613,10 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
 
     
     // New timer state
-    timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime,
+    timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime, timerMemo, timerSessionId,
     
     // New timer methods
-    startSession, pauseSession, resumeSession, completeSession, updateTimerStartTime,
-    
-    // Legacy compatibility setters
-    setTimerActive, setTimerSeconds: setTimerSecondsCompat, setTimerRunning,
+    startSession, pauseSession, resumeSession, completeSession, updateTimerStartTime, updateTimerMemo,
     
     addTrack, removeTrack, updateTrackTitle,
     toggleCheck, incPartial, decPartial,

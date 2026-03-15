@@ -26,7 +26,7 @@ const activeColors = {
   home: "var(--TURQUOISE)",
   today: "var(--VERY_PERI)",
   apple: "var(--text-primary)",
-  metronome: "var(--text-secondary)", // always gray
+  metronome: "var(--LIVING_CORAL)",
   statistic: "var(--MIMOSA)",
   setting: "var(--VIVA_MAGENTA)"
 };
@@ -120,10 +120,7 @@ export default function BottomTabBar({ activeTab }: BottomTabBarProps) {
         const Icon = iconComponents[tab];
         const isActive = activeTab === tab;
         
-        // Metronome always shows inactive color
-        const color = tab === 'metronome' 
-          ? "var(--text-secondary)" 
-          : (isActive ? activeColors[tab] : "var(--text-secondary)");
+        const color = isActive ? activeColors[tab] : "var(--text-secondary)";
         
         return (
           <button
