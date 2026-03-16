@@ -19,4 +19,5 @@
   width: 24px; /* 아이콘 크기 지정 */
   height: 24px; /* 아이콘 크기 지정 */
   margin-bottom: 4px; /* 아이콘과 글자 사이 간격 */
+  color: inherit;
 }
