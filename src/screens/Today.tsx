@@ -6,10 +6,11 @@ import "dayjs/locale/ko";
 import Header from "../components/Header";
 import WeekCalendar from "../components/WeekCalendar";
 import PracticeItem from "../components/PracticeItem";
+import TrackDetailModal from "../components/TrackDetailModal";
 import TodayCalendarModal from "./TodayCalendarModal";
 import SongPlusIcon from "../assets/icons/songplus.svg?react";
 import SongNoteIcon from "../assets/icons/song_note.svg?react";
-import { usePracticeData, Track } from "../contexts/PracticeDataContext";
+import { usePracticeData } from "../contexts/PracticeDataContext";
 import { getKoreanHolidays } from "../utils/statsUtils";
 
 export function Today() {
@@ -31,6 +32,7 @@ export function Today() {
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
   const [showSongPlusModal, setShowSongPlusModal] = useState(false);
   const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [showTrackDetailModal, setShowTrackDetailModal] = useState(false);
   const [selectedTrackId, setSelectedTrackId] = useState<number | null>(null);
 
   const handleEdit = (id: number, newTitle: string) => {
@@ -42,6 +44,11 @@ export function Today() {
   };
   const handleTitleClick = (trackId: number) => {
     setSelectedTrackId(trackId);
+    setShowTrackDetailModal(true);
+  };
+  const handleOpenCalendarDetail = (trackId: number) => {
+    setSelectedTrackId(trackId);
+    setShowTrackDetailModal(false);
     setShowCalendarModal(true);
   };
   const handleCountClick = (trackId: number) => {
@@ -364,11 +371,23 @@ onKeyPress={(e) => {
       {showCalendarModal && (
         <TodayCalendarModal
           isOpen={showCalendarModal}
-          onClose={() => setShowCalendarModal(false)}
+          onClose={() => {
+            setShowCalendarModal(false);
+            if (selectedTrackId !== null) {
+              setShowTrackDetailModal(true);
+            }
+          }}
           trackId={selectedTrackId}
           onPracticeUpdate={handlePracticeUpdate}
         />
       )}
+
+      <TrackDetailModal
+        isOpen={showTrackDetailModal}
+        trackId={selectedTrackId}
+        onClose={() => setShowTrackDetailModal(false)}
+        onOpenCalendar={handleOpenCalendarDetail}
+      />
     </main>
   );
 }

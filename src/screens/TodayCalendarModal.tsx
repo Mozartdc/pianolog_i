@@ -203,7 +203,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Song title */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 14 }}>
             <SongNoteIcon style={{ color: "var(--VERY_PERI)" }} width="16" height="16" />
             <span
               style={{
@@ -223,7 +223,7 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
               fontSize: 16,
               color: "var(--text-primary)",
               fontWeight: "normal",
-              marginBottom: 10,
+              marginBottom: 16,
               ...commonFontStyle,
             }}
           >
@@ -231,53 +231,73 @@ const TodayCalendarModal: React.FC<TodayCalendarModalProps> = ({
           </div>
 
           {/* Song completion checkbox */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12,
-              padding: "8px 12px",
-              border: "var(--border-light)",
-              borderRadius: 3,
-              width: "100%",
-              height: 33,
-              margin: "0 auto 10px auto",
-              cursor: "pointer",
-            }}
-            onClick={handleComplete}
-          >
+          <div style={{ marginBottom: 16 }}>
             <div
               style={{
-                width: 14,
-                height: 14,
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "center",
-                color: isCompleted ? "var(--VERY_PERI)" : "var(--text-secondary)"
+                justifyContent: "space-between",
+                gap: 10,
+                padding: "8px 12px",
+                border: "1px solid var(--DARK_GRAY)",
+                borderRadius: 3,
+                width: "100%",
+                minHeight: 40,
+                margin: "0 auto",
+                cursor: "pointer",
+                boxSizing: "border-box",
               }}
+              onClick={handleComplete}
             >
-              {isCompleted ? <CheckIcon width="14" height="14" /> : <UncheckIcon width="14" height="14" />}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  minWidth: 0,
+                  flex: "0 0 auto",
+                }}
+              >
+                <div
+                  style={{
+                    width: 14,
+                    height: 14,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: isCompleted ? "var(--VERY_PERI)" : "var(--text-secondary)"
+                  }}
+                >
+                  {isCompleted ? <CheckIcon width="14" height="14" /> : <UncheckIcon width="14" height="14" />}
+                </div>
+                <span
+                  style={{
+                    fontSize: 14,
+                    color: "var(--text-primary)",
+                    fontWeight: "normal",
+                    whiteSpace: "nowrap",
+                    ...commonFontStyle,
+                  }}
+                >
+                  곡 완성
+                </span>
+              </div>
+              <span
+                style={{
+                  fontSize: 10,
+                  color: "var(--VIVA_MAGENTA)",
+                  lineHeight: 1.2,
+                  textAlign: "right",
+                  flex: 1,
+                  minWidth: 0,
+                  whiteSpace: "normal",
+                  wordBreak: "keep-all",
+                  ...commonFontStyle,
+                }}
+              >
+                체크하면 내일부터 연습 목록에서 사라집니다.
+              </span>
             </div>
-            <span
-              style={{
-                fontSize: 14,
-                color: "var(--text-primary)",
-                fontWeight: "normal",
-                ...commonFontStyle,
-              }}
-            >
-              곡 완성
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                color: "var(--VIVA_MAGENTA)",
-                marginLeft: "auto",
-              }}
-            >
-              * 체크하면 내일 부터 연습 목록에서 사라집니다.
-            </span>
           </div>
 
           {/* Calendar */}

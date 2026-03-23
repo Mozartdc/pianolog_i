@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect, PropsWithChildren, useCallback, useRef } from 'react';
 import dayjs from 'dayjs';
 import { getStoredJson, setStoredJson } from '../utils/localStorage';
+import { deleteRecordingBlob } from '../utils/recordingStorage';
 
 // Basic data types
 export type Track = {
@@ -29,6 +30,17 @@ export type PartialCounts = {
   [date: string]: { [key: string]: number };
 };
 
+export type TrackRecording = {
+  id: string;
+  trackId: number;
+  archiveName: string;
+  createdAt: string;
+  durationMs: number;
+  note?: string;
+  sourceType: 'recorded' | 'imported';
+  mimeType: string;
+};
+
 // New timer state V2
 interface TimerStateV2 {
   version: 2;
@@ -53,6 +65,8 @@ interface PracticeDataContextType {
   setPracticeChecks: React.Dispatch<React.SetStateAction<PracticeChecks>>;
   partialCounts: PartialCounts;
   setPartialCounts: React.Dispatch<React.SetStateAction<PartialCounts>>;
+  trackRecordings: TrackRecording[];
+  setTrackRecordings: React.Dispatch<React.SetStateAction<TrackRecording[]>>;
   updateTrackAddedDate: (id: number, dateStr: string) => void;
 
   
@@ -82,6 +96,9 @@ interface PracticeDataContextType {
   decPartial: (date: string, key: number | string) => void;
   markTrackComplete: (trackId: number, date: string) => void;
   unmarkTrackComplete: (trackId: number) => void;
+  addTrackRecording: (recording: TrackRecording) => void;
+  updateTrackRecordingNote: (recordingId: string, note: string) => void;
+  removeTrackRecording: (recordingId: string) => void;
 }
 
 const PracticeDataContext = createContext<PracticeDataContextType | undefined>(undefined);
@@ -142,6 +159,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
   const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>(() => getStoredJson<PracticeRecord[]>("practiceRecords", []));
   const [practiceChecks, setPracticeChecks] = useState<PracticeChecks>(() => getStoredJson<PracticeChecks>("practiceChecks", {}));
   const [partialCounts, setPartialCounts] = useState<PartialCounts>(() => getStoredJson<PartialCounts>("partialCounts", {}));
+  const [trackRecordings, setTrackRecordings] = useState<TrackRecording[]>(() => getStoredJson<TrackRecording[]>("trackRecordings", []));
 
   // New timer states
   const [timerStateV2, setTimerStateV2] = useState<TimerStateV2>(() => initializeTimerState());
@@ -467,6 +485,11 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     return cleanup;
   }, [partialCounts, debouncedSave]);
 
+  useEffect(() => {
+    const cleanup = debouncedSave("trackRecordings", trackRecordings);
+    return cleanup;
+  }, [trackRecordings, debouncedSave]);
+
   // Existing actions (no changes)
   const addTrack = useCallback((title: string) => {
     if (!title.trim()) return;
@@ -482,6 +505,15 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
   const removeTrack = useCallback((id: number) => {
     console.log('🗑️ 트랙 삭제:', id);
     setTracks(prev => prev.filter(t => t.id !== id));
+    setTrackRecordings(prev => {
+      const toDelete = prev.filter(recording => recording.trackId === id);
+      toDelete.forEach((recording) => {
+        void deleteRecordingBlob(recording.id).catch((error) => {
+          console.error('녹음 파일 삭제 실패:', error);
+        });
+      });
+      return prev.filter(recording => recording.trackId !== id);
+    });
   }, []);
   
   const updateTrackTitle = useCallback((id: number, newTitle: string) => {
@@ -529,6 +561,27 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
   const unmarkTrackComplete = useCallback((trackId: number) => {
     console.log('↩️ 트랙 완료 해제:', trackId);
     setTracks(prev => prev.map(t => t.id === trackId ? { ...t, completedDate: undefined } : t));
+  }, []);
+
+  const addTrackRecording = useCallback((recording: TrackRecording) => {
+    setTrackRecordings(prev => [recording, ...prev].sort((a, b) => dayjs(b.createdAt).valueOf() - dayjs(a.createdAt).valueOf()));
+  }, []);
+
+  const updateTrackRecordingNote = useCallback((recordingId: string, note: string) => {
+    setTrackRecordings(prev =>
+      prev.map(recording =>
+        recording.id === recordingId
+          ? { ...recording, note: note.trim() || undefined }
+          : recording
+      )
+    );
+  }, []);
+
+  const removeTrackRecording = useCallback((recordingId: string) => {
+    setTrackRecordings(prev => prev.filter(recording => recording.id !== recordingId));
+    void deleteRecordingBlob(recordingId).catch((error) => {
+      console.error('녹음 파일 삭제 실패:', error);
+    });
   }, []);
 
   // Storage change listener (same as before, with timerV2 added)
@@ -583,6 +636,18 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
           console.error('❌ partialCounts 파싱 실패:', e);
         }
       }
+
+      if (event.key === "trackRecordings" && event.newValue) {
+        try {
+          const newRecordings = JSON.parse(event.newValue);
+          if (Array.isArray(newRecordings)) {
+            console.log('🎙️ trackRecordings 외부 업데이트:', newRecordings.length + '개');
+            setTrackRecordings(newRecordings);
+          }
+        } catch (e) {
+          console.error('❌ trackRecordings 파싱 실패:', e);
+        }
+      }
       
       // New timerV2 sync
       if (event.key === "timerV2" && event.newValue) {
@@ -609,6 +674,7 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     practiceRecords, setPracticeRecords,
     practiceChecks, setPracticeChecks,
     partialCounts, setPartialCounts,
+    trackRecordings, setTrackRecordings,
     updateTrackAddedDate,
 
     
@@ -620,7 +686,8 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     
     addTrack, removeTrack, updateTrackTitle,
     toggleCheck, incPartial, decPartial,
-    markTrackComplete, unmarkTrackComplete
+    markTrackComplete, unmarkTrackComplete,
+    addTrackRecording, updateTrackRecordingNote, removeTrackRecording
   };
 
   return (
