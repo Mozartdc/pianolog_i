@@ -195,11 +195,7 @@ function StatsScreen() {
       .filter(record => record.date === date)
       .reduce((sum, record) => sum + Number(record.practiceTime || 0), 0);
 
-  const hasCheckedTrackOnDate = (date: string) =>
-    !!(practiceChecks[date] && Object.values(practiceChecks[date]).some(Boolean));
-
-  const hasActivityOnDate = (date: string) =>
-    getDayMinutes(date) > 0 || hasCheckedTrackOnDate(date);
+  const hasTimedPracticeOnDate = (date: string) => getDayMinutes(date) > 0;
 
   const weekData = getWeekData(selectedDate, practiceRecords, practiceChecks);
 
@@ -207,11 +203,11 @@ function StatsScreen() {
     let streak = 0;
     let cursor = dayjs();
 
-    if (!hasActivityOnDate(cursor.format("YYYY-MM-DD"))) {
+    if (!hasTimedPracticeOnDate(cursor.format("YYYY-MM-DD"))) {
       cursor = cursor.subtract(1, "day");
     }
 
-    while (hasActivityOnDate(cursor.format("YYYY-MM-DD"))) {
+    while (hasTimedPracticeOnDate(cursor.format("YYYY-MM-DD"))) {
       streak++;
       cursor = cursor.subtract(1, "day");
       if (streak > 365) break;
@@ -221,8 +217,8 @@ function StatsScreen() {
   }, [practiceRecords, practiceChecks]);
 
   const weekPracticeDays = useMemo(
-    () => weekData.dates.filter(date => hasActivityOnDate(date.format("YYYY-MM-DD"))).length,
-    [weekData, practiceRecords, practiceChecks]
+    () => weekData.dates.filter(date => hasTimedPracticeOnDate(date.format("YYYY-MM-DD"))).length,
+    [weekData, practiceRecords]
   );
 
   const monthPracticeDays = useMemo(() => {
@@ -231,13 +227,13 @@ function StatsScreen() {
     let count = 0;
 
     for (let cursor = monthStart; cursor.isSameOrBefore(monthEnd, "day"); cursor = cursor.add(1, "day")) {
-      if (hasActivityOnDate(cursor.format("YYYY-MM-DD"))) {
+      if (hasTimedPracticeOnDate(cursor.format("YYYY-MM-DD"))) {
         count++;
       }
     }
 
     return count;
-  }, [practiceRecords, practiceChecks]);
+  }, [practiceRecords]);
 
   const previousWeekData = useMemo(
     () => getWeekData(dayjs(selectedDate).subtract(7, "day").format("YYYY-MM-DD"), practiceRecords, practiceChecks),
@@ -300,11 +296,11 @@ function StatsScreen() {
     let count = 0;
 
     for (let cursor = start; cursor.isSameOrBefore(end, "day"); cursor = cursor.add(1, "day")) {
-      if (hasActivityOnDate(cursor.format("YYYY-MM-DD"))) count++;
+      if (hasTimedPracticeOnDate(cursor.format("YYYY-MM-DD"))) count++;
     }
 
     return count;
-  }, [practiceRecords, practiceChecks]);
+  }, [practiceRecords]);
 
   const monthTrendData = useMemo(() => {
     const start = dayjs().startOf("month");
@@ -342,8 +338,8 @@ function StatsScreen() {
   );
 
   const getHeatmapLevel = (dateStr: string) => {
-    if (!hasCheckedTrackOnDate(dateStr)) return 0;
     const minutes = getDayMinutes(dateStr);
+    if (minutes <= 0) return 0;
     if (minutes >= 120) return 3;
     if (minutes >= 60) return 2;
     return 1;
