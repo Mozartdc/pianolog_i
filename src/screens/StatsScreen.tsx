@@ -351,8 +351,8 @@ function StatsScreen() {
 
   const levelColors = [
     "#FFFFFF",
-    "rgba(242, 201, 76, 0.35)",
-    "rgba(242, 201, 76, 0.7)",
+    "rgba(69, 181, 170, 0.28)",
+    "rgba(69, 181, 170, 0.62)",
     "var(--TURQUOISE)"
   ];
 
