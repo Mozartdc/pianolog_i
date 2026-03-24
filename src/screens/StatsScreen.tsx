@@ -190,10 +190,31 @@ function StatsScreen() {
   });
 };
 
+  const normalizeRecordDate = (record: PracticeRecord): string | null => {
+    const rawDate = typeof record.date === "string" ? record.date.trim() : "";
+    if (rawDate) {
+      const parsed = dayjs(rawDate);
+      if (parsed.isValid()) return parsed.format("YYYY-MM-DD");
+    }
+    if (record.startTime) {
+      const parsedFromStart = dayjs(record.startTime);
+      if (parsedFromStart.isValid()) return parsedFromStart.format("YYYY-MM-DD");
+    }
+    return null;
+  };
+
+  const minutesByDate = useMemo(() => {
+    const map: Record<string, number> = {};
+    practiceRecords.forEach((record) => {
+      const normalizedDate = normalizeRecordDate(record);
+      if (!normalizedDate) return;
+      map[normalizedDate] = (map[normalizedDate] || 0) + Number(record.practiceTime || 0);
+    });
+    return map;
+  }, [practiceRecords]);
+
   const getDayMinutes = (date: string) =>
-    practiceRecords
-      .filter(record => record.date === date)
-      .reduce((sum, record) => sum + Number(record.practiceTime || 0), 0);
+    minutesByDate[date] || 0;
 
   const hasTimedPracticeOnDate = (date: string) => getDayMinutes(date) > 0;
 
@@ -214,7 +235,7 @@ function StatsScreen() {
     }
 
     return streak;
-  }, [practiceRecords, practiceChecks]);
+  }, [practiceRecords]);
 
   const weekPracticeDays = useMemo(
     () => weekData.dates.filter(date => hasTimedPracticeOnDate(date.format("YYYY-MM-DD"))).length,
