@@ -97,7 +97,13 @@ function fromCSV(csv: string): PracticeRecord[] {
     }
     if (!sessionHeaderLine || sessionDataLines.length === 0) return [];
     const keys = sessionHeaderLine.split(",");
-    const headerMap: { [key: string]: keyof PracticeRecord } = { "날짜": "date", "요일": "date", "연습시간": "practiceTime", "시작시간": "startTime", "종료시간": "endTime", "메모": "memo" };
+    const headerMap: { [key: string]: keyof PracticeRecord } = {
+      "날짜": "date",
+      "연습시간": "practiceTime",
+      "시작시간": "startTime",
+      "종료시간": "endTime",
+      "메모": "memo"
+    };
     return sessionDataLines.map(line => {
         const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
         const obj: Partial<PracticeRecord> = {};

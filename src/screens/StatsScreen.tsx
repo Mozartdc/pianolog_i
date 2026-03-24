@@ -192,10 +192,21 @@ function StatsScreen() {
 
   const normalizeRecordDate = (record: PracticeRecord): string | null => {
     const rawDate = typeof record.date === "string" ? record.date.trim() : "";
-    if (rawDate) {
-      const parsed = dayjs(rawDate);
-      if (parsed.isValid()) return parsed.format("YYYY-MM-DD");
+
+    // Accept legacy separators as well: YYYY-MM-DD / YYYY.MM.DD / YYYY/MM/DD
+    const ymdMatch = rawDate.match(/^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/);
+    if (ymdMatch) {
+      const y = ymdMatch[1];
+      const m = ymdMatch[2].padStart(2, "0");
+      const d = ymdMatch[3].padStart(2, "0");
+      return `${y}-${m}-${d}`;
     }
+
+    // Handle ISO datetime strings by slicing date part.
+    if (/^\d{4}-\d{2}-\d{2}T/.test(rawDate)) {
+      return rawDate.slice(0, 10);
+    }
+
     if (record.startTime) {
       const parsedFromStart = dayjs(record.startTime);
       if (parsedFromStart.isValid()) return parsedFromStart.format("YYYY-MM-DD");
@@ -203,12 +214,28 @@ function StatsScreen() {
     return null;
   };
 
+  const getRecordMinutes = (record: PracticeRecord): number => {
+    const raw = (record as unknown as { practiceTime: unknown }).practiceTime;
+    if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+    if (typeof raw === "string") {
+      const text = raw.trim();
+      const hourMatch = text.match(/(\d+)\s*시간/);
+      const minuteMatch = text.match(/(\d+)\s*분/);
+      if (hourMatch || minuteMatch) {
+        return (hourMatch ? parseInt(hourMatch[1], 10) * 60 : 0) + (minuteMatch ? parseInt(minuteMatch[1], 10) : 0);
+      }
+      const numeric = Number(text);
+      if (Number.isFinite(numeric)) return numeric;
+    }
+    return 0;
+  };
+
   const minutesByDate = useMemo(() => {
     const map: Record<string, number> = {};
     practiceRecords.forEach((record) => {
       const normalizedDate = normalizeRecordDate(record);
       if (!normalizedDate) return;
-      map[normalizedDate] = (map[normalizedDate] || 0) + Number(record.practiceTime || 0);
+      map[normalizedDate] = (map[normalizedDate] || 0) + getRecordMinutes(record);
     });
     return map;
   }, [practiceRecords]);
@@ -368,8 +395,8 @@ function StatsScreen() {
 
   const levelColors = [
     "#FFFFFF",
-    "rgba(69, 181, 170, 0.28)",
-    "rgba(69, 181, 170, 0.62)",
+    "#D6F0EE",
+    "#8FD7D0",
     "var(--TURQUOISE)"
   ];
 
