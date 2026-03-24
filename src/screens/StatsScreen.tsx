@@ -395,9 +395,9 @@ function StatsScreen() {
 
   const levelColors = [
     "#FFFFFF",
-    "#D6F0EE",
-    "#8FD7D0",
-    "var(--TURQUOISE)"
+    "#69d6ca",
+    "#45b5aa",
+    "#17958b"
   ];
 
   // Now define calculated values

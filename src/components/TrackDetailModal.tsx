@@ -409,11 +409,11 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
   const recentRecordings = sortedRecordings.slice(0, 3);
 
   const levelColors = [
-    "var(--bg-tertiary, #edf0f3)",
-    "rgba(255, 122, 89, 0.22)",
-    "rgba(255, 122, 89, 0.42)",
-    "rgba(255, 122, 89, 0.66)",
-    "var(--LIVING_CORAL)"
+    "#FFFFFF",
+    "#fce2df",
+    "#fce2df",
+    "#f7a8a1",
+    "#f36f63"
   ];
 
   return (
