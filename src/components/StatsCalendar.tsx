@@ -5,8 +5,6 @@ import CalLeftIcon from "../assets/icons/cal_left.svg?react";
 import CalRightIcon from "../assets/icons/cal_right.svg?react";
 import CalDownIcon from "../assets/icons/cal_down.svg?react";
 import DoIcon from "../assets/icons/do.svg?react";
-import StatsCheckIcon from "../assets/icons/check_s.svg?react";
-import StatsUncheckIcon from "../assets/icons/uncheck.svg?react";
 import { PracticeRecord, PracticeChecks, Track } from "../contexts/PracticeDataContext";
 import { generateCalendarDays } from "../utils/statsUtils";
 
@@ -21,8 +19,6 @@ interface StatsCalendarProps {
   practiceChecks: PracticeChecks;
   tracks: Track[];
   onYearChange: (year: number) => void;
-  getSelectedDateTotalTime: (date: string) => string;
-  getSelectedDateTracks: (date: string) => Track[];
   koreanHolidays: string[];
   commonFontStyle: React.CSSProperties;
 }
@@ -38,8 +34,6 @@ export const StatsCalendar: React.FC<StatsCalendarProps> = ({
   practiceChecks,
   tracks,
   onYearChange,
-  getSelectedDateTotalTime,
-  getSelectedDateTracks,
   koreanHolidays,
   commonFontStyle
 }) => {
@@ -53,7 +47,7 @@ export const StatsCalendar: React.FC<StatsCalendarProps> = ({
   return (
     <div style={{
       width: "100%", margin: "25px auto 0 auto", padding: "16px 0", 
-      border: "var(--border-light)", borderRadius: 5, background: "var(--bg-primary)", 
+      border: "1px solid rgba(0,0,0,0.12)", borderRadius: 5, background: "var(--bg-primary)", 
       boxSizing: "border-box"
     }}>
       {/* Calendar header */}
@@ -192,52 +186,6 @@ export const StatsCalendar: React.FC<StatsCalendarProps> = ({
         </div>
       ))}
       
-      {/* Selected date info section */}
-      <div style={{
-        margin: "16px auto 0 auto", padding: "16px", width: "calc(100% - 36px)",
-        background: "transparent", border: "0.7px solid var(--MIMOSA)",
-        borderRadius: 8, ...commonFontStyle
-      }}>
-        <div style={{
-          fontSize: 18, color: "var(--MIMOSA)", fontWeight: 400, marginBottom: 12
-        }}>
-          {dayjs(selectedDate).format("YYYY년 MM월 DD일")} ({dayjs(selectedDate).format("ddd").toLowerCase()})
-        </div>
-        
-        <div style={{
-          fontSize: 14, color: "var(--text-primary)", marginBottom: 12
-        }}>
-          총 연습시간: <span style={{ color: "var(--MIMOSA)", fontWeight: "bold" }}>
-            {getSelectedDateTotalTime(selectedDate)}
-          </span>
-        </div>
-        
-        <div style={{
-          borderTop: "1px solid var(--border-light)", paddingTop: 12,
-          display: "flex", flexDirection: "column", gap: 8
-        }}>
-          <span style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 4 }}>연습한 곡:</span>
-          {getSelectedDateTracks(selectedDate).length > 0 ? (
-            getSelectedDateTracks(selectedDate).map(track => {
-              const isChecked = !!(practiceChecks[selectedDate] && practiceChecks[selectedDate][track.id]);
-              return (
-                <div key={track.id} style={{ 
-                  display: "flex", alignItems: "center", gap: 8, 
-                  color: isChecked ? "var(--text-primary)" : "var(--text-secondary)" 
-                }}>
-                  {isChecked ? 
-                    <StatsCheckIcon style={{color: "var(--MIMOSA)"}} width="14" height="14" /> : 
-                    <StatsUncheckIcon width="14" height="14" />
-                  }
-                  <span style={{ fontSize: 14, ...commonFontStyle }}>{track.title}</span>
-                </div>
-              );
-            })
-          ) : (
-            <span style={{ color: "var(--text-secondary)", fontSize: 14 }}>연습한 곡이 없습니다.</span>
-          )}
-        </div>
-      </div>
     </div>
   );
 };

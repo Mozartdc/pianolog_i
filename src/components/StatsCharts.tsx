@@ -1,7 +1,6 @@
 // src/components/StatsCharts.tsx
 import React from "react";
 import dayjs from "dayjs";
-import { getDynamicMaxAndTicks, calculateBarHeight } from "../utils/statsUtils";
 
 interface WeekData {
   dates: dayjs.Dayjs[];
@@ -14,143 +13,151 @@ interface StatsChartsProps {
   weekData: WeekData;
   today: string;
   commonFontStyle: React.CSSProperties;
+  timeSummary: string;
+  songSummary: string;
 }
 
 export const StatsCharts: React.FC<StatsChartsProps> = ({
   weekData,
   today,
-  commonFontStyle
+  commonFontStyle,
+  timeSummary,
+  songSummary
 }) => {
-  const { maxValue: timeMaxValue, ticks: timeTicks } = getDynamicMaxAndTicks(weekData.timeData, 'time');
-  const { maxValue: songMaxValue, ticks: songTicks } = getDynamicMaxAndTicks(weekData.songData, 'songs');
+  const chartWidth = 320;
+  const chartHeight = 92;
+  const horizontalPadding = 16;
+  const verticalPadding = 12;
+  const stepX = (chartWidth - horizontalPadding * 2) / Math.max(weekData.timeData.length - 1, 1);
+
+  const buildPoints = (values: number[]) => {
+    const maxValue = Math.max(...values, 1);
+    return values.map((value, index) => {
+      const x = horizontalPadding + stepX * index;
+      const y = chartHeight - verticalPadding - ((value / maxValue) * (chartHeight - verticalPadding * 2));
+      return { x, y };
+    });
+  };
+
+  const renderChart = (values: number[], accentColor: string) => {
+    const points = buildPoints(values);
+    const polylinePoints = points.map(point => `${point.x},${point.y}`).join(" ");
+
+    return (
+      <>
+        <svg
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          style={{ width: "100%", height: 120, display: "block", overflow: "visible" }}
+        >
+          {[0, 0.5, 1].map((ratio, index) => {
+            const y = chartHeight - verticalPadding - ratio * (chartHeight - verticalPadding * 2);
+            return (
+              <line
+                key={index}
+                x1={horizontalPadding}
+                y1={y}
+                x2={chartWidth - horizontalPadding}
+                y2={y}
+                stroke="rgba(0,0,0,0.08)"
+                strokeWidth="1"
+              />
+            );
+          })}
+
+          <polyline
+            fill="none"
+            stroke={accentColor}
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+            points={polylinePoints}
+          />
+
+          {points.map((point, index) => {
+            const isTodayPoint = weekData.dates[index].format("YYYY-MM-DD") === today;
+            return (
+              <circle
+                key={weekData.dates[index].format("YYYY-MM-DD")}
+                cx={point.x}
+                cy={point.y}
+                r={isTodayPoint ? 4.5 : 3.5}
+                fill={isTodayPoint ? accentColor : "var(--bg-primary)"}
+                stroke={isTodayPoint ? "var(--text-primary)" : accentColor}
+                strokeWidth={isTodayPoint ? 1.5 : 1.5}
+              />
+            );
+          })}
+        </svg>
+
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 6, marginTop: 2 }}>
+          {["m", "t", "w", "t", "f", "s", "s"].map((day, index) => (
+            <div
+              key={`${day}-${index}`}
+              style={{
+                flex: 1,
+                textAlign: "center",
+                fontSize: 12,
+                color: index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)",
+                ...commonFontStyle
+              }}
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  };
 
   return (
-    <div style={{ 
-      display: "flex", 
-      gap: "min(12px, 3vw)", 
-      margin: "10px auto 0 auto", 
-      width: "100%", 
-      boxSizing: "border-box", 
-      justifyContent: "space-between", 
-      alignItems: "flex-start" 
+    <div style={{
+      display: "flex",
+      gap: "min(12px, 3vw)",
+      margin: "12px auto 0 auto",
+      width: "100%",
+      boxSizing: "border-box",
+      alignItems: "stretch"
     }}>
-      {/* Weekly practice time chart */}
-      <div style={{ 
-        flex: 1, 
-        minWidth: "calc(50% - min(12px, 3vw) / 2)", 
-        height: 161, 
-        padding: 10, 
-        border: "var(--border-light)", 
-        borderRadius: 5, 
-        background: "var(--bg-primary)", 
-        boxSizing: "border-box" 
+      <div style={{
+        flex: 1,
+        minWidth: 0,
+        padding: "12px 12px 16px",
+        border: "var(--border-light)",
+        borderRadius: 5,
+        background: "var(--bg-primary)",
+        boxSizing: "border-box"
       }}>
-        <div style={{ fontSize: 12, color: "var(--text-primary)", marginBottom: 4, ...commonFontStyle }}>
+        <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 700, marginBottom: 4, ...commonFontStyle }}>
           주간 피출 시간
         </div>
-        <div style={{ fontSize: 12, color: "var(--text-primary)", marginBottom: 12, ...commonFontStyle }}>
+        <div style={{ fontSize: 12, color: "var(--MIMOSA)", marginBottom: 2, ...commonFontStyle }}>
+          {timeSummary}
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 10, ...commonFontStyle }}>
           {weekData.dateRange}
         </div>
-        
-        <div style={{ display: "flex", height: 70, marginBottom: 8 }}>
-          <div style={{ width: 25, height: 70, position: "relative", marginRight: 5, flexShrink: 0 }}>
-            {timeTicks.map((hour, index) => (
-              <div key={index} style={{ 
-                position: "absolute", top: `${index * (100 / (timeTicks.length - 1))}%`, 
-                transform: 'translateY(-50%)', left: 0, fontSize: 10, 
-                color: "var(--text-secondary)", lineHeight: 1, ...commonFontStyle 
-              }}>
-                {hour}h
-              </div>
-            ))}
-          </div>
-          
-          <div style={{ display: "flex", alignItems: "end", height: 70, flex: 1, minWidth: 0 }}>
-            {weekData.timeData.map((value, index) => {
-              const isToday = weekData.dates[index].format("YYYY-MM-DD") === today;
-              const height = calculateBarHeight(value, timeMaxValue);
-              return (
-                <div key={index} style={{ 
-                  flex: "1 1 0", height: height, 
-                  backgroundColor: isToday ? "var(--MIMOSA)" : "var(--PASTEL_MIMOSA)", 
-                  borderRadius: 2, marginRight: index < 6 ? 2 : 0, minWidth: 0 
-                }} />
-              );
-            })}
-          </div>
-        </div>
-        
-        <div style={{ display: "flex", fontSize: 12, ...commonFontStyle }}>
-          <div style={{ width: 30, flexShrink: 0 }} />
-          <div style={{ display: "flex", flex: 1, minWidth: 0 }}>
-            {["m", "t", "w", "t", "f", "s", "s"].map((day, index) => (
-              <div key={index} style={{ 
-                flex: "1 1 0", textAlign: "center", 
-                color: index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)", 
-                marginRight: index < 6 ? 2 : 0, minWidth: 0 
-              }}>
-                {day}
-              </div>
-            ))}
-          </div>
-        </div>
+        {renderChart(weekData.timeData, "var(--MIMOSA)")}
       </div>
 
-      {/* Weekly practice songs chart */}
-      <div style={{ 
-        flex: 1, minWidth: "calc(50% - min(12px, 3vw) / 2)", height: 161, 
-        padding: 10, border: "var(--border-light)", borderRadius: 5, 
-        background: "var(--bg-primary)", boxSizing: "border-box" 
+      <div style={{
+        flex: 1,
+        minWidth: 0,
+        padding: "12px 12px 16px",
+        border: "var(--border-light)",
+        borderRadius: 5,
+        background: "var(--bg-primary)",
+        boxSizing: "border-box"
       }}>
-        <div style={{ fontSize: 12, color: "var(--text-primary)", marginBottom: 4, ...commonFontStyle }}>
-          주간 연습 곡
+        <div style={{ fontSize: 14, color: "var(--text-primary)", fontWeight: 700, marginBottom: 4, ...commonFontStyle }}>
+          주간 연습 곡 수
         </div>
-        <div style={{ fontSize: 12, color: "var(--text-primary)", marginBottom: 12, ...commonFontStyle }}>
+        <div style={{ fontSize: 12, color: "var(--TURQUOISE)", marginBottom: 2, ...commonFontStyle }}>
+          {songSummary}
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text-secondary)", marginBottom: 10, ...commonFontStyle }}>
           {weekData.dateRange}
         </div>
-        
-        <div style={{ display: "flex", height: 70, marginBottom: 8 }}>
-          <div style={{ width: 25, height: 70, position: "relative", marginRight: 5, flexShrink: 0 }}>
-            {songTicks.map((songs, index) => (
-              <div key={index} style={{ 
-                position: "absolute", top: `${index * (100 / (songTicks.length - 1))}%`, 
-                transform: 'translateY(-50%)', left: 0, fontSize: 10, 
-                color: "var(--text-secondary)", lineHeight: 1, ...commonFontStyle 
-              }}>
-                {songs}
-              </div>
-            ))}
-          </div>
-          
-          <div style={{ display: "flex", alignItems: "end", height: 70, flex: 1, minWidth: 0 }}>
-            {weekData.songData.map((value, index) => {
-              const isToday = weekData.dates[index].format("YYYY-MM-DD") === today;
-              const height = calculateBarHeight(value, songMaxValue);
-              return (
-                <div key={index} style={{ 
-                  flex: "1 1 0", height: height, 
-                  backgroundColor: isToday ? "var(--MIMOSA)" : "var(--PASTEL_MIMOSA)", 
-                  borderRadius: 2, marginRight: index < 6 ? 2 : 0, minWidth: 0 
-                }} />
-              );
-            })}
-          </div>
-        </div>
-        
-        <div style={{ display: "flex", fontSize: 12, ...commonFontStyle }}>
-          <div style={{ width: 30, flexShrink: 0 }} />
-          <div style={{ display: "flex", flex: 1, minWidth: 0 }}>
-            {["m", "t", "w", "t", "f", "s", "s"].map((day, index) => (
-              <div key={index} style={{ 
-                flex: "1 1 0", textAlign: "center", 
-                color: index === 6 ? "var(--VIVA_MAGENTA)" : "var(--text-secondary)", 
-                marginRight: index < 6 ? 2 : 0, minWidth: 0 
-              }}>
-                {day}
-              </div>
-            ))}
-          </div>
-        </div>
+        {renderChart(weekData.songData, "var(--TURQUOISE)")}
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import TrackRecordingsModal from "./TrackRecordingsModal";
 import { getAudioDurationMs, saveRecordingBlob, getRecordingBlob, getMediaKindFromMimeType } from "../utils/recordingStorage";
 import AudioFileIcon from "../assets/icons/audio file.svg?react";
 import RecordIcon from "../assets/icons/rec.svg?react";
-import RecordStopIcon from "../assets/icons/rec stop.svg?react";
+import RecordingIcon from "../assets/icons/recording.svg?react";
 import CautionIcon from "../assets/icons/caution.svg?react";
 
 interface TrackDetailModalProps {
@@ -28,6 +28,13 @@ type RecorderState = "idle" | "recording" | "fallback";
 
 const formatDuration = (durationMs: number) => {
   const totalSeconds = Math.max(0, Math.round(durationMs / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
+
+const formatElapsed = (elapsedMs: number) => {
+  const totalSeconds = Math.max(0, Math.floor(elapsedMs / 1000));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
@@ -130,6 +137,11 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
   const [draftNote, setDraftNote] = useState("");
   const [recorderState, setRecorderState] = useState<RecorderState>("idle");
   const [recorderError, setRecorderError] = useState<string | null>(null);
+  const [recordingElapsedMs, setRecordingElapsedMs] = useState(0);
+  const [recordingBlinkOn, setRecordingBlinkOn] = useState(true);
+  const recordingStartAtRef = useRef<number | null>(null);
+  const recordingTickerRef = useRef<number | null>(null);
+  const recordingBlinkTickerRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -198,6 +210,17 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
       setDraftNote("");
       setRecorderState("idle");
       setRecorderError(null);
+      setRecordingElapsedMs(0);
+      recordingStartAtRef.current = null;
+      if (recordingTickerRef.current) {
+        clearInterval(recordingTickerRef.current);
+        recordingTickerRef.current = null;
+      }
+      if (recordingBlinkTickerRef.current) {
+        clearInterval(recordingBlinkTickerRef.current);
+        recordingBlinkTickerRef.current = null;
+      }
+      setRecordingBlinkOn(true);
     }
   }, [isOpen]);
 
@@ -209,6 +232,15 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
         mediaStreamRef.current.getTracks().forEach((track) => track.stop());
         mediaStreamRef.current = null;
       }
+      if (recordingTickerRef.current) {
+        clearInterval(recordingTickerRef.current);
+        recordingTickerRef.current = null;
+      }
+      if (recordingBlinkTickerRef.current) {
+        clearInterval(recordingBlinkTickerRef.current);
+        recordingBlinkTickerRef.current = null;
+      }
+      recordingStartAtRef.current = null;
     };
   }, []);
 
@@ -252,6 +284,17 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
     }
     setRecorderState("fallback");
     setRecorderError(message);
+    setRecordingElapsedMs(0);
+    recordingStartAtRef.current = null;
+    if (recordingTickerRef.current) {
+      clearInterval(recordingTickerRef.current);
+      recordingTickerRef.current = null;
+    }
+    if (recordingBlinkTickerRef.current) {
+      clearInterval(recordingBlinkTickerRef.current);
+      recordingBlinkTickerRef.current = null;
+    }
+    setRecordingBlinkOn(true);
   };
 
   const handleStartRecording = async () => {
@@ -295,11 +338,39 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
         }
 
         setRecorderState("idle");
+        if (recordingTickerRef.current) {
+          clearInterval(recordingTickerRef.current);
+          recordingTickerRef.current = null;
+        }
+        if (recordingBlinkTickerRef.current) {
+          clearInterval(recordingBlinkTickerRef.current);
+          recordingBlinkTickerRef.current = null;
+        }
+        recordingStartAtRef.current = null;
+        setRecordingElapsedMs(0);
+        setRecordingBlinkOn(true);
         await createDraftFromBlob(recordedBlob, "recorded", mimeType || "audio/mp4");
       };
 
       recorder.start();
       setRecorderState("recording");
+      const startAt = Date.now();
+      recordingStartAtRef.current = startAt;
+      setRecordingElapsedMs(0);
+      if (recordingTickerRef.current) {
+        clearInterval(recordingTickerRef.current);
+      }
+      recordingTickerRef.current = window.setInterval(() => {
+        if (!recordingStartAtRef.current) return;
+        setRecordingElapsedMs(Date.now() - recordingStartAtRef.current);
+      }, 200);
+      if (recordingBlinkTickerRef.current) {
+        clearInterval(recordingBlinkTickerRef.current);
+      }
+      setRecordingBlinkOn(true);
+      recordingBlinkTickerRef.current = window.setInterval(() => {
+        setRecordingBlinkOn((prev) => !prev);
+      }, 650);
     } catch (error) {
       const name = error instanceof DOMException ? error.name : "";
       if (name === "NotAllowedError") {
@@ -489,34 +560,56 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
             </div>
 
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
-              <button
-                type="button"
-                onClick={recorderState === "recording" ? handleStopRecording : handleStartRecording}
-                style={{
-                  border: recorderState === "recording" ? "none" : "1px solid var(--VIVA_MAGENTA)",
-                  borderRadius: "var(--border-radius-small)",
-                  background: "transparent",
-                  color: recorderState === "recording" ? "var(--text-primary)" : "var(--VIVA_MAGENTA)",
-                  cursor: "pointer",
-                  fontFamily: "var(--FONT_FAMILY)",
-                  fontSize: 15,
-                  fontWeight: 500,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 6,
-                  minHeight: 32,
-                  padding: recorderState === "recording" ? "0" : "0 10px",
-                  lineHeight: 1
-                }}
-              >
-                {recorderState === "recording" ? (
-                  <RecordStopIcon width="16" height="16" style={{ color: "var(--LIVING_CORAL)", flexShrink: 0 }} />
-                ) : (
+              {recorderState === "recording" ? (
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    minHeight: 32,
+                    fontSize: 15,
+                    fontWeight: 500,
+                    color: "var(--VIVA_MAGENTA)"
+                  }}
+                >
+                  <RecordingIcon
+                    width="16"
+                    height="16"
+                    style={{
+                      color: "var(--VIVA_MAGENTA)",
+                      flexShrink: 0,
+                      opacity: recordingBlinkOn ? 1 : 0.25,
+                      transition: "opacity 220ms ease"
+                    }}
+                  />
+                  <span>녹음중</span>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleStartRecording}
+                  style={{
+                    border: "1px solid var(--VIVA_MAGENTA)",
+                    borderRadius: "var(--border-radius-small)",
+                    background: "transparent",
+                    color: "var(--VIVA_MAGENTA)",
+                    cursor: "pointer",
+                    fontFamily: "var(--FONT_FAMILY)",
+                    fontSize: 15,
+                    fontWeight: 500,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    minHeight: 32,
+                    padding: "0 10px",
+                    lineHeight: 1
+                  }}
+                >
                   <RecordIcon width="16" height="16" style={{ color: "var(--VIVA_MAGENTA)", flexShrink: 0 }} />
-                )}
-                <span>{recorderState === "recording" ? "녹음 정지" : "REC"}</span>
-              </button>
+                  <span>REC</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
@@ -545,6 +638,73 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
                 onChange={handleImportFile}
               />
             </div>
+
+            {recorderState === "recording" && (
+              <div
+                style={{
+                  width: "100%",
+                  border: "var(--border-light)",
+                  borderRadius: "999px",
+                  padding: "8px 10px",
+                  boxSizing: "border-box",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={handleStopRecording}
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    border: "1px solid rgba(0,0,0,0.15)",
+                    background: "var(--bg-primary)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                    padding: 0
+                  }}
+                  aria-label="녹음 정지"
+                >
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 2,
+                      background: "var(--text-secondary)"
+                    }}
+                  />
+                </button>
+
+                <div
+                  style={{
+                    flex: 1,
+                    height: 10,
+                    borderRadius: 999,
+                    background: "rgba(0,0,0,0.08)",
+                    overflow: "hidden"
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.min((recordingElapsedMs / (60 * 60 * 1000)) * 100, 100)}%`,
+                      height: "100%",
+                      background: "var(--VERY_PERI)",
+                      borderRadius: 999,
+                      transition: "width 180ms linear"
+                    }}
+                  />
+                </div>
+
+                <div style={{ minWidth: 46, textAlign: "right", fontSize: 12, color: "var(--text-primary)" }}>
+                  {formatElapsed(recordingElapsedMs)}
+                </div>
+              </div>
+            )}
 
             {recorderError && (
               <div style={{ display: "flex", alignItems: "flex-start", gap: 6, fontSize: 12, color: "var(--VIVA_MAGENTA)", lineHeight: 1.5 }}>
