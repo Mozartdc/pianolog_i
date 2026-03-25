@@ -121,7 +121,7 @@ function TrendLineMiniChart({
 
 function StatsScreen() {
   const { tracks, practiceRecords, practiceChecks, setPracticeRecords } = usePracticeData();
-  const HEATMAP_DAYS = 252;
+  const HEATMAP_DAYS = 266;
   
   // UI states
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
@@ -698,43 +698,42 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
           </div>
         </div>
 
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          marginTop: 12, gap: 12
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--text-secondary)", ...commonFontStyle }}>
-            <span>적음</span>
-            {levelColors.map(color => (
-              <span
-                key={color}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: 2,
-                  background: color,
-                  border: color === levelColors[0] ? "1px solid rgba(0, 0, 0, 0.16)" : "none",
-                  boxSizing: "border-box"
-                }}
-              />
-            ))}
-            <span>많음</span>
-          </div>
+        <div style={{ display: "flex", justifyContent: "center", width: "100%", marginTop: 6 }}>
+          <div style={{ width: statsHeatmapWidth, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--text-secondary)", ...commonFontStyle }}>
+              <span>적음</span>
+              {levelColors.map(color => (
+                <span
+                  key={color}
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 2,
+                    background: color,
+                    border: color === levelColors[0] ? "1px solid rgba(0, 0, 0, 0.16)" : "none",
+                    boxSizing: "border-box"
+                  }}
+                />
+              ))}
+              <span>많음</span>
+            </div>
 
-          <button
-            onClick={() => setShowCalendarDetailModal(true)}
-            style={{
-              background: "transparent",
-              border: "1px solid var(--MIMOSA)",
-              borderRadius: 999,
-              color: "var(--MIMOSA)",
-              padding: "7px 12px",
-              fontSize: 12,
-              cursor: "pointer",
-              ...commonFontStyle
-            }}
-          >
-            달력 상세 보기
-          </button>
+            <button
+              onClick={() => setShowCalendarDetailModal(true)}
+              style={{
+                background: "transparent",
+                border: "1px solid var(--MIMOSA)",
+                borderRadius: 999,
+                color: "var(--MIMOSA)",
+                padding: "7px 12px",
+                fontSize: 12,
+                cursor: "pointer",
+                ...commonFontStyle
+              }}
+            >
+              달력 상세 보기
+            </button>
+          </div>
         </div>
       </div>
 

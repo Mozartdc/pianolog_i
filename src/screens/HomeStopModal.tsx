@@ -138,7 +138,7 @@ export function HomeStopModal({
           disabled={isCompleting}
           style={{
             width: "100%", height: 150,
-            border: "0,7px solid var(--text-secondary)",
+            border: "0.7px solid var(--text-secondary)",
             borderRadius: "var(--border-radius-medium)",
             padding: 16, fontSize: 16,
             color: "var(--text-primary)", background: "var(--bg-primary)",
