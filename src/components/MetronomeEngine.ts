@@ -4,7 +4,6 @@ import { AudioContextManager } from './AudioContextManager';
 import { MetronomeSoundEngine } from './MetronomeSoundEngine';
 import { RHYTHM_PATTERNS } from '../utils/rhythmUtils';
 import { TimeSignature } from './useMetronomeStore';
-import { BackgroundMetronomePlayer } from './BackgroundMetronomePlayer';
 
 export interface MetronomeEngineConfig {
   bpm: number;
@@ -48,14 +47,10 @@ export class MetronomeEngine {
 
   private callbacks: MetronomeEngineCallbacks | null = null;
   private visibilityHandlerBound = false;
-  private backgroundPlayer = new BackgroundMetronomePlayer();
-  private useBackgroundMediaPath = false;
-  private mediaBeatTimer: number | null = null;
 
   constructor() {
     this.audioContextManager = AudioContextManager.getInstance();
     this.soundEngine = MetronomeSoundEngine.getInstance();
-    this.useBackgroundMediaPath = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
   }
 
   async initialize(): Promise<void> {
@@ -126,16 +121,6 @@ export class MetronomeEngine {
       console.log('🔇 음소거 상태:', this.isMuted);
     }
 
-    if (this.isPlaying && this.useBackgroundMediaPath) {
-      this.restartMediaPath().catch((error) => {
-        console.warn('Media path update failed, fallback to WebAudio path:', error);
-        this.useBackgroundMediaPath = false;
-        this.restartScheduleLoop();
-        this.scheduleNotes();
-      });
-      return;
-    }
-
     if (this.isPlaying && needsReschedule && needsTimeGridReschedule) {
       this.reschedule();
     }
@@ -167,17 +152,6 @@ export class MetronomeEngine {
     this.startTime = context.currentTime;
     this.callbacks?.onBeatChange(0);
 
-    if (this.useBackgroundMediaPath) {
-      try {
-        await this.startMediaPath();
-        console.log('▶️ 메트로놈 시작 (media path)');
-        return;
-      } catch (error) {
-        console.warn('Media path start failed, fallback to WebAudio path:', error);
-        this.useBackgroundMediaPath = false;
-      }
-    }
-
     this.restartScheduleLoop();
     this.scheduleNotes();
 
@@ -193,8 +167,6 @@ export class MetronomeEngine {
 
     this.isPlaying = false;
     this.clearScheduleLoop();
-    this.clearMediaBeatTimer();
-    this.backgroundPlayer.stop();
     this.soundEngine.stopAll();
     this.scheduledBeat = 0;
     this.currentBeat = 0;
@@ -346,42 +318,6 @@ export class MetronomeEngine {
     }
   }
 
-  private buildMediaConfig() {
-    return {
-      bpm: this.currentBPM,
-      numerator: this.timeSignature.numerator,
-      denominator: this.timeSignature.denominator,
-      beatPattern: this.beatPattern
-    };
-  }
-
-  private startMediaBeatTicker(): void {
-    this.clearMediaBeatTimer();
-    const beatMs = Math.max(1, this.getBeatDuration() * 1000);
-    this.mediaBeatTimer = window.setInterval(() => {
-      if (!this.isPlaying) return;
-      this.currentBeat = (this.currentBeat + 1) % this.timeSignature.numerator;
-      this.callbacks?.onBeatChange(this.currentBeat);
-    }, beatMs);
-  }
-
-  private clearMediaBeatTimer(): void {
-    if (this.mediaBeatTimer) {
-      window.clearInterval(this.mediaBeatTimer);
-      this.mediaBeatTimer = null;
-    }
-  }
-
-  private async startMediaPath(): Promise<void> {
-    await this.backgroundPlayer.start(this.buildMediaConfig());
-    this.startMediaBeatTicker();
-  }
-
-  private async restartMediaPath(): Promise<void> {
-    await this.backgroundPlayer.update(this.buildMediaConfig());
-    this.startMediaBeatTicker();
-  }
-
   private catchUpIfBehind(currentTime: number): void {
     if (this.nextNoteTime >= currentTime) return;
 
@@ -415,7 +351,6 @@ export class MetronomeEngine {
 
   async dispose(): Promise<void> {
     this.stop();
-    this.backgroundPlayer.dispose();
     await this.soundEngine.dispose();
     this.isInitialized = false;
     console.log('🗑️ MetronomeEngine 정리 완료');
