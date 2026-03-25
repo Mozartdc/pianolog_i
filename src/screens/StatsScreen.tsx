@@ -121,6 +121,7 @@ function TrendLineMiniChart({
 
 function StatsScreen() {
   const { tracks, practiceRecords, practiceChecks, setPracticeRecords } = usePracticeData();
+  const HEATMAP_DAYS = 252;
   
   // UI states
   const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
@@ -381,8 +382,8 @@ function StatsScreen() {
   }, [practiceRecords]);
 
   const heatmapDates = useMemo(
-    () => Array.from({ length: 200 }, (_, index) => dayjs().subtract(199 - index, "day")),
-    []
+    () => Array.from({ length: HEATMAP_DAYS }, (_, index) => dayjs().subtract(HEATMAP_DAYS - 1 - index, "day")),
+    [HEATMAP_DAYS]
   );
   const statsHeatRows = 7;
   const statsDotSize = 8;
@@ -603,7 +604,7 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
       <div style={{
         width: "100%",
         margin: "16px auto 0 auto",
-        fontSize: 14,
+        fontSize: 16,
         color: "var(--text-secondary)",
         display: "flex",
         alignItems: "center",
@@ -645,7 +646,7 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
         background: "transparent", boxSizing: "border-box"
       }}>
         <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 14, ...commonFontStyle }}>
-          최근 200일 기록
+          최근 {HEATMAP_DAYS}일 기록
         </div>
 
         <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>

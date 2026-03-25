@@ -173,7 +173,7 @@ return (
         }}
         style={{
           position: "fixed",
-          bottom: "103px",
+          bottom: "113px",
           left: "50%",
           transform: "translateX(-50%)",
           width: "45px",

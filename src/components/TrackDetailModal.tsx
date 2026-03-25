@@ -122,6 +122,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
   onClose,
   onOpenCalendar
 }) => {
+  const HEATMAP_DAYS = 252;
   const {
     tracks,
     practiceChecks,
@@ -177,8 +178,8 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
   const recentHeatmap = useMemo(() => {
     if (!track) return [];
 
-    return Array.from({ length: 90 }, (_, index) => {
-      const date = dayjs().subtract(89 - index, "day");
+    return Array.from({ length: HEATMAP_DAYS }, (_, index) => {
+      const date = dayjs().subtract(HEATMAP_DAYS - 1 - index, "day");
       const dateStr = date.format("YYYY-MM-DD");
       const isChecked = !!practiceChecks[dateStr]?.[track.id];
       const totalMinutes = practiceRecords
@@ -195,7 +196,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
 
       return { key: dateStr, label: date.format("M/D"), level };
     });
-  }, [practiceChecks, practiceRecords, track]);
+  }, [HEATMAP_DAYS, practiceChecks, practiceRecords, track]);
   const trackHeatRows = 7;
   const trackDotSize = 8;
   const trackDotGap = 1;
@@ -519,7 +520,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
             </div>
 
             <div>
-              <div style={{ fontSize: 14, color: "var(--text-primary)", marginBottom: 8 }}>최근 90일 기록</div>
+              <div style={{ fontSize: 14, color: "var(--text-primary)", marginBottom: 8 }}>최근 {HEATMAP_DAYS}일 기록</div>
               <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
                 <div style={{ width: trackHeatmapWidth }}>
                   <div style={{ position: "relative", height: 14, marginBottom: 4 }}>
