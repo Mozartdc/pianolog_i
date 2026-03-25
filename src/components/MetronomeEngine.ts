@@ -36,6 +36,8 @@ export class MetronomeEngine {
   private currentBeat = 0;
   private foregroundLookaheadTime = 25;
   private foregroundScheduleHorizonSec = 0.1;
+  // Experimental: schedule a longer window when app goes background.
+  private backgroundScheduleHorizonSec = 45;
   private scheduleInterval: number | null = null;
   private startTime = 0;
   private uiTimeouts: number[] = [];
@@ -44,6 +46,7 @@ export class MetronomeEngine {
   private transportStartPerfMs = 0;
 
   private callbacks: MetronomeEngineCallbacks | null = null;
+  private visibilityHandlerBound = false;
 
   constructor() {
     this.audioContextManager = AudioContextManager.getInstance();
@@ -60,6 +63,7 @@ export class MetronomeEngine {
       }
 
       await this.soundEngine.initialize();
+      this.bindVisibilityHandlerOnce();
       this.isInitialized = true;
       console.log('🎵 MetronomeEngine 초기화 완료');
     } catch (error) {
@@ -195,10 +199,30 @@ export class MetronomeEngine {
 
     this.catchUpIfBehind(context.currentTime);
 
-    while (this.nextNoteTime < context.currentTime + this.foregroundScheduleHorizonSec) {
+    const scheduleHorizonSec = this.getCurrentScheduleHorizonSec();
+    while (this.nextNoteTime < context.currentTime + scheduleHorizonSec) {
       this.playNote(this.nextNoteTime, this.scheduledBeat);
       this.advanceNote();
     }
+  }
+
+  private getCurrentScheduleHorizonSec(): number {
+    if (typeof document !== 'undefined' && document.hidden) {
+      return this.backgroundScheduleHorizonSec;
+    }
+    return this.foregroundScheduleHorizonSec;
+  }
+
+  private bindVisibilityHandlerOnce(): void {
+    if (this.visibilityHandlerBound || typeof document === 'undefined') return;
+    this.visibilityHandlerBound = true;
+
+    document.addEventListener('visibilitychange', () => {
+      // When moving to background, pre-schedule a wider audio window
+      // so playback survives timer throttling longer.
+      if (!document.hidden || !this.isPlaying) return;
+      this.scheduleNotes();
+    });
   }
 
   private playNote(when: number, beatIndex: number): void {
