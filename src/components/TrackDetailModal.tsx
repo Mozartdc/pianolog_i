@@ -196,6 +196,27 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
       return { key: dateStr, label: date.format("M/D"), level };
     });
   }, [practiceChecks, practiceRecords, track]);
+  const trackHeatRows = 7;
+  const trackDotSize = 8;
+  const trackDotGap = 1;
+  const trackWeekCount = Math.ceil(recentHeatmap.length / trackHeatRows);
+  const trackHeatmapWidth = trackWeekCount * trackDotSize + (trackWeekCount - 1) * trackDotGap;
+  const trackMonthLabels = useMemo(() => {
+    const labels: { key: string; label: string; column: number }[] = [];
+    let lastKey = "";
+    recentHeatmap.forEach((cell, index) => {
+      const monthKey = dayjs(cell.key).format("YYYY-MM");
+      if (monthKey !== lastKey) {
+        labels.push({
+          key: monthKey,
+          label: dayjs(cell.key).format("MMM"),
+          column: Math.floor(index / trackHeatRows)
+        });
+        lastKey = monthKey;
+      }
+    });
+    return labels;
+  }, [recentHeatmap]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -499,26 +520,50 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
 
             <div>
               <div style={{ fontSize: 14, color: "var(--text-primary)", marginBottom: 8 }}>최근 90일 기록</div>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(18, minmax(0, 1fr))",
-                  gap: 3,
-                  width: "100%"
-                }}
-              >
-                {recentHeatmap.map((cell) => (
+              <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+                <div style={{ width: trackHeatmapWidth }}>
+                  <div style={{ position: "relative", height: 14, marginBottom: 4 }}>
+                    {trackMonthLabels.map((month) => (
+                      <span
+                        key={month.key}
+                        style={{
+                          position: "absolute",
+                          left: month.column * (trackDotSize + trackDotGap),
+                          fontSize: 9,
+                          lineHeight: "14px",
+                          color: "var(--text-secondary)"
+                        }}
+                      >
+                        {month.label}
+                      </span>
+                    ))}
+                  </div>
                   <div
-                    key={cell.key}
-                    title={cell.label}
                     style={{
-                      width: "100%",
-                      aspectRatio: "1 / 1",
-                      borderRadius: 2,
-                      background: levelColors[cell.level]
+                      display: "grid",
+                      gridTemplateRows: `repeat(${trackHeatRows}, ${trackDotSize}px)`,
+                      gridAutoFlow: "column",
+                      gridAutoColumns: `${trackDotSize}px`,
+                      gap: trackDotGap,
+                      width: trackHeatmapWidth
                     }}
-                  />
-                ))}
+                  >
+                    {recentHeatmap.map((cell) => (
+                      <div
+                        key={cell.key}
+                        title={cell.label}
+                        style={{
+                          width: trackDotSize,
+                          height: trackDotSize,
+                          borderRadius: 2,
+                          background: levelColors[cell.level],
+                          border: cell.level === 0 ? "1px solid rgba(0, 0, 0, 0.16)" : "none",
+                          boxSizing: "border-box"
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 10 }}>
                 <div style={{ fontSize: 12, color: "var(--text-secondary)" }}>기준: 체크된 날의 전체 연습 시간</div>

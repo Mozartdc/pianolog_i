@@ -384,6 +384,27 @@ function StatsScreen() {
     () => Array.from({ length: 200 }, (_, index) => dayjs().subtract(199 - index, "day")),
     []
   );
+  const statsHeatRows = 7;
+  const statsDotSize = 8;
+  const statsDotGap = 1;
+  const statsWeekCount = Math.ceil(heatmapDates.length / statsHeatRows);
+  const statsHeatmapWidth = statsWeekCount * statsDotSize + (statsWeekCount - 1) * statsDotGap;
+  const statsMonthLabels = useMemo(() => {
+    const labels: { key: string; label: string; column: number }[] = [];
+    let lastKey = "";
+    heatmapDates.forEach((date, index) => {
+      const monthKey = date.format("YYYY-MM");
+      if (monthKey !== lastKey) {
+        labels.push({
+          key: monthKey,
+          label: date.format("MMM"),
+          column: Math.floor(index / statsHeatRows)
+        });
+        lastKey = monthKey;
+      }
+    });
+    return labels;
+  }, [heatmapDates]);
 
   const getHeatmapLevel = (dateStr: string) => {
     const minutes = getDayMinutes(dateStr);
@@ -627,29 +648,54 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
           최근 200일 기록
         </div>
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(40, minmax(0, 1fr))",
-          gap: 1,
-          width: "100%"
-        }}>
-          {heatmapDates.map(date => {
-            const level = getHeatmapLevel(date.format("YYYY-MM-DD"));
-            return (
-              <div
-                key={date.format("YYYY-MM-DD")}
-                title={`${date.format("YYYY-MM-DD")} · ${formatMinutesHuman(getDayMinutes(date.format("YYYY-MM-DD")))}`}
-                style={{
-                  width: "100%",
-                  aspectRatio: "1 / 1",
-                  borderRadius: 2,
-                  background: levelColors[level],
-                  border: level === 0 ? "1px solid rgba(0, 0, 0, 0.16)" : "none",
-                  boxSizing: "border-box"
-                }}
-              />
-            );
-          })}
+        <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
+          <div style={{ width: statsHeatmapWidth }}>
+            <div style={{ position: "relative", height: 14, marginBottom: 4 }}>
+              {statsMonthLabels.map((month) => (
+                <span
+                  key={month.key}
+                  style={{
+                    position: "absolute",
+                    left: month.column * (statsDotSize + statsDotGap),
+                    fontSize: 9,
+                    lineHeight: "14px",
+                    color: "var(--text-secondary)",
+                    ...commonFontStyle
+                  }}
+                >
+                  {month.label}
+                </span>
+              ))}
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateRows: `repeat(${statsHeatRows}, ${statsDotSize}px)`,
+                gridAutoFlow: "column",
+                gridAutoColumns: `${statsDotSize}px`,
+                gap: statsDotGap,
+                width: statsHeatmapWidth
+              }}
+            >
+              {heatmapDates.map(date => {
+                const level = getHeatmapLevel(date.format("YYYY-MM-DD"));
+                return (
+                  <div
+                    key={date.format("YYYY-MM-DD")}
+                    title={`${date.format("YYYY-MM-DD")} · ${formatMinutesHuman(getDayMinutes(date.format("YYYY-MM-DD")))}`}
+                    style={{
+                      width: statsDotSize,
+                      height: statsDotSize,
+                      borderRadius: 2,
+                      background: levelColors[level],
+                      border: level === 0 ? "1px solid rgba(0, 0, 0, 0.16)" : "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div style={{
