@@ -36,8 +36,6 @@ export class MetronomeEngine {
   private currentBeat = 0;
   private foregroundLookaheadTime = 25;
   private foregroundScheduleHorizonSec = 0.1;
-  // Keep a longer pre-scheduled window when tab/app goes background.
-  private backgroundScheduleHorizonSec = 12;
   private scheduleInterval: number | null = null;
   private startTime = 0;
   private uiTimeouts: number[] = [];
@@ -46,7 +44,6 @@ export class MetronomeEngine {
   private transportStartPerfMs = 0;
 
   private callbacks: MetronomeEngineCallbacks | null = null;
-  private visibilityHandlerBound = false;
 
   constructor() {
     this.audioContextManager = AudioContextManager.getInstance();
@@ -63,7 +60,6 @@ export class MetronomeEngine {
       }
 
       await this.soundEngine.initialize();
-      this.bindVisibilityHandlerOnce();
       this.isInitialized = true;
       console.log('🎵 MetronomeEngine 초기화 완료');
     } catch (error) {
@@ -199,30 +195,10 @@ export class MetronomeEngine {
 
     this.catchUpIfBehind(context.currentTime);
 
-    const scheduleHorizonSec = this.getCurrentScheduleHorizonSec();
-    while (this.nextNoteTime < context.currentTime + scheduleHorizonSec) {
+    while (this.nextNoteTime < context.currentTime + this.foregroundScheduleHorizonSec) {
       this.playNote(this.nextNoteTime, this.scheduledBeat);
       this.advanceNote();
     }
-  }
-
-  private getCurrentScheduleHorizonSec(): number {
-    if (typeof document !== 'undefined' && document.hidden) {
-      return this.backgroundScheduleHorizonSec;
-    }
-    return this.foregroundScheduleHorizonSec;
-  }
-
-  private bindVisibilityHandlerOnce(): void {
-    if (this.visibilityHandlerBound || typeof document === 'undefined') return;
-    this.visibilityHandlerBound = true;
-
-    document.addEventListener('visibilitychange', () => {
-      // Hidden 직전/직후 가능한 만큼 미리 예약해서
-      // iOS 백그라운드 타이머 스로틀 시 드랍을 줄인다.
-      if (!document.hidden || !this.isPlaying) return;
-      this.scheduleNotes();
-    });
   }
 
   private playNote(when: number, beatIndex: number): void {
