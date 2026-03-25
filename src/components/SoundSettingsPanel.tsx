@@ -23,6 +23,22 @@ import './SoundSettingsPanel.css';
 
 const FLASH_STORAGE_KEY = 'metronome.fullscreenFlashEnabled';
 const SOUND_STORAGE_KEY = 'metronome.soundEnabled';
+const SOUND_SETTINGS_STORAGE_KEY = 'metronome.soundSettings.v1';
+
+const loadStoredSoundSettings = (): SoundSettings => {
+  if (typeof window === 'undefined') return DEFAULT_SOUND_SETTINGS;
+  try {
+    const raw = window.localStorage.getItem(SOUND_SETTINGS_STORAGE_KEY);
+    if (!raw) return DEFAULT_SOUND_SETTINGS;
+    const parsed = JSON.parse(raw) as Partial<SoundSettings>;
+    return {
+      ...DEFAULT_SOUND_SETTINGS,
+      ...parsed
+    };
+  } catch {
+    return DEFAULT_SOUND_SETTINGS;
+  }
+};
 
 const CATEGORY_ICONS: Record<SoundCategory, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   wood: WoodIcon,
@@ -63,8 +79,20 @@ const SoundSettingsPanel: React.FC<SoundSettingsPanelProps> = ({
     stopAll
   } = useSoundEngine();
 
-  const [settings, setSettings] = useState<SoundSettings>(engineSnapshot ?? DEFAULT_SOUND_SETTINGS);
-  const [localSettings, setLocalSettings] = useState<SoundSettings>(engineSnapshot ?? DEFAULT_SOUND_SETTINGS);
+  const [settings, setSettings] = useState<SoundSettings>(() => {
+    const stored = loadStoredSoundSettings();
+    if (engineSnapshot) {
+      return { ...stored, ...engineSnapshot };
+    }
+    return stored;
+  });
+  const [localSettings, setLocalSettings] = useState<SoundSettings>(() => {
+    const stored = loadStoredSoundSettings();
+    if (engineSnapshot) {
+      return { ...stored, ...engineSnapshot };
+    }
+    return stored;
+  });
   const [previewingPresetId, setPreviewingPresetId] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
     if (typeof window === 'undefined') return DEFAULT_SOUND_SETTINGS.volume > 0;
@@ -98,7 +126,10 @@ const SoundSettingsPanel: React.FC<SoundSettingsPanelProps> = ({
 
   useEffect(() => {
     if (!isInitialized) return;
-    const latest = MetronomeSoundEngine.getInstance().getCurrentSettingsSnapshot();
+    const latest = {
+      ...loadStoredSoundSettings(),
+      ...MetronomeSoundEngine.getInstance().getCurrentSettingsSnapshot()
+    };
     setSettings(latest);
     setLocalSettings(latest);
   }, [isInitialized]);
@@ -108,6 +139,11 @@ const SoundSettingsPanel: React.FC<SoundSettingsPanelProps> = ({
       applySettings(settings);
     }
   }, [settings, isInitialized, applySettings]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(SOUND_SETTINGS_STORAGE_KEY, JSON.stringify(localSettings));
+  }, [localSettings]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

@@ -17,6 +17,7 @@ export class MetronomeSoundEngine {
   private currentSettings: SoundSettings;
   private masterGain: GainNode | null = null;
   private activePreviewHandle: PreviewHandle | null = null;
+  private activeSources: Set<{ stop: (when?: number) => void; disconnect: () => void }> = new Set();
   private isInitialized: boolean = false;
 
   public static getInstance(): MetronomeSoundEngine {
@@ -201,6 +202,20 @@ export class MetronomeSoundEngine {
 
   stopAll(): Result<void> {
     try {
+      this.activeSources.forEach((node) => {
+        try {
+          node.stop(0);
+        } catch {
+          // ignore already stopped nodes
+        }
+        try {
+          node.disconnect();
+        } catch {
+          // ignore disconnect errors
+        }
+      });
+      this.activeSources.clear();
+
       if (this.activePreviewHandle) {
         this.activePreviewHandle.stop();
         this.activePreviewHandle = null;
@@ -269,6 +284,7 @@ export class MetronomeSoundEngine {
       source.buffer = buffer;
       source.connect(gainNode);
       gainNode.connect(this.masterGain!);
+      this.registerSource(source, gainNode);
       
       let volume = 1.0;
       if (type === 'strong' || type === 'accent') {
@@ -328,14 +344,15 @@ export class MetronomeSoundEngine {
       source.connect(toneFilter);
       toneFilter.connect(gainNode);
       gainNode.connect(this.masterGain);
+      this.registerSource(source, gainNode, toneFilter);
 
       const playbackDuration =
         type === 'accent'
-          ? Math.min(buffer.duration, 0.6)
+          ? Math.min(buffer.duration, 0.22)
           : buffer.duration;
       const fadeOutDuration =
         type === 'accent'
-          ? Math.min(0.04, Math.max(0.01, playbackDuration * 0.2))
+          ? Math.min(0.02, Math.max(0.005, playbackDuration * 0.15))
           : 0.01;
 
       if (type === 'weak') {
@@ -371,6 +388,7 @@ export class MetronomeSoundEngine {
       
       oscillator.connect(gainNode);
       gainNode.connect(this.masterGain!);
+      this.registerSource(oscillator, gainNode);
       
       const frequency = type === 'strong' ? 800 : 600;
       oscillator.frequency.value = frequency;
@@ -397,6 +415,34 @@ export class MetronomeSoundEngine {
         error: AudioError.NodeCreationFailed
       };
     }
+  }
+
+  private registerSource(
+    source: AudioBufferSourceNode | OscillatorNode,
+    ...nodesToDisconnect: AudioNode[]
+  ): void {
+    const handle = {
+      stop: (when?: number) => source.stop(when),
+      disconnect: () => {
+        nodesToDisconnect.forEach((node) => {
+          try {
+            node.disconnect();
+          } catch {
+            // ignore
+          }
+        });
+        try {
+          source.disconnect();
+        } catch {
+          // ignore
+        }
+      }
+    };
+    this.activeSources.add(handle);
+    source.onended = () => {
+      handle.disconnect();
+      this.activeSources.delete(handle);
+    };
   }
 }
 
