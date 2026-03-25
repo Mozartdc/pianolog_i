@@ -645,12 +645,11 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
         width: "100%", margin: "14px auto 0 auto", padding: "0 6px",
         background: "transparent", boxSizing: "border-box"
       }}>
-        <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 14, ...commonFontStyle }}>
-          최근 {HEATMAP_DAYS}일 기록
-        </div>
-
         <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
           <div style={{ width: statsHeatmapWidth }}>
+            <div style={{ fontSize: 12, color: "var(--text-secondary)", marginBottom: 6, ...commonFontStyle }}>
+              최근 연습 기록
+            </div>
             <div style={{ position: "relative", height: 14, marginBottom: 4 }}>
               {statsMonthLabels.map((month) => (
                 <span

@@ -122,7 +122,7 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
   onClose,
   onOpenCalendar
 }) => {
-  const HEATMAP_DAYS = 252;
+  const HEATMAP_DAYS = 224;
   const {
     tracks,
     practiceChecks,
@@ -520,9 +520,9 @@ const TrackDetailModal: React.FC<TrackDetailModalProps> = ({
             </div>
 
             <div>
-              <div style={{ fontSize: 14, color: "var(--text-primary)", marginBottom: 8 }}>최근 {HEATMAP_DAYS}일 기록</div>
               <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>
                 <div style={{ width: trackHeatmapWidth }}>
+                  <div style={{ fontSize: 14, color: "var(--text-primary)", marginBottom: 6 }}>최근 연습 기록</div>
                   <div style={{ position: "relative", height: 14, marginBottom: 4 }}>
                     {trackMonthLabels.map((month) => (
                       <span
