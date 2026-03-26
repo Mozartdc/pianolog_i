@@ -19,6 +19,7 @@ export class MetronomeSoundEngine {
   private activePreviewHandle: PreviewHandle | null = null;
   private activeSources: Set<{ stop: (when?: number) => void; disconnect: () => void }> = new Set();
   private isInitialized: boolean = false;
+  private initializePromise: Promise<Result<void>> | null = null;
 
   public static getInstance(): MetronomeSoundEngine {
     if (!MetronomeSoundEngine.instance) {
@@ -64,41 +65,50 @@ export class MetronomeSoundEngine {
     if (this.isInitialized) {
       return { success: true, data: undefined };
     }
-
-    try {
-      const contextResult = await this.audioContextManager.ensureContext();
-      if (!contextResult.success) {
-        return { 
-          success: false, 
-          error: (contextResult as { success: false; error: any }).error 
-        };
-      }
-
-      const context = contextResult.data;
-
-      this.masterGain = context.createGain();
-      this.masterGain.connect(context.destination);
-      this.masterGain.gain.value = this.currentSettings.volume;
-
-      const soundBankResult = await this.soundBank.initialize();
-      if (!soundBankResult.success) {
-        return { 
-          success: false, 
-          error: (soundBankResult as { success: false; error: any }).error 
-        };
-      }
-
-      await this.soundBank.preloadPresetFamily(this.currentSettings.presetId);
-
-      this.isInitialized = true;
-      return { success: true, data: undefined };
-    } catch (error) {
-      console.error('Failed to initialize MetronomeSoundEngine:', error);
-      return {
-        success: false,
-        error: AudioError.ContextCreationFailed
-      };
+    if (this.initializePromise) {
+      return this.initializePromise;
     }
+
+    this.initializePromise = (async () => {
+      try {
+        const contextResult = await this.audioContextManager.ensureContext();
+        if (!contextResult.success) {
+          return {
+            success: false,
+            error: (contextResult as { success: false; error: any }).error
+          };
+        }
+
+        const context = contextResult.data;
+
+        this.masterGain = context.createGain();
+        this.masterGain.connect(context.destination);
+        this.masterGain.gain.value = this.currentSettings.volume;
+
+        const soundBankResult = await this.soundBank.initialize();
+        if (!soundBankResult.success) {
+          return {
+            success: false,
+            error: (soundBankResult as { success: false; error: any }).error
+          };
+        }
+
+        await this.soundBank.preloadPresetFamily(this.currentSettings.presetId);
+
+        this.isInitialized = true;
+        return { success: true, data: undefined };
+      } catch (error) {
+        console.error('Failed to initialize MetronomeSoundEngine:', error);
+        return {
+          success: false,
+          error: AudioError.ContextCreationFailed
+        };
+      } finally {
+        this.initializePromise = null;
+      }
+    })();
+
+    return this.initializePromise;
   }
 
   applySettings(settings: SoundSettings): Result<void> {

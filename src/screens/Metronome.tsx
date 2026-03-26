@@ -183,7 +183,7 @@ function Metronome() {
   const beatPatternRef = useRef<BeatStrength[]>(editableBeatPattern);
   const fullScreenFlashEnabledRef = useRef<boolean>(isFullScreenFlashEnabled);
   const isDarkThemeRef = useRef<boolean>(isDarkTheme);
-  const lastForegroundRecoveryRef = useRef<number>(0);
+  const foregroundRecoverAtRef = useRef<number>(0);
   const rhythmSubdivBtnRef = useRef<HTMLButtonElement | null>(null);
 
 // Initialize MetronomeEngine instances (without audio initialization)
@@ -285,12 +285,12 @@ useEffect(() => {
   useEffect(() => {
     if (typeof document === 'undefined') return;
 
-    const recoverAudioOnForeground = () => {
+    const recover = () => {
       if (!isPlayingRef.current) return;
 
       const now = Date.now();
-      if (now - lastForegroundRecoveryRef.current < 500) return;
-      lastForegroundRecoveryRef.current = now;
+      if (now - foregroundRecoverAtRef.current < 500) return;
+      foregroundRecoverAtRef.current = now;
 
       MetronomeSoundEngine.getInstance().unlockAudio();
       engineRef.current?.recoverFromInterruption().catch((error) => {
@@ -299,14 +299,9 @@ useEffect(() => {
     };
 
     const onVisibilityChange = () => {
-      if (!document.hidden) {
-        recoverAudioOnForeground();
-      }
+      if (!document.hidden) recover();
     };
-
-    const onPageShow = () => {
-      recoverAudioOnForeground();
-    };
+    const onPageShow = () => recover();
 
     document.addEventListener('visibilitychange', onVisibilityChange);
     window.addEventListener('pageshow', onPageShow);

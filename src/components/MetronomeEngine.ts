@@ -24,6 +24,7 @@ export class MetronomeEngine {
   private soundEngine: MetronomeSoundEngine;
   private isPlaying = false;
   private isInitialized = false;
+  private initializePromise: Promise<void> | null = null;
 
   private currentBPM = 120;
   private timeSignature: TimeSignature = { numerator: 4, denominator: 4 };
@@ -52,20 +53,34 @@ export class MetronomeEngine {
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
-
-    try {
-      const contextResult = await this.audioContextManager.ensureContext();
-      if (!contextResult.success) {
-        throw new Error('Failed to initialize audio context');
-      }
-
-      await this.soundEngine.initialize();
-      this.isInitialized = true;
-      console.log('🎵 MetronomeEngine 초기화 완료');
-    } catch (error) {
-      console.error('❌ MetronomeEngine 초기화 실패:', error);
-      throw error;
+    if (this.initializePromise) {
+      await this.initializePromise;
+      return;
     }
+
+    this.initializePromise = (async () => {
+      try {
+        const contextResult = await this.audioContextManager.ensureContext();
+        if (!contextResult.success) {
+          throw new Error('Failed to initialize audio context');
+        }
+
+        const soundResult = await this.soundEngine.initialize();
+        if (!soundResult.success) {
+          throw new Error('Failed to initialize metronome sound engine');
+        }
+
+        this.isInitialized = true;
+        console.log('🎵 MetronomeEngine 초기화 완료');
+      } catch (error) {
+        console.error('❌ MetronomeEngine 초기화 실패:', error);
+        throw error;
+      } finally {
+        this.initializePromise = null;
+      }
+    })();
+
+    await this.initializePromise;
   }
 
   setCallbacks(callbacks: MetronomeEngineCallbacks): void {
@@ -190,13 +205,8 @@ export class MetronomeEngine {
 
     const context = contextResult.data;
     this.clearUITimeouts();
-
-    // iOS foreground 복귀 시 오디오 타임라인이 끊기는 케이스를
-    // 현재 비트 기준으로 재앵커해서 즉시 회복한다.
-    this.scheduledBeat = (this.currentBeat + 1) % this.timeSignature.numerator;
     this.nextNoteTime = context.currentTime + 0.01;
-    this.lastUiBeatContextTime = context.currentTime;
-
+    this.scheduledBeat = this.currentBeat;
     this.restartScheduleLoop();
     this.scheduleNotes();
   }
