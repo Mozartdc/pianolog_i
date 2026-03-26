@@ -243,6 +243,17 @@ function StatsScreen() {
     minutesByDate[date] || 0;
 
   const hasTimedPracticeOnDate = (date: string) => getDayMinutes(date) > 0;
+  const todayKey = dayjs().format("YYYY-MM-DD");
+
+  const practicedDateKeys = useMemo(() => {
+    return Object.keys(minutesByDate)
+      .filter((date) => minutesByDate[date] > 0)
+      .filter((date) => /^\d{4}-\d{2}-\d{2}$/.test(date))
+      .filter((date) => !dayjs(date).isAfter(todayKey, "day"))
+      .sort((a, b) => dayjs(a).valueOf() - dayjs(b).valueOf());
+  }, [minutesByDate, todayKey]);
+
+  const practicedDateSet = useMemo(() => new Set(practicedDateKeys), [practicedDateKeys]);
 
   const weekData = getWeekData(selectedDate, practiceRecords, practiceChecks);
 
@@ -250,32 +261,25 @@ function StatsScreen() {
     let streak = 0;
     let cursor = dayjs();
 
-    if (!hasTimedPracticeOnDate(cursor.format("YYYY-MM-DD"))) {
-      cursor = cursor.subtract(1, "day");
-    }
-
-    while (hasTimedPracticeOnDate(cursor.format("YYYY-MM-DD"))) {
+    // "현재 연속"은 오늘 기준으로 계산한다.
+    while (practicedDateSet.has(cursor.format("YYYY-MM-DD"))) {
       streak++;
       cursor = cursor.subtract(1, "day");
-      if (streak > 365) break;
+      if (streak > 3650) break;
     }
 
     return streak;
-  }, [minutesByDate]);
+  }, [practicedDateSet]);
 
   const bestStreak = useMemo(() => {
-    const practicedDates = Object.keys(minutesByDate)
-      .filter((date) => minutesByDate[date] > 0)
-      .sort();
-
-    if (practicedDates.length === 0) return 0;
+    if (practicedDateKeys.length === 0) return 0;
 
     let best = 1;
     let running = 1;
 
-    for (let i = 1; i < practicedDates.length; i += 1) {
-      const prev = dayjs(practicedDates[i - 1]);
-      const curr = dayjs(practicedDates[i]);
+    for (let i = 1; i < practicedDateKeys.length; i += 1) {
+      const prev = dayjs(practicedDateKeys[i - 1]);
+      const curr = dayjs(practicedDateKeys[i]);
       if (curr.diff(prev, "day") === 1) {
         running += 1;
       } else {
@@ -285,7 +289,7 @@ function StatsScreen() {
     }
 
     return best;
-  }, [minutesByDate]);
+  }, [practicedDateKeys]);
 
   const weekPracticeDays = useMemo(
     () => weekData.dates.filter(date => hasTimedPracticeOnDate(date.format("YYYY-MM-DD"))).length,
@@ -342,24 +346,22 @@ function StatsScreen() {
   const currentMonthMinutes = useMemo(() => {
     const start = dayjs().startOf("month");
     const end = dayjs().endOf("month");
-    return practiceRecords
-      .filter(record => {
-        const date = dayjs(record.date);
-        return date.isSameOrAfter(start, "day") && date.isSameOrBefore(end, "day");
-      })
-      .reduce((sum, record) => sum + Number(record.practiceTime || 0), 0);
+    return Object.entries(minutesByDate).reduce((sum, [date, minutes]) => {
+      const d = dayjs(date);
+      if (d.isSameOrAfter(start, "day") && d.isSameOrBefore(end, "day")) return sum + minutes;
+      return sum;
+    }, 0);
   }, [minutesByDate]);
 
   const currentYearMinutes = useMemo(() => {
     const start = dayjs().startOf("year");
     const end = dayjs().endOf("year");
-    return practiceRecords
-      .filter(record => {
-        const date = dayjs(record.date);
-        return date.isSameOrAfter(start, "day") && date.isSameOrBefore(end, "day");
-      })
-      .reduce((sum, record) => sum + Number(record.practiceTime || 0), 0);
-  }, [practiceRecords]);
+    return Object.entries(minutesByDate).reduce((sum, [date, minutes]) => {
+      const d = dayjs(date);
+      if (d.isSameOrAfter(start, "day") && d.isSameOrBefore(end, "day")) return sum + minutes;
+      return sum;
+    }, 0);
+  }, [minutesByDate]);
 
   const currentYearPracticeDays = useMemo(() => {
     const start = dayjs().startOf("year");
@@ -371,7 +373,7 @@ function StatsScreen() {
     }
 
     return count;
-  }, [practiceRecords]);
+  }, [minutesByDate]);
 
   const monthTrendData = useMemo(() => {
     const start = dayjs().startOf("month");
@@ -629,32 +631,63 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
               width: 140,
               height: 89,
               position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
+              overflow: "hidden",
               color: "var(--MIMOSA)"
             }}
           >
             <LaurelWreathIcon
-              width={124}
-              height={82}
+              width={132}
+              height={72}
               style={{
                 position: "absolute",
                 left: "50%",
-                top: "50%",
-                transform: "translate(-50%, -50%)",
+                top: 10,
+                transform: "translateX(-50%)",
                 color: "var(--MIMOSA)",
-                opacity: 0.95
+                opacity: 1
               }}
             />
-            <div style={{ fontSize: 12, lineHeight: "24px", color: "var(--text-primary)", zIndex: 1, ...commonFontStyle }}>
+            <div style={{
+              position: "absolute",
+              top: 17,
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              fontSize: 12,
+              lineHeight: "24px",
+              color: "var(--text-primary)",
+              zIndex: 1,
+              ...commonFontStyle
+            }}>
               {item.label}
             </div>
-            <div style={{ fontSize: 32, lineHeight: "24px", fontWeight: 800, color: "var(--MIMOSA)", marginTop: 4, zIndex: 1, ...commonFontStyle }}>
+            <div style={{
+              position: "absolute",
+              top: 45,
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              fontSize: 32,
+              lineHeight: "24px",
+              fontWeight: 800,
+              color: "var(--MIMOSA)",
+              zIndex: 1,
+              ...commonFontStyle
+            }}>
               {String(item.value).padStart(3, "0")}
             </div>
-            <div style={{ fontSize: 14, lineHeight: "24px", color: "var(--text-primary)", marginTop: 10, zIndex: 1, ...commonFontStyle }}>
+            <div style={{
+              position: "absolute",
+              top: 72,
+              left: 0,
+              right: 0,
+              textAlign: "center",
+              fontSize: 14,
+              lineHeight: "24px",
+              color: "var(--text-primary)",
+              zIndex: 1,
+              ...commonFontStyle
+            }}>
               일
             </div>
           </div>
