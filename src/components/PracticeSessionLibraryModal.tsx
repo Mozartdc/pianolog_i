@@ -32,6 +32,7 @@ const PracticeSessionLibraryModal: React.FC<PracticeSessionLibraryModalProps> = 
   const savedItems = items.filter((item) => item.source === 'saved');
 
   const renderItem = (item: PracticeSessionListItem) => {
+    const canDelete = item.source === 'saved';
     const tempoText = item.bpm ? String(item.bpm) : '미설정';
     const signatureText =
       item.numerator && item.denominator
@@ -43,7 +44,7 @@ const PracticeSessionLibraryModal: React.FC<PracticeSessionLibraryModalProps> = 
         key={`${item.source}:${item.id}`}
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr auto',
+          gridTemplateColumns: canDelete ? '1fr auto' : '1fr',
           alignItems: 'center',
           gap: '8px',
           width: '100%',
@@ -84,25 +85,27 @@ const PracticeSessionLibraryModal: React.FC<PracticeSessionLibraryModalProps> = 
           <span style={{ color: 'var(--text-secondary)' }}>{tempoText}</span>
           <span style={{ color: 'var(--text-secondary)' }}>{signatureText}</span>
         </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(item);
-          }}
-          aria-label={`${item.title} 삭제`}
-          style={{
-            border: 'none',
-            background: 'transparent',
-            color: 'var(--text-secondary)',
-            fontSize: '11px',
-            cursor: 'pointer',
-            padding: '6px 4px',
-            whiteSpace: 'nowrap'
-          }}
-        >
-          삭제
-        </button>
+        {canDelete && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(item);
+            }}
+            aria-label={`${item.title} 삭제`}
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: 'var(--text-secondary)',
+              fontSize: '11px',
+              cursor: 'pointer',
+              padding: '6px 4px',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            삭제
+          </button>
+        )}
       </div>
     );
   };

@@ -77,16 +77,37 @@ const PracticeSessionSaveModal: React.FC<PracticeSessionSaveModalProps> = ({
             marginBottom: '14px'
           }}
         />
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              height: '32px',
+              padding: '0 12px',
+              borderRadius: '8px',
+              border: '1px solid var(--DARK_GRAY)',
+              background: 'transparent',
+              color: 'var(--text-secondary)',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            취소
+          </button>
           {onSkipSave && (
             <button
               type="button"
               onClick={onSkipSave}
               style={{
-                border: 'none',
+                height: '32px',
+                padding: '0 12px',
+                borderRadius: '8px',
+                border: '1px solid var(--DARK_GRAY)',
                 background: 'transparent',
                 color: 'var(--text-secondary)',
                 fontSize: '12px',
+                fontWeight: 600,
                 cursor: 'pointer'
               }}
             >
@@ -95,24 +116,14 @@ const PracticeSessionSaveModal: React.FC<PracticeSessionSaveModalProps> = ({
           )}
           <button
             type="button"
-            onClick={onClose}
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--text-secondary)',
-              fontSize: '12px',
-              cursor: 'pointer'
-            }}
-          >
-            취소
-          </button>
-          <button
-            type="button"
             onClick={() => onConfirm(name)}
             style={{
-              border: 'none',
-              background: 'transparent',
-              color: 'var(--LIVING_CORAL)',
+              height: '32px',
+              padding: '0 14px',
+              borderRadius: '8px',
+              border: '1px solid var(--LIVING_CORAL)',
+              background: 'var(--LIVING_CORAL)',
+              color: '#fff',
               fontSize: '12px',
               fontWeight: 700,
               cursor: 'pointer'
