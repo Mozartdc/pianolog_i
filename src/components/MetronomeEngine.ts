@@ -155,13 +155,14 @@ export class MetronomeEngine {
     }
 
     this.isPlaying = true;
-    this.scheduledBeat = 0;
     this.currentBeat = 0;
     this.transportStartPerfMs = performance.now();
-    this.lastUiBeatContextTime = context.currentTime;
-    this.nextNoteTime = context.currentTime + 0.01;
+    const firstBeatTime = context.currentTime + 0.03;
+    this.lastUiBeatContextTime = firstBeatTime;
+    this.playNote(firstBeatTime, 0);
+    this.scheduledBeat = this.timeSignature.numerator > 1 ? 1 : 0;
+    this.nextNoteTime = firstBeatTime + this.getBeatDuration();
     this.startTime = context.currentTime;
-    this.callbacks?.onBeatChange(0);
 
     this.restartScheduleLoop();
     this.scheduleNotes();

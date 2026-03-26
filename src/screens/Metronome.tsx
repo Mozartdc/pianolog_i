@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
+import dayjs from "dayjs";
 import { MCentralControls as DialComponent } from '../components/MCentralDial';
 import MTempoVisualizer from '../components/MTempoVisualizer';
 import TimeSignatureButton from '../components/TimeSignatureButton';
@@ -383,7 +384,15 @@ useEffect(() => {
   }, [trackSettings]);
 
   const sessionLibraryItems = useMemo<PracticeSessionListItem[]>(() => {
-    const todayItems: PracticeSessionListItem[] = tracks.map((track) => {
+    const todayDate = dayjs().format('YYYY-MM-DD');
+    const visibleTodayTracks = tracks.filter((track) => {
+      const addedBeforeOrOn = dayjs(track.addedDate).isSameOrBefore(todayDate, 'day');
+      const notCompletedOrCompletedAfter =
+        !track.completedDate || dayjs(track.completedDate).isSameOrAfter(todayDate, 'day');
+      return addedBeforeOrOn && notCompletedOrCompletedAfter;
+    });
+
+    const todayItems: PracticeSessionListItem[] = visibleTodayTracks.map((track) => {
       const setting = trackSettings[String(track.id)];
       return {
         id: String(track.id),
