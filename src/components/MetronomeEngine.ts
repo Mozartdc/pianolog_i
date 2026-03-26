@@ -182,6 +182,25 @@ export class MetronomeEngine {
     return this.isPlaying;
   }
 
+  async recoverFromInterruption(): Promise<void> {
+    if (!this.isPlaying) return;
+
+    const contextResult = await this.audioContextManager.ensureContext();
+    if (!contextResult.success) return;
+
+    const context = contextResult.data;
+    this.clearUITimeouts();
+
+    // iOS foreground 복귀 시 오디오 타임라인이 끊기는 케이스를
+    // 현재 비트 기준으로 재앵커해서 즉시 회복한다.
+    this.scheduledBeat = (this.currentBeat + 1) % this.timeSignature.numerator;
+    this.nextNoteTime = context.currentTime + 0.01;
+    this.lastUiBeatContextTime = context.currentTime;
+
+    this.restartScheduleLoop();
+    this.scheduleNotes();
+  }
+
   private scheduleNotes(): void {
     if (!this.isPlaying) return;
 

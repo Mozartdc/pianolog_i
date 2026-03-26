@@ -183,6 +183,7 @@ function Metronome() {
   const beatPatternRef = useRef<BeatStrength[]>(editableBeatPattern);
   const fullScreenFlashEnabledRef = useRef<boolean>(isFullScreenFlashEnabled);
   const isDarkThemeRef = useRef<boolean>(isDarkTheme);
+  const lastForegroundRecoveryRef = useRef<number>(0);
   const rhythmSubdivBtnRef = useRef<HTMLButtonElement | null>(null);
 
 // Initialize MetronomeEngine instances (without audio initialization)
@@ -280,6 +281,41 @@ useEffect(() => {
   useEffect(() => {
     isPlayingRef.current = isPlaying;
   }, [isPlaying]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const recoverAudioOnForeground = () => {
+      if (!isPlayingRef.current) return;
+
+      const now = Date.now();
+      if (now - lastForegroundRecoveryRef.current < 500) return;
+      lastForegroundRecoveryRef.current = now;
+
+      MetronomeSoundEngine.getInstance().unlockAudio();
+      engineRef.current?.recoverFromInterruption().catch((error) => {
+        console.warn('포그라운드 복귀 오디오 복구 실패:', error);
+      });
+    };
+
+    const onVisibilityChange = () => {
+      if (!document.hidden) {
+        recoverAudioOnForeground();
+      }
+    };
+
+    const onPageShow = () => {
+      recoverAudioOnForeground();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pageshow', onPageShow);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pageshow', onPageShow);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
