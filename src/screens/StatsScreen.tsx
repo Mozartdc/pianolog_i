@@ -245,6 +245,23 @@ function StatsScreen() {
   const hasTimedPracticeOnDate = (date: string) => getDayMinutes(date) > 0;
   const todayKey = dayjs().format("YYYY-MM-DD");
 
+  const practicedDateKeysForStreak = useMemo(() => {
+    const set = new Set<string>();
+    practiceRecords.forEach((record) => {
+      const normalizedDate = normalizeRecordDate(record);
+      if (!normalizedDate) return;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(normalizedDate) && !dayjs(normalizedDate).isAfter(todayKey, "day")) {
+        set.add(normalizedDate);
+      }
+    });
+    return Array.from(set).sort((a, b) => dayjs(a).valueOf() - dayjs(b).valueOf());
+  }, [practiceRecords, todayKey]);
+
+  const practicedDateSetForStreak = useMemo(
+    () => new Set(practicedDateKeysForStreak),
+    [practicedDateKeysForStreak]
+  );
+
   const practicedDateKeys = useMemo(() => {
     return Object.keys(minutesByDate)
       .filter((date) => minutesByDate[date] > 0)
@@ -258,28 +275,33 @@ function StatsScreen() {
   const weekData = getWeekData(selectedDate, practiceRecords, practiceChecks);
 
   const currentStreak = useMemo(() => {
+    // HomeScreen(getStreak)과 동일하게:
+    // 오늘 기록이 있으면 오늘부터, 없으면 어제부터 연속 카운트
     let streak = 0;
     let cursor = dayjs();
+    const todayPracticed = practicedDateSetForStreak.has(cursor.format("YYYY-MM-DD"));
+    if (!todayPracticed) {
+      cursor = cursor.subtract(1, "day");
+    }
 
-    // "현재 연속"은 오늘 기준으로 계산한다.
-    while (practicedDateSet.has(cursor.format("YYYY-MM-DD"))) {
+    while (practicedDateSetForStreak.has(cursor.format("YYYY-MM-DD"))) {
       streak++;
       cursor = cursor.subtract(1, "day");
       if (streak > 3650) break;
     }
 
     return streak;
-  }, [practicedDateSet]);
+  }, [practicedDateSetForStreak]);
 
   const bestStreak = useMemo(() => {
-    if (practicedDateKeys.length === 0) return 0;
+    if (practicedDateKeysForStreak.length === 0) return 0;
 
     let best = 1;
     let running = 1;
 
-    for (let i = 1; i < practicedDateKeys.length; i += 1) {
-      const prev = dayjs(practicedDateKeys[i - 1]);
-      const curr = dayjs(practicedDateKeys[i]);
+    for (let i = 1; i < practicedDateKeysForStreak.length; i += 1) {
+      const prev = dayjs(practicedDateKeysForStreak[i - 1]);
+      const curr = dayjs(practicedDateKeysForStreak[i]);
       if (curr.diff(prev, "day") === 1) {
         running += 1;
       } else {
@@ -289,7 +311,7 @@ function StatsScreen() {
     }
 
     return best;
-  }, [practicedDateKeys]);
+  }, [practicedDateKeysForStreak]);
 
   const weekPracticeDays = useMemo(
     () => weekData.dates.filter(date => hasTimedPracticeOnDate(date.format("YYYY-MM-DD"))).length,
@@ -663,7 +685,7 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
             </div>
             <div style={{
               position: "absolute",
-              top: 45,
+              top: 41,
               left: 0,
               right: 0,
               textAlign: "center",
@@ -674,11 +696,11 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
               zIndex: 1,
               ...commonFontStyle
             }}>
-              {String(item.value).padStart(3, "0")}
+              {item.value}
             </div>
             <div style={{
               position: "absolute",
-              top: 72,
+              top: 68,
               left: 0,
               right: 0,
               textAlign: "center",
