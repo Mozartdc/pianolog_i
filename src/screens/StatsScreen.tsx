@@ -9,9 +9,7 @@ import updateLocale from 'dayjs/plugin/updateLocale';
 import { validateTimeSettings, logTimeInfo } from "../utils/timeValidation"; // added import
 
 import Header from "../components/Header";
-import LaurelLeftIcon from "../assets/icons/laurel_L.svg?react";
-import LaurelRightIcon from "../assets/icons/laurel_R.svg?react";
-import FlameIcon from "../assets/icons/flame.svg?react";
+import LaurelWreathIcon from "../assets/icons/laurel_wreath.svg?react";
 import StatsCheckIcon from "../assets/icons/check_s.svg?react";
 import StatsUncheckIcon from "../assets/icons/uncheck.svg?react";
 
@@ -263,11 +261,35 @@ function StatsScreen() {
     }
 
     return streak;
-  }, [practiceRecords]);
+  }, [minutesByDate]);
+
+  const bestStreak = useMemo(() => {
+    const practicedDates = Object.keys(minutesByDate)
+      .filter((date) => minutesByDate[date] > 0)
+      .sort();
+
+    if (practicedDates.length === 0) return 0;
+
+    let best = 1;
+    let running = 1;
+
+    for (let i = 1; i < practicedDates.length; i += 1) {
+      const prev = dayjs(practicedDates[i - 1]);
+      const curr = dayjs(practicedDates[i]);
+      if (curr.diff(prev, "day") === 1) {
+        running += 1;
+      } else {
+        running = 1;
+      }
+      if (running > best) best = running;
+    }
+
+    return best;
+  }, [minutesByDate]);
 
   const weekPracticeDays = useMemo(
     () => weekData.dates.filter(date => hasTimedPracticeOnDate(date.format("YYYY-MM-DD"))).length,
-    [weekData, practiceRecords]
+    [weekData, minutesByDate]
   );
 
   const monthPracticeDays = useMemo(() => {
@@ -282,7 +304,7 @@ function StatsScreen() {
     }
 
     return count;
-  }, [practiceRecords]);
+  }, [minutesByDate]);
 
   const previousWeekData = useMemo(
     () => getWeekData(dayjs(selectedDate).subtract(7, "day").format("YYYY-MM-DD"), practiceRecords, practiceChecks),
@@ -326,7 +348,7 @@ function StatsScreen() {
         return date.isSameOrAfter(start, "day") && date.isSameOrBefore(end, "day");
       })
       .reduce((sum, record) => sum + Number(record.practiceTime || 0), 0);
-  }, [practiceRecords]);
+  }, [minutesByDate]);
 
   const currentYearMinutes = useMemo(() => {
     const start = dayjs().startOf("year");
@@ -589,21 +611,69 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
         <Header title="statistics" color="var(--MIMOSA)" topMargin={5} showBackButton={false} />
       </div>
 
+      <div style={{
+        width: "min(100%, 312px)",
+        margin: "80px auto 0 auto",
+        display: "flex",
+        justifyContent: "center",
+        gap: 32,
+        boxSizing: "border-box"
+      }}>
+        {[
+          { label: "현재 연속 피출", value: currentStreak },
+          { label: "최고 연속 피출", value: bestStreak }
+        ].map((item) => (
+          <div
+            key={item.label}
+            style={{
+              width: 140,
+              height: 89,
+              position: "relative",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--MIMOSA)"
+            }}
+          >
+            <LaurelWreathIcon
+              width={124}
+              height={82}
+              style={{
+                position: "absolute",
+                left: "50%",
+                top: "50%",
+                transform: "translate(-50%, -50%)",
+                color: "var(--MIMOSA)",
+                opacity: 0.95
+              }}
+            />
+            <div style={{ fontSize: 12, lineHeight: "24px", color: "var(--text-primary)", zIndex: 1, ...commonFontStyle }}>
+              {item.label}
+            </div>
+            <div style={{ fontSize: 32, lineHeight: "24px", fontWeight: 800, color: "var(--MIMOSA)", marginTop: 4, zIndex: 1, ...commonFontStyle }}>
+              {String(item.value).padStart(3, "0")}
+            </div>
+            <div style={{ fontSize: 14, lineHeight: "24px", color: "var(--text-primary)", marginTop: 10, zIndex: 1, ...commonFontStyle }}>
+              일
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Total practice time */}
       <div style={{
-        width: "100%", height: 24, margin: "80px auto 0 auto", display: "flex",
-        alignItems: "center", justifyContent: "center", gap: "8px", boxSizing: "border-box"
+        width: "100%", height: 24, margin: "4px auto 0 auto", display: "flex",
+        alignItems: "center", justifyContent: "center", boxSizing: "border-box"
       }}>
-        <LaurelLeftIcon style={{ color: "var(--MIMOSA)" }} width="13" height="20" />
-        <div style={{ fontSize: 16, textAlign: "center", lineHeight: "24px" }}>
+        <div style={{ fontSize: 16, textAlign: "center", lineHeight: "24px", ...commonFontStyle }}>
           지금까지 총 <span style={{ fontWeight: 700, color: "var(--MIMOSA)" }}>{totalHours}</span>시간 피출
         </div>
-        <LaurelRightIcon style={{ color: "var(--MIMOSA)" }} width="13" height="20" />
       </div>
 
       <div style={{
         width: "100%",
-        margin: "16px auto 0 auto",
+        margin: "10px auto 0 auto",
         fontSize: 16,
         color: "var(--text-secondary)",
         display: "flex",
@@ -613,31 +683,16 @@ logTimeInfo('StatsScreen 시간 업데이트', startTimestamp, endTimestamp);
         flexWrap: "wrap",
         ...commonFontStyle
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <span>현재</span>
-          {currentStreak > 0 ? (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <FlameIcon
-                width="14"
-                height="18"
-                style={{ color: "var(--LIVING_CORAL)", flexShrink: 0 }}
-              />
-              <span style={{ color: "var(--MIMOSA)", fontWeight: 700 }}>
-                {currentStreak}
-              </span>
-            </span>
-          ) : (
-            <span style={{ color: "var(--MIMOSA)", fontWeight: 700 }}>{currentStreak}</span>
-          )}
-          <span>일 연속</span>
-        </div>
-        <span style={{ color: "var(--text-secondary)" }}>·</span>
         <div>
           이번 주 <span style={{ color: "var(--MIMOSA)", fontWeight: 700 }}>{weekPracticeDays}</span>일
         </div>
         <span style={{ color: "var(--text-secondary)" }}>·</span>
         <div>
           이번 달 <span style={{ color: "var(--MIMOSA)", fontWeight: 700 }}>{monthPracticeDays}</span>일
+        </div>
+        <span style={{ color: "var(--text-secondary)" }}>·</span>
+        <div>
+          올해 <span style={{ color: "var(--MIMOSA)", fontWeight: 700 }}>{currentYearPracticeDays}</span>일
         </div>
       </div>
 
