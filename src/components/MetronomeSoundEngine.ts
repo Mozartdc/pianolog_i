@@ -93,9 +93,10 @@ export class MetronomeSoundEngine {
           };
         }
 
-        await this.soundBank.preloadPresetFamily(this.currentSettings.presetId);
-
         this.isInitialized = true;
+        this.soundBank.preloadPresetFamily(this.currentSettings.presetId).catch((error) => {
+          console.warn(`Failed to preload sound family ${this.currentSettings.presetId}:`, error);
+        });
         return { success: true, data: undefined };
       } catch (error) {
         console.error('Failed to initialize MetronomeSoundEngine:', error);

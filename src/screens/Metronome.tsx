@@ -1210,6 +1210,13 @@ useEffect(() => {
           setIsSessionSaveModalOpen(false);
           setPendingOpenLibraryAfterSave(false);
         }}
+        onSkipSave={() => {
+          setIsSessionSaveModalOpen(false);
+          if (pendingOpenLibraryAfterSave) {
+            setIsSessionLibraryOpen(true);
+          }
+          setPendingOpenLibraryAfterSave(false);
+        }}
         onConfirm={handleSessionSaveConfirm}
       />
 

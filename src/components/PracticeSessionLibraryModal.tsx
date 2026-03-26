@@ -125,13 +125,17 @@ const PracticeSessionLibraryModal: React.FC<PracticeSessionLibraryModalProps> = 
           left: '50%',
           transform: 'translateX(-50%)',
           width: '300px',
+          maxHeight: 'min(62vh, 520px)',
           backgroundColor: 'var(--bg-primary)',
           borderRadius: '16px',
           padding: '14px',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
           border: '1px solid var(--DARK_GRAY)',
           zIndex: 1701,
-          fontFamily: 'var(--FONT_FAMILY)'
+          fontFamily: 'var(--FONT_FAMILY)',
+          overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
+          boxSizing: 'border-box'
         }}
       >
         <div style={{ fontSize: '14px', fontWeight: 700, margin: '0 0 6px 0', color: 'var(--text-primary)', textAlign: 'center' }}>곡 목록</div>

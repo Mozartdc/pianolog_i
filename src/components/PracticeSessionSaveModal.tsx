@@ -5,13 +5,15 @@ interface PracticeSessionSaveModalProps {
   initialName: string;
   onClose: () => void;
   onConfirm: (name: string) => void;
+  onSkipSave?: () => void;
 }
 
 const PracticeSessionSaveModal: React.FC<PracticeSessionSaveModalProps> = ({
   isOpen,
   initialName,
   onClose,
-  onConfirm
+  onConfirm,
+  onSkipSave
 }) => {
   const [name, setName] = useState(initialName);
 
@@ -76,6 +78,21 @@ const PracticeSessionSaveModal: React.FC<PracticeSessionSaveModalProps> = ({
           }}
         />
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          {onSkipSave && (
+            <button
+              type="button"
+              onClick={onSkipSave}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--text-secondary)',
+                fontSize: '12px',
+                cursor: 'pointer'
+              }}
+            >
+              저장 안함
+            </button>
+          )}
           <button
             type="button"
             onClick={onClose}
