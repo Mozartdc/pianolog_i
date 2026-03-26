@@ -36,7 +36,8 @@ export class MetronomeEngine {
   private scheduledBeat = 0;
   private currentBeat = 0;
   private foregroundLookaheadTime = 25;
-  private foregroundScheduleHorizonSec = 0.1;
+  private foregroundScheduleHorizonSec = 0.15;
+  private firstBeatOffsetSec = 0.1;
   private scheduleInterval: number | null = null;
   private startTime = 0;
   private uiTimeouts: number[] = [];
@@ -144,33 +145,46 @@ export class MetronomeEngine {
 
     if (this.isPlaying) return;
 
+    const ensureStartPerf = performance.now();
     const contextResult = await this.audioContextManager.ensureContext();
+    const ensureEndPerf = performance.now();
     if (!contextResult.success) {
       throw new Error('Audio context not available');
     }
 
     const context = contextResult.data;
+    let resumeLatency = 0;
     if (context.state !== 'running') {
+      const resumeStartPerf = performance.now();
       await context.resume();
+      resumeLatency = performance.now() - resumeStartPerf;
     }
 
     this.isPlaying = true;
+    this.scheduledBeat = 0;
     this.currentBeat = 0;
     this.transportStartPerfMs = performance.now();
-    const firstBeatTime = context.currentTime + 0.03;
-    this.lastUiBeatContextTime = firstBeatTime;
-    this.playNote(firstBeatTime, 0);
-    this.scheduledBeat = this.timeSignature.numerator > 1 ? 1 : 0;
-    this.nextNoteTime = firstBeatTime + this.getBeatDuration();
+    this.lastUiBeatContextTime = context.currentTime;
+    this.nextNoteTime = context.currentTime + this.firstBeatOffsetSec;
     this.startTime = context.currentTime;
 
     this.restartScheduleLoop();
     this.scheduleNotes();
 
+    const scheduleMargin = this.nextNoteTime - context.currentTime;
+
     console.log('▶️ 메트로놈 시작:', {
       bpm: this.currentBPM,
       timeSignature: `${this.timeSignature.numerator}/${this.timeSignature.denominator}`,
       pattern: this.rhythmPatternId
+    });
+    console.log('[METRO_START_METRICS]', {
+      ensureLatencyMs: Math.round((ensureEndPerf - ensureStartPerf) * 10) / 10,
+      resumeLatencyMs: Math.round(resumeLatency * 10) / 10,
+      scheduleMarginMs: Math.round(scheduleMargin * 1000),
+      firstBeatOffsetMs: Math.round(this.firstBeatOffsetSec * 1000),
+      horizonMs: Math.round(this.foregroundScheduleHorizonSec * 1000),
+      lookaheadMs: this.foregroundLookaheadTime
     });
   }
 
@@ -201,15 +215,33 @@ export class MetronomeEngine {
   async recoverFromInterruption(): Promise<void> {
     if (!this.isPlaying) return;
 
+    const ensureStartPerf = performance.now();
     const contextResult = await this.audioContextManager.ensureContext();
+    const ensureEndPerf = performance.now();
     if (!contextResult.success) return;
 
     const context = contextResult.data;
+    let resumeLatency = 0;
+    if (context.state !== 'running') {
+      const resumeStartPerf = performance.now();
+      await context.resume();
+      resumeLatency = performance.now() - resumeStartPerf;
+    }
+
     this.clearUITimeouts();
-    this.nextNoteTime = context.currentTime + 0.01;
-    this.scheduledBeat = this.currentBeat;
+    this.nextNoteTime = context.currentTime + this.firstBeatOffsetSec;
+    this.scheduledBeat = (this.currentBeat + 1) % this.timeSignature.numerator;
     this.restartScheduleLoop();
     this.scheduleNotes();
+
+    const scheduleMargin = this.nextNoteTime - context.currentTime;
+    console.log('[METRO_RECOVER_METRICS]', {
+      ensureLatencyMs: Math.round((ensureEndPerf - ensureStartPerf) * 10) / 10,
+      resumeLatencyMs: Math.round(resumeLatency * 10) / 10,
+      scheduleMarginMs: Math.round(scheduleMargin * 1000),
+      scheduledBeat: this.scheduledBeat,
+      currentBeat: this.currentBeat
+    });
   }
 
   private scheduleNotes(): void {

@@ -268,6 +268,14 @@ useEffect(() => {
   }, []);
 
   useEffect(() => {
+    // 페이지 진입 시 초기화를 먼저 시도한다.
+    // iOS 제스처 제한으로 실패할 수 있으므로 에러는 무시하고, 이후 사용자 액션에서 재시도한다.
+    engineRef.current?.initialize().catch((error) => {
+      console.warn('메트로놈 선초기화 보류(사용자 제스처 대기):', error);
+    });
+  }, []);
+
+  useEffect(() => {
     beatPatternRef.current = editableBeatPattern;
   }, [editableBeatPattern]);
 
@@ -663,9 +671,6 @@ useEffect(() => {
   }, [activeSession, bpm, pendingOpenLibraryAfterSave, persistLastViewed, timeSignature.denominator, timeSignature.numerator]);
 
   const startEngine = useCallback(async () => {
-    // 동기 함수로 바뀐 unlockAudio를 가장 먼저 호출
-    MetronomeSoundEngine.getInstance().unlockAudio();
-
     if (!engineRef.current) {
       return;
     }
@@ -674,6 +679,8 @@ useEffect(() => {
       // Initialize engine only when user first clicks (user gesture required)
       console.log('첫 재생 시도 - 엔진 초기화 중...');
       await engineRef.current.initialize();
+      // iOS: resume 이후 무음 킥으로 하드웨어 경로를 깨운다.
+      MetronomeSoundEngine.getInstance().unlockAudio();
       
       engineRef.current.updateConfig({
         bpm,
