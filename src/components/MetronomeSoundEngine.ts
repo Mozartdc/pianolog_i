@@ -359,12 +359,18 @@ export class MetronomeSoundEngine {
 
       const playbackDuration =
         type === 'accent'
-          ? Math.min(buffer.duration, 0.22)
+          ? Math.min(buffer.duration, 0.3)
           : buffer.duration;
+      const attackDuration =
+        type === 'accent'
+          ? 0.006
+          : type === 'weak'
+            ? 0.004
+            : 0.003;
       const fadeOutDuration =
         type === 'accent'
-          ? Math.min(0.02, Math.max(0.005, playbackDuration * 0.15))
-          : 0.01;
+          ? Math.min(0.035, Math.max(0.012, playbackDuration * 0.22))
+          : 0.016;
 
       if (type === 'weak') {
         toneFilter.type = 'lowpass';
@@ -377,8 +383,12 @@ export class MetronomeSoundEngine {
       }
 
       gainNode.gain.cancelScheduledValues(when);
-      gainNode.gain.setValueAtTime(baseGain, when);
-      gainNode.gain.setValueAtTime(baseGain, when + Math.max(0, playbackDuration - fadeOutDuration));
+      gainNode.gain.setValueAtTime(0.0001, when);
+      gainNode.gain.linearRampToValueAtTime(baseGain, when + attackDuration);
+      gainNode.gain.setValueAtTime(
+        baseGain,
+        when + Math.max(attackDuration, playbackDuration - fadeOutDuration)
+      );
       gainNode.gain.linearRampToValueAtTime(0.0001, when + playbackDuration);
 
       source.start(when);
