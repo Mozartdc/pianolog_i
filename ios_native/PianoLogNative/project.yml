@@ -1,0 +1,24 @@
+name: PianoLogNative
+options:
+  bundleIdPrefix: com.mozartdc
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+targets:
+  PianoLogNative:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - Sources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: PianoLogNative
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mozartdc.pianolog.native
+        TARGETED_DEVICE_FAMILY: "1,2"

@@ -13,7 +13,7 @@ const HamburgerButton: React.FC<HamburgerButtonProps> = ({ isOpen, onClick }) =>
       onClick={onClick}
       style={{
         position: 'fixed',
-        top: '20px',
+        top: 'calc(env(safe-area-inset-top) + 8px)',
         right: '20px',
         width: '44px',
         height: '44px',

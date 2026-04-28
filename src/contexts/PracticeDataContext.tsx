@@ -57,6 +57,8 @@ interface TimerStateV2 {
 // Add new timer state and methods to context type
 interface PracticeDataContextType {
   // Basic data management
+  selectedDate: string;
+  setSelectedDate: (dateStr: string) => void;
   tracks: Track[];
   setTracks: React.Dispatch<React.SetStateAction<Track[]>>;
   practiceRecords: PracticeRecord[];
@@ -154,6 +156,14 @@ const initializeTimerState = (): TimerStateV2 => {
 };
 
 export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) => {
+  const todayDateStr = dayjs().format("YYYY-MM-DD");
+  const initialSelectedDate =
+    getStoredJson<string>("selectedDate", "") ||
+    getStoredJson<string>("lastSelectedDate", "") ||
+    todayDateStr;
+
+  const [selectedDate, setSelectedDateState] = useState<string>(initialSelectedDate);
+
   // Existing states (no changes)
   const [tracks, setTracks] = useState<Track[]>(() => getStoredJson<Track[]>("tracks", []));
   const [practiceRecords, setPracticeRecords] = useState<PracticeRecord[]>(() => getStoredJson<PracticeRecord[]>("practiceRecords", []));
@@ -184,6 +194,11 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
     };
     setTimerStateV2(stateToSave);
     setStoredJson('timerV2', stateToSave);
+  }, []);
+
+  const setSelectedDate = useCallback((dateStr: string) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return;
+    setSelectedDateState(dateStr);
   }, []);
 
   // Timer tick management
@@ -466,6 +481,11 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
 
   // Existing data localStorage sync (no changes)
   useEffect(() => {
+    const cleanup = debouncedSave("selectedDate", selectedDate);
+    return cleanup;
+  }, [selectedDate, debouncedSave]);
+
+  useEffect(() => {
     const cleanup = debouncedSave("tracks", tracks);
     return cleanup;
   }, [tracks, debouncedSave]);
@@ -670,6 +690,8 @@ export const PracticeDataProvider: React.FC<PropsWithChildren> = ({ children }) 
   }, []);
 
   const value = {
+    selectedDate,
+    setSelectedDate,
     tracks, setTracks,
     practiceRecords, setPracticeRecords,
     practiceChecks, setPracticeChecks,

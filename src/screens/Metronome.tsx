@@ -867,7 +867,7 @@ useEffect(() => {
       style={{
         width: "100%",
         maxWidth: "100%",
-        minHeight: "100vh",
+        minHeight: "calc(100dvh - (65px + env(safe-area-inset-bottom)))",
         background: "var(--bg-primary)",
         overflowX: "hidden",
         overflowY: "hidden",
@@ -880,7 +880,7 @@ useEffect(() => {
       <div
         style={{
           width: "100%",
-          height: "100vh",
+          height: "calc(100dvh - (65px + env(safe-area-inset-bottom)))",
           position: "relative",
           boxSizing: "border-box",
           ...commonFontStyle,
@@ -898,7 +898,7 @@ useEffect(() => {
           aria-label="곡목록"
           style={{
             position: "fixed",
-            top: "20px",
+            top: "calc(env(safe-area-inset-top) + 8px)",
             left: "20px",
             width: "44px",
             height: "44px",

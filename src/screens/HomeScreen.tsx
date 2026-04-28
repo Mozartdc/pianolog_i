@@ -19,7 +19,6 @@ import FlameIcon from "../assets/icons/flame.svg?react";
 import ExportIcon from "../assets/icons/export.svg?react";
 import Lottie from 'lottie-react';
 import playButtonAnimation from '../assets/playbutton.json';
-import { useLocation } from "react-router-dom";
 import { specialEvents, getTodayEvents, getTodayCheerData, CheerData } from "../utils/specialEvents";
 import { getStoredJson, getStoredString, setStoredJson } from "../utils/localStorage";
 import { getKoreanHolidays } from "../utils/statsUtils";
@@ -55,36 +54,19 @@ const cleanupTemporaryData = () => {
 };
 
 function HomeScreen() {
-  const location = useLocation();
-
   // Get timer state and methods from Context
   const { 
+    selectedDate, setSelectedDate,
     practiceRecords, setPracticeRecords, tracks, practiceChecks,
     timerActive, timerSeconds, timerMilliseconds, timerRunning, timerStartTime, timerMemo, timerSessionId,
     startSession, pauseSession, resumeSession, completeSession, updateTimerStartTime
   } = usePracticeData();
 
-  // Prevent scrolling
-  useEffect(() => {
-    if (location.pathname === '/' || location.pathname === '/home') {
-      const originalBodyStyle = document.body.style.cssText;
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = '0';
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-
-      return () => {
-        document.body.style.cssText = originalBodyStyle;
-      };
-    }
-  }, [location.pathname]);
+  // Body fixed lock removed for iOS safe-area sizing stability.
 
   const [nickname, setNickname] = useState(getStoredString("nickname", "디붕이"));
   const [avatar, setAvatar] = useState(getStoredString("avatar", ""));
   const [cheerData, setCheerData] = useState<CheerData>(getTodayCheerData());
-  const [selectedDate, setSelectedDate] = useState<string>(dayjs().format("YYYY-MM-DD"));
-
   // Modal states
   const [showTimePickModal, setShowTimePickModal] = useState(false);
   const [showHomeStopModal, setShowHomeStopModal] = useState(false);
@@ -377,7 +359,7 @@ function HomeScreen() {
     <div style={{
       width: "100%",
       maxWidth: "100%",
-      minHeight: "100vh",
+      minHeight: "100dvh",
       background: "var(--bg-primary)",
       overflowX: "hidden",
       overflowY: "hidden",

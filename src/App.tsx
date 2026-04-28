@@ -110,8 +110,9 @@ function App() {
         width: "100%",
         maxWidth: "100%",
         margin: "0 auto",
-        paddingBottom: 80,
+        paddingBottom: 0,
         minHeight: "100dvh",
+        boxSizing: "border-box",
         background: "var(--bg-primary)",
         boxShadow: "none"
       }}>
