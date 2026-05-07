@@ -56,3 +56,17 @@
 "today.track.add.title" = "연습곡 추가";
 "today.track.edit.title" = "곡 제목 수정";
 "today.track.title.placeholder" = "곡 제목";
+"today.track.delete.mode.title" = "";
+"today.track.delete.mode.message" = "완료: 오늘 목록에서만 제거(과거 기록 유지)\n\n삭제: 곡 및 관련 연습 기록 영구 삭제";
+"today.track.delete.mode.soft" = "완료";
+"today.track.delete.mode.hard" = "삭제";
+"today.track.delete.mode.soft.caption" = "어제 완료로 처리되어 오늘 목록에서 지워집니다.\n과거 연습 기록은 유지됩니다.";
+"today.track.delete.mode.hard.caption" = "곡과 관련한 모든 연습 기록이 영구 삭제됩니다.";
+"today.track.complete.action" = "곡완성";
+"today.track.delete.warning" = "삭제: 곡과 관련한 모든 연습 기록이 영구 삭제됩니다.\n\n곡완성: 어제 완료로 처리되어 오늘 목록에서 지워집니다. 과거 연습 기록은 유지됩니다.";
+"today.track.edit.mode.title" = "이름 변경 방식";
+"today.track.edit.mode.message" = "이름만 수정: 기존 기록 유지\n새 곡 분리 등록: 기존 곡 완료 + 새 곡 시작";
+"today.track.edit.mode.rename" = "이름만 수정";
+"today.track.edit.mode.fork" = "새 곡 분리 등록";
+"today.track.edit.mode.rename.caption" = "현재 곡의 이름만 변경합니다.\n기존 연습 기록은 그대로 유지됩니다.";
+"today.track.edit.mode.fork.caption" = "기존 곡은 완료 처리하고,\n같은 이름으로 새 곡을 시작합니다.";

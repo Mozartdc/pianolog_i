@@ -9,6 +9,7 @@ struct TodayView: View {
     @State private var newTrackTitle = ""
     @State private var editingTrackId: Int?
     @State private var editingTitle = ""
+    @State private var pendingDeleteTrackId: Int?
     @State private var detailTrackId: Int?
     @State private var counterTrackId: Int?
     @State private var counterDate: Date = .now
@@ -40,6 +41,7 @@ struct TodayView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
+                        AppHaptics.tap()
                         dateStore.selectedDate = .now
                     } label: {
                         Image(systemName: "arrow.counterclockwise.circle")
@@ -52,6 +54,7 @@ struct TodayView: View {
                 ToolbarItem(placement: .principal) {
                     HStack(spacing: 8) {
                         Button {
+                            AppHaptics.tap()
                             shiftSelectedDate(by: -1)
                         } label: {
                             Image(systemName: "chevron.left")
@@ -66,6 +69,7 @@ struct TodayView: View {
                             .frame(width: 170, alignment: .center)
 
                         Button {
+                            AppHaptics.tap()
                             shiftSelectedDate(by: 1)
                         } label: {
                             Image(systemName: "chevron.right")
@@ -77,6 +81,7 @@ struct TodayView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        AppHaptics.tap()
                         isDatePickerPresented = true
                     } label: {
                         Image(systemName: "calendar")
@@ -90,6 +95,7 @@ struct TodayView: View {
                 HStack {
                     Spacer()
                     Button {
+                        AppHaptics.tap()
                         newTrackTitle = ""
                         isAddSheetPresented = true
                     } label: {
@@ -122,6 +128,7 @@ struct TodayView: View {
                     .toolbar {
                         ToolbarItem(placement: .topBarTrailing) {
                             Button("today.datePicker.done") {
+                                AppHaptics.tap()
                                 isDatePickerPresented = false
                             }
                         }
@@ -139,11 +146,13 @@ struct TodayView: View {
                     .toolbar {
                         ToolbarItem(placement: .topBarLeading) {
                             Button("common.cancel") {
+                                AppHaptics.tap()
                                 isAddSheetPresented = false
                             }
                         }
                         ToolbarItem(placement: .topBarTrailing) {
                             Button("common.add") {
+                                AppHaptics.tap()
                                 tracksStore.addTrack(title: newTrackTitle)
                                 isAddSheetPresented = false
                             }
@@ -159,13 +168,38 @@ struct TodayView: View {
             )) {
                 TextField("today.track.title.placeholder", text: $editingTitle)
                 Button("common.cancel", role: .cancel) {
+                    AppHaptics.tap()
                     editingTrackId = nil
                 }
                 Button("common.save") {
+                    AppHaptics.tap()
                     guard let trackId = editingTrackId else { return }
                     tracksStore.updateTrackTitle(id: trackId, title: editingTitle)
                     editingTrackId = nil
                 }
+            }
+            .alert(
+                deleteAlertTitle,
+                isPresented: Binding(
+                    get: { pendingDeleteTrackId != nil },
+                    set: { if !$0 { pendingDeleteTrackId = nil } }
+                )
+            ) {
+                Button("today.track.delete.mode.hard", role: .destructive) {
+                    AppHaptics.tap()
+                    guard let trackId = pendingDeleteTrackId else { return }
+                    tracksStore.removeTrack(id: trackId)
+                    pendingDeleteTrackId = nil
+                }
+                Button("today.track.complete.action") {
+                    AppHaptics.tap()
+                    guard let trackId = pendingDeleteTrackId else { return }
+                    let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: .now) ?? .now
+                    tracksStore.markTrackComplete(id: trackId, on: yesterday)
+                    pendingDeleteTrackId = nil
+                }
+            } message: {
+                Text("today.track.delete.warning")
             }
             .sheet(isPresented: Binding(
                 get: { detailTrackId != nil },
@@ -216,6 +250,14 @@ struct TodayView: View {
         }
     }
 
+    private var deleteAlertTitle: String {
+        guard let id = pendingDeleteTrackId,
+              let track = tracksStore.tracks.first(where: { $0.id == id }) else {
+            return "\"이 곡\"을(를) 정말로 삭제하시겠습니까?"
+        }
+        return "\"\(track.title)\"을(를) 정말로 삭제하시겠습니까?"
+    }
+
     private func rowView(for track: PracticeTrack) -> some View {
         let id = track.id
         let title = track.title
@@ -229,20 +271,37 @@ struct TodayView: View {
             subtitle: subtitle,
             partialCount: count,
             themeColor: AppPalette.todayTheme,
-            onToggleCheck: { tracksStore.toggleCheck(date: dateStore.selectedDate, trackId: id) },
-            onOpenDetail: { detailTrackId = id },
-            onDecrement: { tracksStore.decrementPartial(date: dateStore.selectedDate, trackId: id) },
+            onToggleCheck: {
+                AppHaptics.tap()
+                tracksStore.toggleCheck(date: dateStore.selectedDate, trackId: id)
+            },
+            onOpenDetail: {
+                AppHaptics.tap()
+                detailTrackId = id
+            },
+            onDecrement: {
+                AppHaptics.tap()
+                tracksStore.decrementPartial(date: dateStore.selectedDate, trackId: id)
+            },
             onOpenCounter: {
+                AppHaptics.tap()
                 counterTrackId = id
                 counterDate = dateStore.selectedDate
                 isCounterPresented = true
             },
-            onIncrement: { tracksStore.incrementPartial(date: dateStore.selectedDate, trackId: id) },
+            onIncrement: {
+                AppHaptics.tap()
+                tracksStore.incrementPartial(date: dateStore.selectedDate, trackId: id)
+            },
             onEdit: {
+                AppHaptics.tap()
                 editingTrackId = id
                 editingTitle = title
             },
-            onDelete: { tracksStore.removeTrack(id: id) }
+            onDelete: {
+                AppHaptics.tap()
+                pendingDeleteTrackId = id
+            }
         )
     }
 
@@ -323,11 +382,13 @@ private struct TrackRowView: View {
 
                 Menu {
                     Button {
+                        AppHaptics.tap()
                         onEdit()
                     } label: {
                         Label("common.edit", systemImage: "pencil")
                     }
                     Button(role: .destructive) {
+                        AppHaptics.tap()
                         onDelete()
                     } label: {
                         Label("common.delete", systemImage: "trash")

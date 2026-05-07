@@ -8,6 +8,7 @@ struct WeeklyCalendarModule: View {
     var body: some View {
         HStack(spacing: 10) {
             Button("오늘") {
+                AppHaptics.tap()
                 dateStore.selectedDate = .now
             }
             .buttonStyle(.borderedProminent)
@@ -16,6 +17,7 @@ struct WeeklyCalendarModule: View {
             .hoverEffect(.lift)
 
             Button {
+                AppHaptics.tap()
                 isPickerPresented = true
             } label: {
                 HStack(spacing: 6) {
@@ -48,6 +50,7 @@ struct WeeklyCalendarModule: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("완료") {
+                            AppHaptics.tap()
                             isPickerPresented = false
                         }
                     }

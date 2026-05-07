@@ -56,3 +56,17 @@
 "today.track.add.title" = "Add Practice Track";
 "today.track.edit.title" = "Edit Track Title";
 "today.track.title.placeholder" = "Track Title";
+"today.track.delete.mode.title" = "Choose Delete Action";
+"today.track.delete.mode.message" = "Mark Complete: sets completion to yesterday so it disappears from today's list (past practice records are kept).\nDelete Permanently: removes the track and all past linked records forever.";
+"today.track.delete.mode.soft" = "Complete";
+"today.track.delete.mode.hard" = "Delete";
+"today.track.delete.mode.soft.caption" = "Sets completion to yesterday,\nso it disappears from today's list.\nPast practice records are kept.";
+"today.track.delete.mode.hard.caption" = "Track and all linked past records\nwill be permanently removed.";
+"today.track.complete.action" = "Mark Complete";
+"today.track.delete.warning" = "If you really want to delete, tap Delete once more below.\nIf you only want to remove it from today, move to yesterday and mark the track complete.";
+"today.track.edit.mode.title" = "Choose Rename Action";
+"today.track.edit.mode.message" = "Rename only: keep existing history\nSplit as new track: complete existing track + start new one";
+"today.track.edit.mode.rename" = "Rename Only";
+"today.track.edit.mode.fork" = "Split as New Track";
+"today.track.edit.mode.rename.caption" = "Only changes the current track title.\nExisting practice history is kept.";
+"today.track.edit.mode.fork.caption" = "Completes the current track and\nstarts a new track with the new title.";

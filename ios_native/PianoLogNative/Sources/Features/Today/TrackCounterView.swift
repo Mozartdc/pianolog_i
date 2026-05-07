@@ -20,6 +20,7 @@ struct TrackCounterView: View {
 
             HStack(spacing: 18) {
                 Button {
+                    AppHaptics.tap()
                     tracksStore.decrementPartial(date: selectedDate, trackId: track.id)
                 } label: {
                     Label("감소", systemImage: "minus.circle.fill")
@@ -31,6 +32,7 @@ struct TrackCounterView: View {
                 .hoverEffect(.lift)
 
                 Button {
+                    AppHaptics.tap()
                     tracksStore.incrementPartial(date: selectedDate, trackId: track.id)
                 } label: {
                     Label("증가", systemImage: "plus.circle.fill")

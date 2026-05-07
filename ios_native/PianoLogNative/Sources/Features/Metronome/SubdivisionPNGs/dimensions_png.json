@@ -1,0 +1,242 @@
+{
+  "dotted_half_quarter_d1": {
+    "width": 80,
+    "height": 52
+  },
+  "dotted_half_quarter_d2": {
+    "width": 79,
+    "height": 54
+  },
+  "dotted_half_quarter_d4": {
+    "width": 70,
+    "height": 52
+  },
+  "dotted_half_quarter_d8": {
+    "width": 70,
+    "height": 60
+  },
+  "four_parts_A_d1": {
+    "width": 102,
+    "height": 52
+  },
+  "four_parts_A_d2": {
+    "width": 102,
+    "height": 53
+  },
+  "four_parts_A_d4": {
+    "width": 102,
+    "height": 53
+  },
+  "four_parts_A_d8": {
+    "width": 102,
+    "height": 60
+  },
+  "four_parts_B_d1": {
+    "width": 101,
+    "height": 63
+  },
+  "four_parts_B_d2": {
+    "width": 96,
+    "height": 60
+  },
+  "four_parts_B_d4": {
+    "width": 98,
+    "height": 70
+  },
+  "four_parts_B_d8": {
+    "width": 100,
+    "height": 76
+  },
+  "half_quarter_quarter_d1": {
+    "width": 84,
+    "height": 52
+  },
+  "half_quarter_quarter_d2": {
+    "width": 76,
+    "height": 52
+  },
+  "half_quarter_quarter_d4": {
+    "width": 76,
+    "height": 53
+  },
+  "half_quarter_quarter_d8": {
+    "width": 76,
+    "height": 62
+  },
+  "one_beat_d1": {
+    "width": 24,
+    "height": 22
+  },
+  "one_beat_d2": {
+    "width": 24,
+    "height": 52
+  },
+  "one_beat_d4": {
+    "width": 24,
+    "height": 52
+  },
+  "one_beat_d8": {
+    "width": 34,
+    "height": 56
+  },
+  "quarter_dotted_half_d1": {
+    "width": 63,
+    "height": 52
+  },
+  "quarter_dotted_half_d2": {
+    "width": 61,
+    "height": 55
+  },
+  "quarter_dotted_half_d4": {
+    "width": 65,
+    "height": 52
+  },
+  "quarter_dotted_half_d8": {
+    "width": 65,
+    "height": 60
+  },
+  "quarter_half_quarter_d1": {
+    "width": 84,
+    "height": 52
+  },
+  "quarter_half_quarter_d2": {
+    "width": 85,
+    "height": 55
+  },
+  "quarter_half_quarter_d4": {
+    "width": 76,
+    "height": 53
+  },
+  "quarter_half_quarter_d8": {
+    "width": 76,
+    "height": 60
+  },
+  "quarter_quarter_half_d1": {
+    "width": 82,
+    "height": 53
+  },
+  "quarter_quarter_half_d2": {
+    "width": 78,
+    "height": 53
+  },
+  "quarter_quarter_half_d4": {
+    "width": 76,
+    "height": 53
+  },
+  "quarter_quarter_half_d8": {
+    "width": 76,
+    "height": 62
+  },
+  "rest_plus_half_d1": {
+    "width": 72,
+    "height": 52
+  },
+  "rest_plus_half_d2": {
+    "width": 72,
+    "height": 63
+  },
+  "rest_plus_half_d4": {
+    "width": 77,
+    "height": 60
+  },
+  "rest_plus_half_d8": {
+    "width": 78,
+    "height": 69
+  },
+  "triplet_d1": {
+    "width": 93,
+    "height": 70
+  },
+  "triplet_d2": {
+    "width": 93,
+    "height": 70
+  },
+  "triplet_d4": {
+    "width": 87,
+    "height": 70
+  },
+  "triplet_d8": {
+    "width": 87,
+    "height": 70
+  },
+  "triplet_rest_edges_d1": {
+    "width": 93,
+    "height": 69
+  },
+  "triplet_rest_edges_d2": {
+    "width": 93,
+    "height": 80
+  },
+  "triplet_rest_edges_d4": {
+    "width": 91,
+    "height": 74
+  },
+  "triplet_rest_edges_d8": {
+    "width": 91,
+    "height": 84
+  },
+  "triplet_rest_first_d1": {
+    "width": 93,
+    "height": 70
+  },
+  "triplet_rest_first_d2": {
+    "width": 93,
+    "height": 80
+  },
+  "triplet_rest_first_d4": {
+    "width": 81,
+    "height": 74
+  },
+  "triplet_rest_first_d8": {
+    "width": 81,
+    "height": 84
+  },
+  "triplet_rest_last_d1": {
+    "width": 93,
+    "height": 69
+  },
+  "triplet_rest_last_d2": {
+    "width": 93,
+    "height": 80
+  },
+  "triplet_rest_last_d4": {
+    "width": 89,
+    "height": 74
+  },
+  "triplet_rest_last_d8": {
+    "width": 95,
+    "height": 84
+  },
+  "triplet_rest_middle_d1": {
+    "width": 93,
+    "height": 69
+  },
+  "triplet_rest_middle_d2": {
+    "width": 93,
+    "height": 80
+  },
+  "triplet_rest_middle_d4": {
+    "width": 84,
+    "height": 74
+  },
+  "triplet_rest_middle_d8": {
+    "width": 85,
+    "height": 84
+  },
+  "two_parts_d1": {
+    "width": 72,
+    "height": 52
+  },
+  "two_parts_d2": {
+    "width": 72,
+    "height": 52
+  },
+  "two_parts_d4": {
+    "width": 68,
+    "height": 52
+  },
+  "two_parts_d8": {
+    "width": 68,
+    "height": 52
+  }
+}

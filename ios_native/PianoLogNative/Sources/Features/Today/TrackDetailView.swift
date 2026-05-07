@@ -38,6 +38,7 @@ struct TrackDetailView: View {
                         Toggle(isOn: Binding(
                             get: { track.completedDate != nil },
                             set: { isOn in
+                                AppHaptics.tap()
                                 if isOn {
                                     tracksStore.markTrackComplete(id: track.id)
                                     triggerCompletionHaptic()
@@ -63,6 +64,7 @@ struct TrackDetailView: View {
                         }
                         .confirmationDialog("track.uncomplete.confirm.title", isPresented: $showUncompleteConfirm, titleVisibility: .visible) {
                             Button("track.uncomplete.confirm.action", role: .destructive) {
+                                AppHaptics.tap()
                                 tracksStore.unmarkTrackComplete(id: track.id)
                             }
                             Button("common.cancel", role: .cancel) {}
@@ -78,6 +80,9 @@ struct TrackDetailView: View {
                                     .foregroundStyle(AppPalette.todayTheme)
                             }
                         }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AppHaptics.tap()
+                        })
                     }
 
                     Section("track.recent.section") {
@@ -91,6 +96,7 @@ struct TrackDetailView: View {
                             ForEach(recorder.recordings) { recording in
                                 VStack(alignment: .leading, spacing: 8) {
                                     Button {
+                                    AppHaptics.tap()
                                     if expandedRecordingID == recording.id {
                                         expandedRecordingID = nil
                                     } else {
@@ -124,10 +130,20 @@ struct TrackDetailView: View {
                                             progress: recorder.progress(for: recording),
                                             elapsedText: recorder.elapsedText(for: recording),
                                             remainText: recorder.remainingText(for: recording),
-                                            playPauseAction: { recorder.togglePlay(recording: recording) },
-                                            backAction: { recorder.skip(recording: recording, by: -15) },
-                                            forwardAction: { recorder.skip(recording: recording, by: 15) },
+                                            playPauseAction: {
+                                                AppHaptics.tap()
+                                                recorder.togglePlay(recording: recording)
+                                            },
+                                            backAction: {
+                                                AppHaptics.tap()
+                                                recorder.skip(recording: recording, by: -15)
+                                            },
+                                            forwardAction: {
+                                                AppHaptics.tap()
+                                                recorder.skip(recording: recording, by: 15)
+                                            },
                                             deleteAction: {
+                                                AppHaptics.tap()
                                                 recorder.delete(item: recording)
                                                 expandedRecordingID = nil
                                             }
@@ -154,6 +170,7 @@ struct TrackDetailView: View {
                 .overlay(alignment: .bottom) {
                     if expandedRecordingID == nil {
                         Button {
+                            AppHaptics.tap()
                             if recorder.isRecording {
                                 recorder.stop()
                             } else {
@@ -179,6 +196,7 @@ struct TrackDetailView: View {
                         elapsed: recorder.liveDurationString,
                         isRecording: recorder.isRecording,
                         stopAction: {
+                            AppHaptics.tap()
                             recorder.stop()
                             showRecordingSheet = false
                         }
@@ -190,7 +208,10 @@ struct TrackDetailView: View {
                     get: { recordingErrorMessage != nil },
                     set: { if !$0 { recordingErrorMessage = nil } }
                 )) {
-                    Button("common.close", role: .cancel) { recordingErrorMessage = nil }
+                    Button("common.close", role: .cancel) {
+                        AppHaptics.tap()
+                        recordingErrorMessage = nil
+                    }
                 } message: {
                     Text(recordingErrorMessage ?? "")
                 }
@@ -204,6 +225,7 @@ struct TrackDetailView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("common.close") {
+                            AppHaptics.tap()
                             dismiss()
                         }
                     }
@@ -219,6 +241,7 @@ struct TrackDetailView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         Button("common.close") {
+                            AppHaptics.tap()
                             dismiss()
                         }
                     }
@@ -336,6 +359,7 @@ private struct TrackCalendarDetailView: View {
                 SystemPracticeCalendarView(
                     checkedDateKeys: tracksStore.checkedDateKeys(trackId: trackId),
                     onToggleDateKey: { dayKey in
+                        AppHaptics.selectionChanged()
                         tracksStore.toggleCheck(dateKey: dayKey, trackId: trackId)
                         if let selected = dateFromDayKey(dayKey) {
                             dateStore.selectedDate = selected

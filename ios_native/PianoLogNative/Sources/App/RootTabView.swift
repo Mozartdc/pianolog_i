@@ -16,6 +16,12 @@ struct RootTabView: View {
                     Image(systemName: "music.note.square.stack")
                         .font(.system(size: tabIconPointSize, weight: .regular))
                 }
+
+            MetronomeView()
+                .tabItem {
+                    Image(systemName: "metronome")
+                        .font(.system(size: tabIconPointSize, weight: .regular))
+                }
         }
     }
 }
