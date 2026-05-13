@@ -17,14 +17,12 @@ struct BeatVisualizerView: View {
 
     private var columns: [GridItem] {
         let count = beatPattern.count
-        let perRow: Int
-        switch count {
-        case ...4: perRow = max(1, count)
-        case 5...8: perRow = 8
-        case 9...12: perRow = 6
-        default: perRow = 8
-        }
-        return Array(repeating: GridItem(.flexible(minimum: minIconFrame), spacing: 10), count: max(1, perRow))
+        let perRow = max(1, count)
+        let spacing = gridSpacing(for: count)
+        return Array(
+            repeating: GridItem(.flexible(minimum: minIconFrame), spacing: spacing),
+            count: perRow
+        )
     }
 
     private var entries: [BeatItem] {

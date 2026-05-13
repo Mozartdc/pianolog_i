@@ -21,121 +21,128 @@ struct MetronomeView: View {
         NavigationStack {
             GeometryReader { geo in
                 let safeWidth = max(1, geo.size.width)
-                let beatWidth = max(1, min(safeWidth - 2, 760))
-                let controlsWidth = max(1, min(safeWidth - 32, 620))
+                let layout = MetronomeUIConfig.layoutMetrics(for: geo.size)
+                let beatWidth = max(1, min(safeWidth - (layout.contentHorizontalInset * 2), 760))
+                let controlsWidth = max(1, min(safeWidth - (layout.contentHorizontalInset * 2), 620))
                 let beatDuration = (60.0 / Double(max(1, viewModel.store.bpm)))
                     * (4.0 / Double(max(1, viewModel.store.timeSignature.denominator)))
 
-                // TWA absolute-top references (from Metronome.tsx):
-                // beat 80, controls 180, info 280, dial 350, tap around dial's lower-right.
-                let beatTop: CGFloat = 30
-                let controlsTop: CGFloat = 130
-                let infoTop: CGFloat = 230
-                let trainingTop: CGFloat = 252
-                let dialTop: CGFloat = 290
-                let tapX: CGFloat = safeWidth * 0.70
-                let tapY: CGFloat = dialTop + 250 + 52
-
-                ZStack(alignment: .top) {
+                ZStack {
                     AppPalette.metronomeTheme
                         .opacity(viewModel.flashPulseOpacity)
                         .ignoresSafeArea()
                         .allowsHitTesting(false)
                         .animation(.easeOut(duration: 0.12), value: viewModel.flashPulseOpacity)
 
-                    BeatVisualizerView(
-                        beatPattern: viewModel.store.beatPattern,
-                        activeBeat: viewModel.store.currentBeat,
-                        beatTick: viewModel.store.beatTick,
-                        beatDuration: beatDuration,
-                        onTapBeat: { idx in
-                            viewModel.cycleBeatStrength(at: idx)
-                        }
-                    )
-                    .frame(maxWidth: beatWidth)
-                    .padding(.top, beatTop)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    VStack(spacing: 0) {
+                        Spacer()
+                            .frame(height: layout.topPadding)
 
-                    MetronomeControlRowView(
-                        signatureText: "\(viewModel.store.timeSignature.numerator)/\(viewModel.store.timeSignature.denominator)",
-                        denominator: viewModel.store.timeSignature.denominator,
-                        subdivision: viewModel.store.subdivision,
-                        onTapSignature: {
-                            closeAllPanels()
-                            showSignatureSheet = true
-                        },
-                        onTapSubdivision: {
-                            closeAllPanels()
-                            showSubdivisionSheet = true
-                        },
-                        onTapTraining: {
-                            closeAllPanels()
-                            showTrainingModeDialog = true
-                        }
-                    )
-                    .frame(width: controlsWidth)
-                    .padding(.top, controlsTop)
-                    .frame(maxWidth: .infinity, alignment: .center)
-
-                    Text(tapTempoMessage ?? viewModel.activeSession.title)
-                        .font(.body)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .padding(.top, infoTop)
+                        BeatVisualizerView(
+                            beatPattern: viewModel.store.beatPattern,
+                            activeBeat: viewModel.store.currentBeat,
+                            beatTick: viewModel.store.beatTick,
+                            beatDuration: beatDuration,
+                            onTapBeat: { idx in
+                                viewModel.cycleBeatStrength(at: idx)
+                            }
+                        )
+                        .frame(maxWidth: beatWidth)
+                        .frame(height: layout.beatRowHeight)
                         .frame(maxWidth: .infinity, alignment: .center)
 
-                    if let training = viewModel.trainingStatusText, !training.isEmpty {
-                        Text(training)
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(AppPalette.metronomeTheme)
-                            .padding(.top, trainingTop)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                    }
+                        Spacer()
+                            .frame(height: layout.beatToControlSpacing)
 
-                    BPMDialView(
-                        bpm: viewModel.store.bpm,
-                        isPlaying: viewModel.store.isPlaying,
-                        minBPM: 20,
-                        maxBPM: 400,
-                        onMinus: {
-                            viewModel.store.decrementBpm()
-                            viewModel.onConfigChanged()
-                        },
-                        onPlus: {
-                            viewModel.store.incrementBpm()
-                            viewModel.onConfigChanged()
-                        },
-                        onPlayPause: {
-                            AppHaptics.tap()
-                            viewModel.togglePlay()
-                        },
-                        onBPMSet: { bpm in
-                            viewModel.store.setBpm(bpm)
-                            viewModel.onConfigChanged()
-                        }
-                    )
-                    .padding(.top, dialTop)
-                    .frame(maxWidth: .infinity, alignment: .center)
-
-                    Button {
-                        AppHaptics.tap()
-
-                        let message = viewModel.tapTempo()
-                        if message.isEmpty {
-                            tapTempoMessage = nil
-                        } else {
-                            tapTempoMessage = message
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                tapTempoMessage = nil
+                        MetronomeControlRowView(
+                            signatureText: "\(viewModel.store.timeSignature.numerator)/\(viewModel.store.timeSignature.denominator)",
+                            denominator: viewModel.store.timeSignature.denominator,
+                            subdivision: viewModel.store.subdivision,
+                            onTapSignature: {
+                                closeAllPanels()
+                                showSignatureSheet = true
+                            },
+                            onTapSubdivision: {
+                                closeAllPanels()
+                                showSubdivisionSheet = true
+                            },
+                            onTapTraining: {
+                                closeAllPanels()
+                                showTrainingModeDialog = true
                             }
+                        )
+                        .frame(width: controlsWidth)
+                        .frame(maxWidth: .infinity, alignment: .center)
+
+                        Spacer()
+                            .frame(height: layout.controlToInfoSpacing)
+
+                        Text(tapTempoMessage ?? viewModel.activeSession.title)
+                            .font(.body)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .center)
+
+                        if let training = viewModel.trainingStatusText, !training.isEmpty {
+                            Text(training)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(AppPalette.metronomeTheme)
+                                .padding(.top, layout.trainingTextOffset)
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
-                    } label: {
-                        tapTempoIcon
+
+                        Spacer()
+                            .frame(height: layout.infoToDialSpacing)
+
+                        ZStack(alignment: .bottomTrailing) {
+                            BPMDialView(
+                                bpm: viewModel.store.bpm,
+                                isPlaying: viewModel.store.isPlaying,
+                                minBPM: 20,
+                                maxBPM: 400,
+                                onMinus: {
+                                    viewModel.store.decrementBpm()
+                                    viewModel.onConfigChanged()
+                                },
+                                onPlus: {
+                                    viewModel.store.incrementBpm()
+                                    viewModel.onConfigChanged()
+                                },
+                                onPlayPause: {
+                                    AppHaptics.tap()
+                                    viewModel.togglePlay()
+                                },
+                                onBPMSet: { bpm in
+                                    viewModel.store.setBpm(bpm)
+                                    viewModel.onConfigChanged()
+                                }
+                            )
+
+                            Button {
+                                AppHaptics.tap()
+
+                                let message = viewModel.tapTempo()
+                                if message.isEmpty {
+                                    tapTempoMessage = nil
+                                } else {
+                                    tapTempoMessage = message
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                                        tapTempoMessage = nil
+                                    }
+                                }
+                            } label: {
+                                tapTempoIcon
+                            }
+                            .buttonStyle(TapTempoButtonStyle())
+                            .contentShape(Circle())
+                            .accessibilityLabel("Tap Tempo")
+                            .offset(x: -layout.tapTrailingInset, y: layout.tapBottomInset)
+                        }
+                        .frame(width: layout.dialContainerWidth, height: layout.dialContainerHeight)
+                        .frame(maxWidth: .infinity, alignment: .center)
+
+                        Spacer(minLength: 0)
                     }
-                    .buttonStyle(TapTempoButtonStyle())
-                    .contentShape(Circle())
-                    .accessibilityLabel("Tap Tempo")
-                    .position(x: tapX, y: tapY)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -149,22 +156,29 @@ struct MetronomeView: View {
                         handleLibraryTap()
                     } label: {
                         Image(systemName: "list.bullet")
+                            .font(.system(size: 22, weight: .regular))
                             .foregroundStyle(.primary)
+                            .frame(width: 58, height: 58, alignment: .center)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .hoverEffect(.lift)
+                    .contentShape(Rectangle())
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         AppHaptics.tap()
-                        closeAllPanels()
-                        showSoundSheet = true
+                        presentSoundSheet()
                     } label: {
                         Image(systemName: "ellipsis")
+                            .font(.system(size: 22, weight: .regular))
                             .foregroundStyle(.primary)
+                            .frame(width: 58, height: 58, alignment: .center)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .hoverEffect(.lift)
+                    .contentShape(Rectangle())
                 }
             }
             .sheet(isPresented: $showSignatureSheet) {
@@ -275,23 +289,17 @@ struct MetronomeView: View {
             .onChange(of: tracksStore.tracks) { _ in
                 viewModel.syncTodayTracks(tracksStore.tracks(for: .now))
             }
-            .onDisappear {
-                if viewModel.store.isPlaying {
-                    viewModel.togglePlay()
-                }
-            }
         }
     }
 
     private func handleLibraryTap() {
-        closeAllPanels()
         if viewModel.hasUnsavedSessionChange {
             sessionSaveName = viewModel.activeSession.title == "Practice Session" ? "" : viewModel.activeSession.title
             pendingOpenLibraryAfterSave = true
-            showSessionSaveSheet = true
+            presentSessionSaveSheet()
             return
         }
-        showLibrarySheet.toggle()
+        presentLibrarySheet()
     }
 
     private var tapTempoIcon: some View {
@@ -309,6 +317,38 @@ struct MetronomeView: View {
         showSoundSheet = false
         showLibrarySheet = false
         showSessionSaveSheet = false
+    }
+
+    private func presentPanel(_ present: @escaping () -> Void) {
+        let hadOpenPanel =
+            showSignatureSheet ||
+            showSubdivisionSheet ||
+            showTrainingSettingSheet ||
+            showSoundSheet ||
+            showLibrarySheet ||
+            showSessionSaveSheet
+        closeAllPanels()
+        // If another panel was open, wait for dismissal animation completion.
+        // This removes the "first tap ignored" race during sheet-to-sheet transitions.
+        if hadOpenPanel {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.28) {
+                present()
+            }
+        } else {
+            present()
+        }
+    }
+
+    private func presentLibrarySheet() {
+        presentPanel { showLibrarySheet = true }
+    }
+
+    private func presentSoundSheet() {
+        presentPanel { showSoundSheet = true }
+    }
+
+    private func presentSessionSaveSheet() {
+        presentPanel { showSessionSaveSheet = true }
     }
 }
 
@@ -471,7 +511,7 @@ private struct SoundSettingsSheet: View {
         self.accentGain = accentGain
         self.flashEnabled = flashEnabled
         self.onApply = onApply
-        _selectedPreset = State(initialValue: preset)
+        _selectedPreset = State(initialValue: preset.pwaTopLevelBase)
         _selectedSoundEnabled = State(initialValue: soundEnabled)
         _selectedVolume = State(initialValue: volume)
         _selectedAccentGain = State(initialValue: accentGain)
@@ -485,14 +525,19 @@ private struct SoundSettingsSheet: View {
                     Toggle("사운드 켜기", isOn: $selectedSoundEnabled)
                 }
 
-                Section("사운드 프리셋") {
-                    ForEach(MetronomeSoundPreset.allCases) { item in
+                Section("사운드 종류") {
+                    ForEach(MetronomeSoundPreset.pwaTopLevelOptions) { item in
                         Button {
                             AppHaptics.selectionChanged()
                             selectedPreset = item
                         } label: {
-                            HStack {
-                                Text(item.title)
+                            HStack(alignment: .top, spacing: 10) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(item.title)
+                                    Text(item.pwaDescription)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                                 Spacer()
                                 if selectedPreset == item {
                                     Image(systemName: "checkmark")

@@ -35,14 +35,17 @@ final class MetronomeEngine {
     private let audioEngine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
     private let schedulerQueue = DispatchQueue(label: "metronome.scheduler", qos: .userInteractive)
-    private let beatCallbackQueue = DispatchQueue(label: "metronome.beat-callback", qos: .userInteractive)
     private let callbackStateLock = NSLock()
+    private let renderFormat = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
     private var schedulerTimer: DispatchSourceTimer?
     private var isPrepared = false
 
     private var accentBuffer: AVAudioPCMBuffer?
     private var strongBuffer: AVAudioPCMBuffer?
     private var weakBuffer: AVAudioPCMBuffer?
+    private var mechanicalStrongSampleBuffer: AVAudioPCMBuffer?
+    private var mechanicalAccentSampleBuffer: AVAudioPCMBuffer?
+    private var mechanicalWeakSampleBuffer: AVAudioPCMBuffer?
 
     private var isPlaying = false
     private var bpm = 120
@@ -69,7 +72,8 @@ final class MetronomeEngine {
         muteDurationPlayLength: 1,
         muteDurationMuteLength: 1
     )
-    private var soundConfig = SoundConfig(preset: .beep, soundEnabled: true, volume: 0.8, accentGain: 1.6)
+    // PWA default sound settings: mechanical / volume 0.7 / accentGain 1.5
+    private var soundConfig = SoundConfig(preset: .mechanical, soundEnabled: true, volume: 0.7, accentGain: 1.5)
 
     private var beatIndex = 0
     private var tickIndex = 0
@@ -80,9 +84,12 @@ final class MetronomeEngine {
     private var callbackStateIsPlaying = false
     private var callbackStateSessionID: UInt64 = 0
 
-    private let lookaheadSeconds: Double = 0.15
-    private let schedulerTickSeconds: Double = 0.025
+    private let foregroundLookaheadSeconds: Double = 0.20
+    private let backgroundLookaheadSeconds: Double = 12.0
+    private let foregroundSchedulerTickSeconds: Double = 0.025
+    private let backgroundSchedulerTickSeconds: Double = 0.20
     private let initialLeadSeconds: Double = 0.10
+    private var isBackgroundPlaybackPhase = false
 
     init() {
         // 지연 초기화: TabView 사전 로드시 오디오 엔진 선기동을 막아 UI 랙을 줄인다.
@@ -194,6 +201,7 @@ final class MetronomeEngine {
         schedulerQueue.async { [self] in
             guard isPlaying else { return }
             prepareIfNeededLocked()
+            reactivateAudioSessionLocked()
             startAudioEngineIfNeededLocked()
             if !playerNode.isPlaying {
                 playerNode.play()
@@ -201,18 +209,41 @@ final class MetronomeEngine {
         }
     }
 
+    func setApplicationBackgroundState(_ isBackground: Bool) {
+        schedulerQueue.async { [self] in
+            isBackgroundPlaybackPhase = isBackground
+            guard isPlaying else { return }
+
+            // 백그라운드 진입 시 세션을 재활성화하고, 더 긴 lookahead를 즉시 채워
+            // 타이머 코얼레싱으로 인한 2~3박 후 끊김을 방지한다.
+            if isBackground {
+                reactivateAudioSessionLocked()
+            }
+            restartSchedulerLocked()
+            scheduleLookaheadLocked()
+        }
+    }
+
     private func configureAudioSession() {
         do {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            // Dynamic Island / Lock Screen now playing 노출을 위해
+            // 보조 믹싱 세션(.mixWithOthers) 대신 주 재생 세션으로 등록한다.
+            try session.setCategory(.playback, mode: .default, policy: .longFormAudio, options: [])
+            try session.setActive(true)
+        } catch {}
+    }
+
+    private func reactivateAudioSessionLocked() {
+        do {
+            let session = AVAudioSession.sharedInstance()
             try session.setActive(true)
         } catch {}
     }
 
     private func configureEngine() {
         audioEngine.attach(playerNode)
-        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
-        audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: format)
+        audioEngine.connect(playerNode, to: audioEngine.mainMixerNode, format: renderFormat)
         audioEngine.prepare()
         startAudioEngineIfNeededLocked()
     }
@@ -221,6 +252,7 @@ final class MetronomeEngine {
         guard !isPrepared else { return }
         configureAudioSession()
         configureEngine()
+        loadMechanicalSampleBuffersIfNeeded()
         buildDefaultBuffers()
         isPrepared = true
     }
@@ -233,27 +265,65 @@ final class MetronomeEngine {
     }
 
     private func buildDefaultBuffers() {
-        let format = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
         let clampedVolume = soundConfig.soundEnabled ? max(0.0, min(1.0, soundConfig.volume)) : 0.0
         let clampedAccentGain = max(1.0, min(2.0, soundConfig.accentGain))
-        let (aFreq, sFreq, wFreq, aDur, sDur, wDur, aAmp, sAmp, wAmp): (Double, Double, Double, Double, Double, Double, Float, Float, Float)
-        switch soundConfig.preset {
-        case .mechanical:
-            (aFreq, sFreq, wFreq, aDur, sDur, wDur, aAmp, sAmp, wAmp) = (1200, 950, 760, 0.030, 0.026, 0.022, 0.90, 0.72, 0.48)
-        case .woodBlock:
-            (aFreq, sFreq, wFreq, aDur, sDur, wDur, aAmp, sAmp, wAmp) = (980, 760, 620, 0.040, 0.036, 0.030, 0.88, 0.70, 0.45)
-        case .marimba:
-            (aFreq, sFreq, wFreq, aDur, sDur, wDur, aAmp, sAmp, wAmp) = (1450, 1120, 820, 0.045, 0.038, 0.030, 0.85, 0.64, 0.42)
-        case .beep:
-            (aFreq, sFreq, wFreq, aDur, sDur, wDur, aAmp, sAmp, wAmp) = (1800, 1400, 1000, 0.022, 0.020, 0.018, 0.95, 0.80, 0.55)
-        case .shaker:
-            (aFreq, sFreq, wFreq, aDur, sDur, wDur, aAmp, sAmp, wAmp) = (2600, 2100, 1700, 0.014, 0.013, 0.011, 0.92, 0.70, 0.50)
+        let v = Float(clampedVolume)
+        let pwaAccentScale = min(2.0, Float(clampedAccentGain))
+
+        if soundConfig.preset == .mechanical {
+            loadMechanicalSampleBuffersIfNeeded()
+
+            if let strong = mechanicalStrongSampleBuffer,
+               let accent = mechanicalAccentSampleBuffer,
+               let weak = mechanicalWeakSampleBuffer
+            {
+                strongBuffer = scaledBuffer(from: strong, gain: v)
+                // PWA mechanical_accent는 재생 시 0.3초까지만 사용한다.
+                let trimmedAccent = trimmedBuffer(accent, maxDuration: 0.3) ?? accent
+                accentBuffer = scaledBuffer(from: trimmedAccent, gain: pwaAccentScale * v)
+                // PWA 약박 기계식은 기본보다 작게 들리도록 감쇠.
+                weakBuffer = scaledBuffer(from: weak, gain: 0.58 * v)
+                return
+            }
         }
 
-        let v = Float(clampedVolume)
-        accentBuffer = makeClickBuffer(format: format, frequency: aFreq, duration: aDur, amplitude: min(1.0, aAmp * Float(clampedAccentGain)) * v)
-        strongBuffer = makeClickBuffer(format: format, frequency: sFreq, duration: sDur, amplitude: sAmp * v)
-        weakBuffer = makeClickBuffer(format: format, frequency: wFreq, duration: wDur, amplitude: wAmp * v)
+        // PWA SoundBank.getSoundParams 기준 주파수/길이와 동기화
+        let (baseFrequency, baseDuration): (Double, Double)
+        switch soundConfig.preset {
+        case .beep:
+            (baseFrequency, baseDuration) = (980, 0.08)
+        case .click:
+            (baseFrequency, baseDuration) = (1800, 0.035)
+        case .woodBlock:
+            (baseFrequency, baseDuration) = (420, 0.14)
+        case .woodClap:
+            (baseFrequency, baseDuration) = (680, 0.09)
+        case .shaker:
+            (baseFrequency, baseDuration) = (6000, 0.06)
+        case .tambourine:
+            (baseFrequency, baseDuration) = (2400, 0.17)
+        case .pendulum:
+            (baseFrequency, baseDuration) = (520, 0.18)
+        case .marimba:
+            (baseFrequency, baseDuration) = (440, 0.24)
+        case .xylophone:
+            (baseFrequency, baseDuration) = (980, 0.22)
+        case .mechanical:
+            (baseFrequency, baseDuration) = (1450, 0.065)
+        case .mechanicalAccent:
+            (baseFrequency, baseDuration) = (1700, 0.06)
+        case .mechanicalWeak:
+            (baseFrequency, baseDuration) = (1280, 0.07)
+        }
+
+        // PWA 규칙: strong/accent는 accentGain 적용, weak는 기본 볼륨
+        let baseAmp: Float = 0.88
+        let strongOrAccentAmp = min(1.0, baseAmp * pwaAccentScale) * v
+        let weakAmp = baseAmp * v
+
+        accentBuffer = makeClickBuffer(format: renderFormat, frequency: baseFrequency, duration: baseDuration, amplitude: strongOrAccentAmp)
+        strongBuffer = makeClickBuffer(format: renderFormat, frequency: baseFrequency, duration: baseDuration, amplitude: strongOrAccentAmp)
+        weakBuffer = makeClickBuffer(format: renderFormat, frequency: baseFrequency, duration: baseDuration, amplitude: weakAmp)
     }
 
     private func makeClickBuffer(
@@ -288,14 +358,106 @@ final class MetronomeEngine {
         return buffer
     }
 
+    private func loadMechanicalSampleBuffersIfNeeded() {
+        guard mechanicalStrongSampleBuffer == nil || mechanicalAccentSampleBuffer == nil || mechanicalWeakSampleBuffer == nil else {
+            return
+        }
+
+        mechanicalStrongSampleBuffer = loadSampleBuffer(named: "mechanical_strong")
+        mechanicalAccentSampleBuffer = loadSampleBuffer(named: "mechanical_accent")
+        mechanicalWeakSampleBuffer = loadSampleBuffer(named: "mechanical_weak")
+    }
+
+    private func loadSampleBuffer(named fileName: String) -> AVAudioPCMBuffer? {
+        let resourceSubdir = "Sounds"
+        let url = Bundle.main.url(forResource: fileName, withExtension: "wav", subdirectory: resourceSubdir)
+            ?? Bundle.main.url(forResource: fileName, withExtension: "wav")
+        guard let url else { return nil }
+        guard let audioFile = try? AVAudioFile(forReading: url) else { return nil }
+
+        let sourceFormat = audioFile.processingFormat
+        let sourceFrameCount = AVAudioFrameCount(audioFile.length)
+        guard let sourceBuffer = AVAudioPCMBuffer(
+            pcmFormat: sourceFormat,
+            frameCapacity: sourceFrameCount
+        ) else { return nil }
+        do {
+            try audioFile.read(into: sourceBuffer)
+        } catch {
+            return nil
+        }
+
+        if sourceFormat == renderFormat {
+            return sourceBuffer
+        }
+        return convertedBuffer(from: sourceBuffer, to: renderFormat)
+    }
+
+    private func convertedBuffer(from input: AVAudioPCMBuffer, to outputFormat: AVAudioFormat) -> AVAudioPCMBuffer? {
+        guard let converter = AVAudioConverter(from: input.format, to: outputFormat) else { return nil }
+        let ratio = outputFormat.sampleRate / input.format.sampleRate
+        let expectedFrames = AVAudioFrameCount(Double(input.frameLength) * ratio) + 8
+        guard let outputBuffer = AVAudioPCMBuffer(
+            pcmFormat: outputFormat,
+            frameCapacity: max(1, expectedFrames)
+        ) else { return nil }
+
+        var didProvideInput = false
+        var convertError: NSError?
+        let status = converter.convert(to: outputBuffer, error: &convertError) { _, outStatus in
+            if didProvideInput {
+                outStatus.pointee = .noDataNow
+                return nil
+            }
+            didProvideInput = true
+            outStatus.pointee = .haveData
+            return input
+        }
+
+        guard convertError == nil else { return nil }
+        guard status == .haveData || status == .inputRanDry || status == .endOfStream else { return nil }
+        return outputBuffer
+    }
+
+    private func trimmedBuffer(_ source: AVAudioPCMBuffer, maxDuration: Double) -> AVAudioPCMBuffer? {
+        let maxFrames = AVAudioFrameCount(renderFormat.sampleRate * maxDuration)
+        let frameLength = min(source.frameLength, maxFrames)
+        guard frameLength > 0 else { return nil }
+        guard let trimmed = AVAudioPCMBuffer(pcmFormat: renderFormat, frameCapacity: frameLength) else { return nil }
+        trimmed.frameLength = frameLength
+        guard let src = source.floatChannelData?[0], let dst = trimmed.floatChannelData?[0] else { return nil }
+        dst.update(from: src, count: Int(frameLength))
+        return trimmed
+    }
+
+    private func scaledBuffer(from source: AVAudioPCMBuffer, gain: Float) -> AVAudioPCMBuffer? {
+        let frameLength = source.frameLength
+        guard frameLength > 0 else { return nil }
+        guard let out = AVAudioPCMBuffer(pcmFormat: renderFormat, frameCapacity: frameLength) else { return nil }
+        out.frameLength = frameLength
+        guard let src = source.floatChannelData?[0], let dst = out.floatChannelData?[0] else { return nil }
+
+        let count = Int(frameLength)
+        for i in 0..<count {
+            let value = src[i] * gain
+            dst[i] = min(1.0, max(-1.0, value))
+        }
+        return out
+    }
+
     private func scheduleLoopLocked() {
         let timer = DispatchSource.makeTimerSource(queue: schedulerQueue)
-        timer.schedule(deadline: .now(), repeating: schedulerTickSeconds)
+        timer.schedule(deadline: .now(), repeating: currentSchedulerTickSecondsLocked())
         timer.setEventHandler { [weak self] in
             self?.scheduleLookaheadLocked()
         }
         timer.resume()
         schedulerTimer = timer
+    }
+
+    private func restartSchedulerLocked() {
+        stopSchedulerLocked()
+        scheduleLoopLocked()
     }
 
     private func stopSchedulerLocked() {
@@ -306,7 +468,7 @@ final class MetronomeEngine {
     private func scheduleLookaheadLocked() {
         guard isPlaying else { return }
         let nowHost = mach_absolute_time()
-        let lookaheadHost = nowHost + AVAudioTime.hostTime(forSeconds: lookaheadSeconds)
+        let lookaheadHost = nowHost + AVAudioTime.hostTime(forSeconds: currentLookaheadSecondsLocked())
 
         while nextEventHostTime <= lookaheadHost {
             let tickPerBeat = max(1, subdivision.ticksPerBeat)
@@ -347,6 +509,14 @@ final class MetronomeEngine {
         return beatDuration / Double(max(1, subdivision.ticksPerBeat))
     }
 
+    private func currentLookaheadSecondsLocked() -> Double {
+        isBackgroundPlaybackPhase ? backgroundLookaheadSeconds : foregroundLookaheadSeconds
+    }
+
+    private func currentSchedulerTickSecondsLocked() -> Double {
+        isBackgroundPlaybackPhase ? backgroundSchedulerTickSeconds : foregroundSchedulerTickSeconds
+    }
+
     private func scheduleMainBeatLocked(beat: Int, at hostTime: UInt64, shouldSound: Bool) {
         updateEffectiveBPMLocked()
         guard shouldSound else { return }
@@ -378,13 +548,11 @@ final class MetronomeEngine {
         let delayHost = hostTime > nowHost ? hostTime - nowHost : 0
         let delay = AVAudioTime.seconds(forHostTime: delayHost)
 
-        // UI 콜백 타이밍은 schedulerQueue 재진입 없이 전용 큐에서 맞춘다.
-        beatCallbackQueue.asyncAfter(deadline: .now() + delay) { [weak self] in
+        // 오디오 hostTime 기준 지연을 그대로 메인 큐에 반영해 UI 시점을 맞춘다.
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
             guard let self else { return }
             guard self.isValidCallbackSession(sessionID) else { return }
-            DispatchQueue.main.async { [weak self] in
-                self?.onBeatChange?(beat)
-            }
+            self.onBeatChange?(beat)
         }
     }
 

@@ -10,11 +10,13 @@ targets:
     platform: iOS
     deploymentTarget: "16.0"
     sources:
-      - Sources
+      - path: Sources
+        excludes:
+          - LiveActivityExtension/**
     info:
       path: Sources/Info.plist
       properties:
-        CFBundleDisplayName: PianoLogNative
+        CFBundleDisplayName: ""
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
@@ -29,9 +31,35 @@ targets:
           - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
+        NSSupportsLiveActivities: true
+        UIBackgroundModes:
+          - audio
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mozartdc.pianolog.native
+        TARGETED_DEVICE_FAMILY: "1,2"
+        CODE_SIGN_STYLE: Automatic
+        DEVELOPMENT_TEAM: U96KK739SR
+    dependencies:
+      - target: PianoLogNativeLiveActivity
+        embed: true
+
+  PianoLogNativeLiveActivity:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.1"
+    sources:
+      - Sources/LiveActivityExtension
+      - Sources/Shared/MetronomeLiveActivityAttributes.swift
+    info:
+      path: Sources/LiveActivityExtension/Info.plist
+      properties:
+        NSSupportsLiveActivities: true
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mozartdc.pianolog.native.liveactivity
         TARGETED_DEVICE_FAMILY: "1,2"
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: U96KK739SR

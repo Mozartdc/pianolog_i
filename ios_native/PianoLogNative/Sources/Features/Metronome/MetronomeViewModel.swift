@@ -1,6 +1,7 @@
 import Foundation
 import UIKit
 import Combine
+import MediaPlayer
 
 @MainActor
 final class MetronomeViewModel: ObservableObject {
@@ -78,7 +79,9 @@ final class MetronomeViewModel: ObservableObject {
     private let lastViewedKey = "metronome.last.viewed.session.v2"
     private var didResolveLastViewed = false
     private var foregroundObserver: NSObjectProtocol?
+    private var backgroundObserver: NSObjectProtocol?
     private var storeChangeCancellable: AnyCancellable?
+    private let nowPlaying = MetronomeNowPlayingController()
 
     init() {
         storeChangeCancellable = store.objectWillChange
@@ -86,12 +89,42 @@ final class MetronomeViewModel: ObservableObject {
                 self?.objectWillChange.send()
             }
 
+        nowPlaying.onPlayRequested = { [weak self] in
+            Task { @MainActor in
+                guard let self, !self.store.isPlaying else { return }
+                self.togglePlay()
+            }
+        }
+        nowPlaying.onPauseRequested = { [weak self] in
+            Task { @MainActor in
+                guard let self, self.store.isPlaying else { return }
+                self.togglePlay()
+            }
+        }
+        nowPlaying.onToggleRequested = { [weak self] in
+            Task { @MainActor in
+                self?.togglePlay()
+            }
+        }
+
+
+        backgroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.engine?.setApplicationBackgroundState(true)
+            }
+        }
+
         foregroundObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.willEnterForegroundNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
+                self?.engine?.setApplicationBackgroundState(false)
                 self?.engine?.recoverAfterInterruption()
             }
         }
@@ -108,14 +141,19 @@ final class MetronomeViewModel: ObservableObject {
                 self.syncTodayTracksFromLibraryOnly()
                 self.resolveInitialSessionIfNeeded()
                 self.evaluateUnsavedChange()
+                self.syncNowPlaying()
             }
         }
     }
 
     deinit {
+        if let backgroundObserver {
+            NotificationCenter.default.removeObserver(backgroundObserver)
+        }
         if let foregroundObserver {
             NotificationCenter.default.removeObserver(foregroundObserver)
         }
+        nowPlaying.clear()
     }
 
     func syncTodayTracks(_ tracks: [PracticeTrack]) {
@@ -168,11 +206,13 @@ final class MetronomeViewModel: ObservableObject {
                 sound: soundConfig()
             )
         }
+        syncNowPlaying()
     }
 
     func onConfigChanged() {
         guard let engine else {
             evaluateUnsavedChange()
+            syncNowPlaying()
             return
         }
         engine.updateConfig(
@@ -184,6 +224,7 @@ final class MetronomeViewModel: ObservableObject {
             sound: soundConfig()
         )
         evaluateUnsavedChange()
+        syncNowPlaying()
     }
 
     func setTimeSignature(_ signature: TimeSignature) {
@@ -514,6 +555,7 @@ final class MetronomeViewModel: ObservableObject {
             guard let self, let engine else { return }
             if !engine.isPlayingNow {
                 self.store.isPlaying = false
+                self.syncNowPlaying()
             }
         }
         engine.onTrainingStatusChange = { [weak self] text in
@@ -546,5 +588,100 @@ final class MetronomeViewModel: ObservableObject {
         }()
 
         return (loadedSavedSessions, loadedTrackSettings)
+    }
+
+    private func syncNowPlaying() {
+        nowPlaying.update(
+            isPlaying: store.isPlaying,
+            bpm: store.bpm,
+            signature: store.timeSignature
+        )
+    }
+}
+
+private final class MetronomeNowPlayingController {
+    var onPlayRequested: (() -> Void)?
+    var onPauseRequested: (() -> Void)?
+    var onToggleRequested: (() -> Void)?
+
+    private var remoteCommandsConfigured = false
+    private lazy var appArtwork: MPMediaItemArtwork? = {
+        guard let image = Self.resolveAppIconImage() else { return nil }
+        return MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+    }()
+
+    func update(isPlaying: Bool, bpm: Int, signature: TimeSignature) {
+        configureRemoteCommandsIfNeeded()
+
+        let title = "메트로놈"
+        let subtitle = "\(bpm) BPM · \(signature.numerator)/\(signature.denominator)"
+        var info: [String: Any] = [
+            MPMediaItemPropertyTitle: title,
+            MPMediaItemPropertyArtist: subtitle,
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
+            MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
+            MPNowPlayingInfoPropertyIsLiveStream: true
+        ]
+        if let appArtwork {
+            info[MPMediaItemPropertyArtwork] = appArtwork
+        }
+        if #available(iOS 10.0, *) {
+            info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
+        }
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+    }
+
+    func clear() {
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+    }
+
+    private func configureRemoteCommandsIfNeeded() {
+        guard !remoteCommandsConfigured else { return }
+        remoteCommandsConfigured = true
+
+        let commandCenter = MPRemoteCommandCenter.shared()
+
+        commandCenter.playCommand.isEnabled = true
+        commandCenter.pauseCommand.isEnabled = true
+        commandCenter.togglePlayPauseCommand.isEnabled = true
+
+        commandCenter.nextTrackCommand.isEnabled = false
+        commandCenter.previousTrackCommand.isEnabled = false
+        commandCenter.skipForwardCommand.isEnabled = false
+        commandCenter.skipBackwardCommand.isEnabled = false
+        commandCenter.changePlaybackPositionCommand.isEnabled = false
+        commandCenter.seekForwardCommand.isEnabled = false
+        commandCenter.seekBackwardCommand.isEnabled = false
+        commandCenter.changeRepeatModeCommand.isEnabled = false
+        commandCenter.changeShuffleModeCommand.isEnabled = false
+        commandCenter.likeCommand.isEnabled = false
+        commandCenter.dislikeCommand.isEnabled = false
+        commandCenter.bookmarkCommand.isEnabled = false
+        commandCenter.ratingCommand.isEnabled = false
+
+        commandCenter.playCommand.addTarget { [weak self] _ in
+            self?.onPlayRequested?()
+            return .success
+        }
+        commandCenter.pauseCommand.addTarget { [weak self] _ in
+            self?.onPauseRequested?()
+            return .success
+        }
+        commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
+            self?.onToggleRequested?()
+            return .success
+        }
+    }
+
+    private static func resolveAppIconImage() -> UIImage? {
+        guard
+            let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any],
+            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
+            let files = primary["CFBundleIconFiles"] as? [String],
+            let iconName = files.last
+        else { return nil }
+        return UIImage(named: iconName)
+            ?? UIImage(named: "\(iconName)60x60")
+            ?? UIImage(named: "\(iconName)40x40")
     }
 }

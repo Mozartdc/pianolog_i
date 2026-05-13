@@ -224,20 +224,111 @@ struct MutePatternTrainingSettings: Codable, Equatable {
 
 enum MetronomeSoundPreset: String, CaseIterable, Identifiable {
     case mechanical
+    case mechanicalAccent
+    case mechanicalWeak
+    case pendulum
     case woodBlock
+    case woodClap
     case marimba
+    case xylophone
     case beep
+    case click
     case shaker
+    case tambourine
+
+    var id: String { rawValue }
+
+    var category: MetronomeSoundCategory {
+        switch self {
+        case .mechanical, .mechanicalAccent, .mechanicalWeak, .pendulum:
+            return .mechanical
+        case .woodBlock, .woodClap:
+            return .wood
+        case .shaker, .tambourine:
+            return .percussion
+        case .beep, .click:
+            return .digital
+        case .marimba, .xylophone:
+            return .marimba
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .mechanical: return "기계식"
+        case .mechanicalAccent: return "기계식 강박"
+        case .mechanicalWeak: return "기계식 약박"
+        case .pendulum: return "진자"
+        case .woodBlock: return "우드 블럭"
+        case .woodClap: return "클랩스틱"
+        case .marimba: return "마림바"
+        case .xylophone: return "실로폰"
+        case .beep: return "디지털"
+        case .click: return "클릭"
+        case .shaker: return "퍼커션"
+        case .tambourine: return "탬버린"
+        }
+    }
+
+    var pwaDescription: String {
+        switch self {
+        case .woodBlock: return "클래식 우드 사운드"
+        case .woodClap: return "드럼스틱 타격음"
+        case .shaker: return "부드러운 리듬감"
+        case .tambourine: return "밝은 금속 사운드"
+        case .beep: return "전자 신호음"
+        case .click: return "디지털 클릭 사운드"
+        case .mechanical: return "전통 메트로놈"
+        case .mechanicalAccent: return "기계식 강박 샘플"
+        case .mechanicalWeak: return "기계식 약박 샘플"
+        case .pendulum: return "진자 소리"
+        case .marimba: return "따뜻한 목관 타악기"
+        case .xylophone: return "밝은 금속 타악기"
+        }
+    }
+
+    // PWA SoundSettingsPanel의 상위 5개 옵션과 동일한 노출 목록.
+    static let pwaTopLevelOptions: [MetronomeSoundPreset] = [
+        .mechanical,
+        .woodBlock,
+        .marimba,
+        .beep,
+        .shaker
+    ]
+
+    // 내부 상세 프리셋(예: mechanicalAccent)도 설정창 진입 시 상위 대표 프리셋으로 정규화.
+    var pwaTopLevelBase: MetronomeSoundPreset {
+        switch self {
+        case .mechanical, .mechanicalAccent, .mechanicalWeak, .pendulum:
+            return .mechanical
+        case .woodBlock, .woodClap:
+            return .woodBlock
+        case .marimba, .xylophone:
+            return .marimba
+        case .beep, .click:
+            return .beep
+        case .shaker, .tambourine:
+            return .shaker
+        }
+    }
+}
+
+enum MetronomeSoundCategory: String, CaseIterable, Identifiable {
+    case mechanical
+    case wood
+    case percussion
+    case digital
+    case marimba
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
         case .mechanical: return "기계식"
-        case .woodBlock: return "우드 블럭"
+        case .wood: return "우드 블럭"
+        case .percussion: return "퍼커션"
+        case .digital: return "디지털"
         case .marimba: return "마림바"
-        case .beep: return "디지털"
-        case .shaker: return "퍼커션"
         }
     }
 }
@@ -273,10 +364,10 @@ final class MetronomeStore: ObservableObject {
         durationSoundLength: 1,
         durationMuteLength: 1
     )
-    @Published var soundPreset: MetronomeSoundPreset = .beep
+    @Published var soundPreset: MetronomeSoundPreset = .mechanical
     @Published var soundEnabled: Bool = true
-    @Published var soundVolume: Double = 0.8
-    @Published var accentGain: Double = 1.6
+    @Published var soundVolume: Double = 0.7
+    @Published var accentGain: Double = 1.5
     @Published var flashEnabled: Bool = false
 
     func setBpm(_ value: Int) {

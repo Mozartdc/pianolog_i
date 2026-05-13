@@ -141,11 +141,12 @@ struct BPMDialView: View {
                 let instantVelocity = abs(diff) / CGFloat(dt)
                 velocityEMA = velocityEMA * 0.8 + instantVelocity * 0.2
 
-                let vLow: CGFloat = 90
-                let vHigh: CGFloat = 360
+                let vLow = MetronomeDialTuning.velocityLow
+                let vHigh = MetronomeDialTuning.velocityHigh
                 let normalized = max(0, min(1, (velocityEMA - vLow) / (vHigh - vLow)))
                 let eased = normalized * normalized
-                let bpmPerTurn: CGFloat = 10 + (20 - 10) * eased
+                let bpmPerTurn = MetronomeDialTuning.bpmPerTurnAtLowVelocity
+                    + (MetronomeDialTuning.bpmPerTurnAtHighVelocity - MetronomeDialTuning.bpmPerTurnAtLowVelocity) * eased
                 let sensitivity = bpmPerTurn / 360
 
                 let maxUpBpmDelta = CGFloat(maxBPM - dragStartBPM)
@@ -165,7 +166,8 @@ struct BPMDialView: View {
                 let target = max(minBPM, min(maxBPM, dragStartBPM + Int(clampedBpmDelta.rounded())))
                 onBPMSet(target)
                 // Throttle dial haptics so drag stays responsive under heavy UI load.
-                if abs(target - lastHapticBPM) >= 2, (now - lastHapticTime) >= 0.035 {
+                if abs(target - lastHapticBPM) >= MetronomeDialTuning.hapticBpmStep,
+                   (now - lastHapticTime) >= MetronomeDialTuning.hapticIntervalSeconds {
                     AppHaptics.selectionChanged()
                     lastHapticBPM = target
                     lastHapticTime = now
@@ -206,10 +208,10 @@ struct BPMDialView: View {
         stopDecayAnimation()
         decayTask = Task { @MainActor in
             while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(16))
+                try? await Task.sleep(for: .milliseconds(Int(MetronomeDialTuning.decayFpsIntervalMs)))
                 if isDragging { break }
-                angleDelta *= 0.92
-                if abs(angleDelta) < 0.5 {
+                angleDelta *= MetronomeDialTuning.decayFactorPerTick
+                if abs(angleDelta) < MetronomeDialTuning.decayStopThreshold {
                     angleDelta = 0
                     break
                 }

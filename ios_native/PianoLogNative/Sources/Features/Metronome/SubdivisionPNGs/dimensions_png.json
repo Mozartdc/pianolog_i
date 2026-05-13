@@ -5,15 +5,15 @@
   },
   "dotted_half_quarter_d2": {
     "width": 79,
-    "height": 54
+    "height": 55
   },
   "dotted_half_quarter_d4": {
     "width": 70,
-    "height": 52
+    "height": 53
   },
   "dotted_half_quarter_d8": {
     "width": 70,
-    "height": 60
+    "height": 56
   },
   "four_parts_A_d1": {
     "width": 102,
@@ -32,20 +32,20 @@
     "height": 60
   },
   "four_parts_B_d1": {
-    "width": 101,
-    "height": 63
+    "width": 102,
+    "height": 54
   },
   "four_parts_B_d2": {
-    "width": 96,
-    "height": 60
+    "width": 100,
+    "height": 56
   },
   "four_parts_B_d4": {
-    "width": 98,
-    "height": 70
+    "width": 102,
+    "height": 60
   },
   "four_parts_B_d8": {
-    "width": 100,
-    "height": 76
+    "width": 104,
+    "height": 66
   },
   "half_quarter_quarter_d1": {
     "width": 84,
@@ -53,7 +53,7 @@
   },
   "half_quarter_quarter_d2": {
     "width": 76,
-    "height": 52
+    "height": 53
   },
   "half_quarter_quarter_d4": {
     "width": 76,
@@ -61,11 +61,11 @@
   },
   "half_quarter_quarter_d8": {
     "width": 76,
-    "height": 62
+    "height": 58
   },
   "one_beat_d1": {
-    "width": 24,
-    "height": 22
+    "width": 34,
+    "height": 35
   },
   "one_beat_d2": {
     "width": 24,
@@ -73,7 +73,7 @@
   },
   "one_beat_d4": {
     "width": 24,
-    "height": 52
+    "height": 51
   },
   "one_beat_d8": {
     "width": 34,
@@ -81,19 +81,19 @@
   },
   "quarter_dotted_half_d1": {
     "width": 63,
-    "height": 52
+    "height": 53
   },
   "quarter_dotted_half_d2": {
     "width": 61,
-    "height": 55
+    "height": 56
   },
   "quarter_dotted_half_d4": {
     "width": 65,
-    "height": 52
+    "height": 53
   },
   "quarter_dotted_half_d8": {
     "width": 65,
-    "height": 60
+    "height": 56
   },
   "quarter_half_quarter_d1": {
     "width": 84,
@@ -125,23 +125,23 @@
   },
   "quarter_quarter_half_d8": {
     "width": 76,
-    "height": 62
+    "height": 58
   },
   "rest_plus_half_d1": {
-    "width": 72,
+    "width": 73,
     "height": 52
   },
   "rest_plus_half_d2": {
     "width": 72,
-    "height": 63
+    "height": 54
   },
   "rest_plus_half_d4": {
-    "width": 77,
-    "height": 60
+    "width": 78,
+    "height": 56
   },
   "rest_plus_half_d8": {
     "width": 78,
-    "height": 69
+    "height": 60
   },
   "triplet_d1": {
     "width": 93,
@@ -161,67 +161,67 @@
   },
   "triplet_rest_edges_d1": {
     "width": 93,
-    "height": 69
+    "height": 70
   },
   "triplet_rest_edges_d2": {
     "width": 93,
-    "height": 80
+    "height": 70
   },
   "triplet_rest_edges_d4": {
-    "width": 91,
-    "height": 74
+    "width": 92,
+    "height": 70
   },
   "triplet_rest_edges_d8": {
-    "width": 91,
-    "height": 84
+    "width": 90,
+    "height": 74
   },
   "triplet_rest_first_d1": {
-    "width": 93,
+    "width": 94,
     "height": 70
   },
   "triplet_rest_first_d2": {
-    "width": 93,
-    "height": 80
+    "width": 94,
+    "height": 70
   },
   "triplet_rest_first_d4": {
-    "width": 81,
-    "height": 74
+    "width": 80,
+    "height": 70
   },
   "triplet_rest_first_d8": {
-    "width": 81,
-    "height": 84
+    "width": 80,
+    "height": 74
   },
   "triplet_rest_last_d1": {
     "width": 93,
-    "height": 69
+    "height": 70
   },
   "triplet_rest_last_d2": {
     "width": 93,
-    "height": 80
+    "height": 70
   },
   "triplet_rest_last_d4": {
-    "width": 89,
-    "height": 74
+    "width": 90,
+    "height": 70
   },
   "triplet_rest_last_d8": {
-    "width": 95,
-    "height": 84
+    "width": 96,
+    "height": 74
   },
   "triplet_rest_middle_d1": {
-    "width": 93,
-    "height": 69
+    "width": 94,
+    "height": 70
   },
   "triplet_rest_middle_d2": {
-    "width": 93,
-    "height": 80
+    "width": 94,
+    "height": 70
   },
   "triplet_rest_middle_d4": {
     "width": 84,
-    "height": 74
+    "height": 70
   },
   "triplet_rest_middle_d8": {
-    "width": 85,
-    "height": 84
+    "width": 84,
+    "height": 74
   },
   "two_parts_d1": {
     "width": 72,
@@ -233,10 +233,10 @@
   },
   "two_parts_d4": {
     "width": 68,
-    "height": 52
+    "height": 53
   },
   "two_parts_d8": {
     "width": 68,
-    "height": 52
+    "height": 53
   }
 }
