@@ -1,31 +1,44 @@
 import SwiftUI
-import ActivityKit
+
+enum AppThemePreference: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: return nil
+        case .light: return .light
+        case .dark: return .dark
+        }
+    }
+
+    var localizedLabel: LocalizedStringKey {
+        switch self {
+        case .system: return "settings.theme.system"
+        case .light: return "settings.theme.light"
+        case .dark: return "settings.theme.dark"
+        }
+    }
+}
 
 @main
 struct PianoLogNativeApp: App {
+    @AppStorage("theme") private var themeRawValue: String = AppThemePreference.system.rawValue
     @StateObject private var selectedDateStore = SelectedDateStore()
     @StateObject private var practiceTracksStore = PracticeTracksStore()
     @StateObject private var practiceDataStore = PracticeDataStore()
 
-    init() {
-        Self.endResidualMetronomeLiveActivitiesIfNeeded()
-    }
-
     var body: some Scene {
         WindowGroup {
+            let theme = AppThemePreference(rawValue: themeRawValue) ?? .system
             RootTabView()
                 .environmentObject(selectedDateStore)
                 .environmentObject(practiceTracksStore)
                 .environmentObject(practiceDataStore)
-        }
-    }
-
-    private static func endResidualMetronomeLiveActivitiesIfNeeded() {
-        guard #available(iOS 16.1, *) else { return }
-        Task { @MainActor in
-            for existing in Activity<MetronomeLiveActivityAttributes>.activities {
-                await existing.end(dismissalPolicy: .immediate)
-            }
+                .preferredColorScheme(theme.colorScheme)
         }
     }
 }

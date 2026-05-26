@@ -10,7 +10,7 @@ struct MetronomeLiveActivityWidget: Widget {
             HStack(spacing: 12) {
                 LiveActivityAppIconView(size: 28)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("메트로놈")
+                    Text("metronome.title")
                         .font(.headline)
                     Text("\(context.state.bpm) BPM · \(context.state.numerator)/\(context.state.denominator)")
                         .font(.subheadline)
@@ -29,7 +29,7 @@ struct MetronomeLiveActivityWidget: Widget {
                 }
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 2) {
-                        Text("메트로놈")
+                        Text("metronome.title")
                             .font(.headline)
                         Text("\(context.state.bpm) BPM")
                             .font(.subheadline)
@@ -40,7 +40,7 @@ struct MetronomeLiveActivityWidget: Widget {
                         .font(.headline.monospacedDigit())
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(context.state.isPlaying ? "재생 중" : "일시정지")
+                    Text(context.state.isPlaying ? "metronome.live.playing" : "metronome.live.paused")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -60,9 +60,10 @@ struct MetronomeLiveActivityWidget: Widget {
 @available(iOSApplicationExtension 16.1, *)
 private struct LiveActivityAppIconView: View {
     let size: CGFloat
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        Image("LiveActivityAppIcon")
+        PianoLogLiveActivityWidget.appIcon(for: colorScheme)
             .resizable()
             .scaledToFill()
             .frame(width: size, height: size)

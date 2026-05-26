@@ -2,7 +2,7 @@ import AVFoundation
 import Foundation
 
 final class MetronomeEngine {
-    var onBeatChange: ((Int) -> Void)?
+    var onBeatChange: ((Int, UInt64, UInt64) -> Void)?
     var onStop: (() -> Void)?
     var onTrainingStatusChange: ((String?) -> Void)?
 
@@ -35,9 +35,12 @@ final class MetronomeEngine {
     private let audioEngine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
     private let schedulerQueue = DispatchQueue(label: "metronome.scheduler", qos: .userInteractive)
+    private let callbackQueue = DispatchQueue(label: "metronome.callback", qos: .userInteractive)
     private let callbackStateLock = NSLock()
+    private let beatTimerLock = NSLock()
     private let renderFormat = AVAudioFormat(standardFormatWithSampleRate: 44_100, channels: 1)!
     private var schedulerTimer: DispatchSourceTimer?
+    private var beatCallbackTimers: [UInt64: DispatchSourceTimer] = [:]
     private var isPrepared = false
 
     private var accentBuffer: AVAudioPCMBuffer?
@@ -83,29 +86,134 @@ final class MetronomeEngine {
     private var beatCallbackSessionID: UInt64 = 0
     private var callbackStateIsPlaying = false
     private var callbackStateSessionID: UInt64 = 0
+    private var callbackStateUIUpdatesEnabled = true
+    private var uiUpdatesEnabled = true
 
     private let foregroundLookaheadSeconds: Double = 0.20
-    private let backgroundLookaheadSeconds: Double = 12.0
+    private let backgroundLookaheadSeconds: Double = 90.0
     private let foregroundSchedulerTickSeconds: Double = 0.025
     private let backgroundSchedulerTickSeconds: Double = 0.20
     private let initialLeadSeconds: Double = 0.10
     private var isBackgroundPlaybackPhase = false
 
+    private var interruptionObserver: NSObjectProtocol?
+    private var engineConfigObserver: NSObjectProtocol?
+    private var routeChangeObserver: NSObjectProtocol?
+    // 인터럽션 시작 시점에 재생 중이었는지 기록한다.
+    // iOS가 인터럽션 중에 MPRemoteCommandCenter.pauseCommand를 보내면
+    // ViewModel → engine.stop() → isPlaying = false가 되어
+    // 인터럽션 종료 시 recoverAfterInterruption()의 guard isPlaying이 통과하지 못한다.
+    // wasPlayingBeforeInterruption으로 인터럽션 시작 당시 상태를 보존해 이 문제를 해결한다.
+    private var wasPlayingBeforeInterruption = false
+
     init() {
         // 지연 초기화: TabView 사전 로드시 오디오 엔진 선기동을 막아 UI 랙을 줄인다.
+
+        // 오디오 세션 인터럽션 복구 (전화, Siri, 시스템 사운드 등)
+        interruptionObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] notification in
+            guard let self,
+                  let info = notification.userInfo,
+                  let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+            else { return }
+
+            switch type {
+            case .began:
+                // 인터럽션 시작: 현재 재생 상태를 저장한다.
+                // 이 시점에서 isPlaying을 읽어야 하므로 schedulerQueue에서 실행한다.
+                self.schedulerQueue.async { [weak self] in
+                    guard let self else { return }
+                    self.wasPlayingBeforeInterruption = self.isPlaying
+                }
+            case .ended:
+                // 인터럽션 종료: 인터럽션 전에 재생 중이었으면 강제 복구한다.
+                // shouldResume = false 여도 메트로놈은 항상 재개 — 사용자가 명시적으로 시작한 것.
+                // isPlaying이 pauseCommand로 인해 false가 되어 있어도 복구해야 하므로
+                // wasPlayingBeforeInterruption을 기준으로 판단한다.
+                self.schedulerQueue.async { [weak self] in
+                    guard let self else { return }
+                    guard self.wasPlayingBeforeInterruption else { return }
+                    self.wasPlayingBeforeInterruption = false
+                    // pauseCommand로 인해 isPlaying이 false가 된 경우 복원한다.
+                    if !self.isPlaying {
+                        self.isPlaying = true
+                        self.syncCallbackStateLocked()
+                    }
+                    self.recoverAfterInterruptionLocked()
+                }
+            @unknown default:
+                break
+            }
+        }
+
+        // AVAudioEngine 구성 변경 복구 (블루투스 연결/해제 등)
+        // 엔진이 실제로 멈춘 경우에만 전체 복구한다.
+        // 실행 중이면 세션 재활성화만 수행한다 — 불필요한 전체 복구는
+        // beatCallbackSessionID를 올려 깜빡임·박자 동기화를 깨뜨린다.
+        engineConfigObserver = NotificationCenter.default.addObserver(
+            forName: .AVAudioEngineConfigurationChange,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            guard let self else { return }
+            self.schedulerQueue.async { [weak self] in
+                guard let self else { return }
+                guard self.isPlaying else { return }
+                if self.audioEngine.isRunning {
+                    // 엔진이 살아있으면 세션만 재활성화
+                    self.reactivateAudioSessionLocked()
+                } else {
+                    // 엔진이 멈췄을 때만 완전 복구
+                    self.recoverAfterInterruptionLocked()
+                }
+            }
+        }
+
+        // 오디오 라우팅 변경 복구 (블루투스 헤드폰 해제, 기기 깨어남 등)
+        // routeChangeNotification은 interruptionNotification 없이 발생하는 경우가 많아
+        // 별도로 처리해야 1분 후 재생 중단을 방지할 수 있다.
+        routeChangeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification,
+            object: nil,
+            queue: nil
+        ) { [weak self] notification in
+            guard let self,
+                  let info = notification.userInfo,
+                  let reasonValue = info[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                  let reason = AVAudioSession.RouteChangeReason(rawValue: reasonValue)
+            else { return }
+            switch reason {
+            case .oldDeviceUnavailable, .wakeFromSleep:
+                // 이전 장치 제거(블루투스 해제) 또는 화면 잠금 해제 시 복구
+                self.recoverAfterInterruption()
+            default:
+                break
+            }
+        }
+    }
+
+    deinit {
+        if let interruptionObserver { NotificationCenter.default.removeObserver(interruptionObserver) }
+        if let engineConfigObserver { NotificationCenter.default.removeObserver(engineConfigObserver) }
+        if let routeChangeObserver { NotificationCenter.default.removeObserver(routeChangeObserver) }
     }
 
     private func syncCallbackStateLocked() {
         callbackStateLock.lock()
         callbackStateIsPlaying = isPlaying
         callbackStateSessionID = beatCallbackSessionID
+        callbackStateUIUpdatesEnabled = uiUpdatesEnabled
         callbackStateLock.unlock()
     }
 
     private func isValidCallbackSession(_ sessionID: UInt64) -> Bool {
         callbackStateLock.lock()
         defer { callbackStateLock.unlock() }
-        return callbackStateIsPlaying && callbackStateSessionID == sessionID
+        return callbackStateIsPlaying && callbackStateSessionID == sessionID && callbackStateUIUpdatesEnabled
     }
 
     // UI thread에서 재생 상태를 읽을 때 사용 (schedulerQueue 내부에서는 호출 금지).
@@ -137,6 +245,7 @@ final class MetronomeEngine {
             syncCallbackStateLocked()
 
             stopSchedulerLocked()
+            cancelAllBeatCallbacksLocked()
             prepareIfNeededLocked()
             startAudioEngineIfNeededLocked()
             buildDefaultBuffers()
@@ -159,7 +268,13 @@ final class MetronomeEngine {
             isPlaying = false
             syncCallbackStateLocked()
             stopSchedulerLocked()
+            cancelAllBeatCallbacksLocked()
             playerNode.stop()
+            // 재생 종료 시 오디오 세션을 비활성화하여 다른 앱(음악, 팟캐스트 등)이
+            // 오디오를 재개할 수 있도록 .notifyOthersOnDeactivation 옵션을 사용한다.
+            do {
+                try AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            } catch {}
             DispatchQueue.main.async { [weak self] in
                 self?.onStop?()
             }
@@ -190,22 +305,44 @@ final class MetronomeEngine {
             if previousSound.preset != sound.preset || abs(previousSound.volume - sound.volume) > 0.0001 {
                 buildDefaultBuffers()
             }
-            // Phase 1-4: 재생 중 BPM 변경 시 lookahead 즉시 플러시
+            // 재생 중 BPM 변경 시 player 큐와 beat callback을 모두 초기화한다.
+            // backgroundLookaheadSeconds = 90 이므로 큐에 최대 90초치가 쌓일 수 있다.
+            // beatCallbackSessionID를 올리지 않으면 이전 BPM의 beat callback이 계속 발화해
+            // flash 타이밍이 어긋나고 시각 동기화가 깨진다.
             if previousBpm != self.bpm {
+                beatCallbackSessionID &+= 1
+                syncCallbackStateLocked()
+                cancelAllBeatCallbacksLocked()
+                playerNode.stop()
+                playerNode.play()
                 nextEventHostTime = mach_absolute_time() + AVAudioTime.hostTime(forSeconds: 0.03)
+                scheduleLookaheadLocked()
             }
         }
+    }
+
+    // schedulerQueue 내부에서 호출하는 동기 복구. 외부에서 직접 호출 금지.
+    private func recoverAfterInterruptionLocked() {
+        reactivateAudioSessionLocked()
+        startAudioEngineIfNeededLocked()
+        // 이전 beatCallback 타이머들을 모두 무효화한다.
+        // sessionID를 올리지 않으면 이전 콜백과 새 콜백이 동시에 실행되어
+        // 소리가 겹치고 깜빡임이 어긋난다.
+        beatCallbackSessionID &+= 1
+        syncCallbackStateLocked()
+        cancelAllBeatCallbacksLocked()
+        // 기존 스케줄 큐를 비우고 재시작
+        playerNode.stop()
+        playerNode.play()
+        nextEventHostTime = mach_absolute_time() + AVAudioTime.hostTime(forSeconds: initialLeadSeconds)
+        restartSchedulerLocked()
+        scheduleLookaheadLocked()
     }
 
     func recoverAfterInterruption() {
         schedulerQueue.async { [self] in
             guard isPlaying else { return }
-            prepareIfNeededLocked()
-            reactivateAudioSessionLocked()
-            startAudioEngineIfNeededLocked()
-            if !playerNode.isPlaying {
-                playerNode.play()
-            }
+            recoverAfterInterruptionLocked()
         }
     }
 
@@ -214,22 +351,49 @@ final class MetronomeEngine {
             isBackgroundPlaybackPhase = isBackground
             guard isPlaying else { return }
 
-            // 백그라운드 진입 시 세션을 재활성화하고, 더 긴 lookahead를 즉시 채워
-            // 타이머 코얼레싱으로 인한 2~3박 후 끊김을 방지한다.
             if isBackground {
+                // 백그라운드 진입: 세션 재활성화 후 90초치 오디오 선예약
                 reactivateAudioSessionLocked()
+                restartSchedulerLocked()
+                scheduleLookaheadLocked()
+            } else {
+                // 포그라운드 복귀:
+                // setUIUpdatesEnabled(true)가 별도 async로 나중에 도착하므로,
+                // 여기서 먼저 uiUpdatesEnabled를 true로 올려야
+                // 아래 scheduleLookaheadLocked()에서 beat callback이 정상 생성된다.
+                // 순서가 틀리면 callbackStateUIUpdatesEnabled = false 상태로
+                // scheduleBeatCallback()이 호출되어 콜백이 만들어지지 않고,
+                // nextEventHostTime이 90초 앞에 있어 이후 스케줄러도 콜백을 안 만든다.
+                uiUpdatesEnabled = true
+                syncCallbackStateLocked()
+                // 백그라운드에서 쌓인 기존 콜백 정리 후 오디오 큐 플러시+재시작.
+                // playerNode.stop() → 100ms 갭 후 재개되지만
+                // 포그라운드 복귀 시 즉각적인 flash 동기화가 더 중요하다.
+                cancelAllBeatCallbacksLocked()
+                playerNode.stop()
+                playerNode.play()
+                nextEventHostTime = mach_absolute_time() + AVAudioTime.hostTime(forSeconds: initialLeadSeconds)
+                restartSchedulerLocked()
+                scheduleLookaheadLocked()
             }
-            restartSchedulerLocked()
-            scheduleLookaheadLocked()
+        }
+    }
+
+    func setUIUpdatesEnabled(_ enabled: Bool) {
+        schedulerQueue.async { [self] in
+            uiUpdatesEnabled = enabled
+            syncCallbackStateLocked()
         }
     }
 
     private func configureAudioSession() {
         do {
             let session = AVAudioSession.sharedInstance()
-            // Dynamic Island / Lock Screen now playing 노출을 위해
-            // 보조 믹싱 세션(.mixWithOthers) 대신 주 재생 세션으로 등록한다.
-            try session.setCategory(.playback, mode: .default, policy: .longFormAudio, options: [])
+            // .mixWithOthers: iOS가 이 앱을 "보조 오디오 소스"로 분류해
+            // NowPlaying 앱 자동 등록을 막는다 → Dynamic Island 회색 스피커 pill 방지.
+            // UIBackgroundModes.audio(Info.plist)가 설정되어 있으므로
+            // .mixWithOthers를 사용해도 백그라운드에서 무제한 재생이 보장된다.
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
             try session.setActive(true)
         } catch {}
     }
@@ -465,8 +629,39 @@ final class MetronomeEngine {
         schedulerTimer = nil
     }
 
+    private func callbackKey(hostTime: UInt64, sessionID: UInt64) -> UInt64 {
+        (sessionID &* 11400714819323198485) ^ hostTime
+    }
+
+    private func cancelAllBeatCallbacksLocked() {
+        beatTimerLock.lock()
+        let timers = beatCallbackTimers
+        beatCallbackTimers.removeAll()
+        beatTimerLock.unlock()
+
+        for (_, timer) in timers {
+            timer.cancel()
+        }
+    }
+
     private func scheduleLookaheadLocked() {
         guard isPlaying else { return }
+
+        // 백그라운드에서 엔진이 notification 없이 조용히 멈추는 경우를 감지하여 복구한다.
+        if isBackgroundPlaybackPhase && !audioEngine.isRunning {
+            reactivateAudioSessionLocked()
+            startAudioEngineIfNeededLocked()
+            // 엔진 재시작 시 이전 sessionID의 beat callback이 살아있으면
+            // 타이밍이 어긋난 콜백이 중복 발화하므로 반드시 먼저 무효화한다.
+            beatCallbackSessionID &+= 1
+            syncCallbackStateLocked()
+            cancelAllBeatCallbacksLocked()
+            // 엔진이 멈췄다 재시작되면 playerNode 큐도 초기화해야 한다.
+            playerNode.stop()
+            playerNode.play()
+            nextEventHostTime = mach_absolute_time() + AVAudioTime.hostTime(forSeconds: initialLeadSeconds)
+        }
+
         let nowHost = mach_absolute_time()
         let lookaheadHost = nowHost + AVAudioTime.hostTime(forSeconds: currentLookaheadSecondsLocked())
 
@@ -484,6 +679,7 @@ final class MetronomeEngine {
                     stopSchedulerLocked()
                     beatCallbackSessionID &+= 1
                     syncCallbackStateLocked()
+                    cancelAllBeatCallbacksLocked()
                     DispatchQueue.main.async { [weak self] in
                         self?.onStop?()
                     }
@@ -544,17 +740,97 @@ final class MetronomeEngine {
     }
 
     private func scheduleBeatCallback(beat: Int, hostTime: UInt64, sessionID: UInt64) {
+        guard isValidCallbackSession(sessionID) else { return }
         let nowHost = mach_absolute_time()
         let delayHost = hostTime > nowHost ? hostTime - nowHost : 0
         let delay = AVAudioTime.seconds(forHostTime: delayHost)
 
-        // 오디오 hostTime 기준 지연을 그대로 메인 큐에 반영해 UI 시점을 맞춘다.
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
-            guard let self else { return }
-            guard self.isValidCallbackSession(sessionID) else { return }
-            self.onBeatChange?(beat)
+        let key = callbackKey(hostTime: hostTime, sessionID: sessionID)
+        let timer = DispatchSource.makeTimerSource(queue: callbackQueue)
+        beatTimerLock.lock()
+        beatCallbackTimers[key] = timer
+        beatTimerLock.unlock()
+        timer.schedule(deadline: .now() + delay, leeway: .nanoseconds(0))
+        timer.setEventHandler { [weak self] in
+            guard let self else {
+                timer.cancel()
+                return
+            }
+            self.beatTimerLock.lock()
+            self.beatCallbackTimers[key] = nil
+            self.beatTimerLock.unlock()
+            guard self.isValidCallbackSession(sessionID) else {
+                timer.cancel()
+                return
+            }
+            let firedHostTime = mach_absolute_time()
+            if firedHostTime > hostTime {
+                let lagSeconds = AVAudioTime.seconds(forHostTime: firedHostTime - hostTime)
+                // Drop stale callbacks aggressively before touching main.
+                // At 120 BPM this keeps visual lag under roughly one quarter-beat.
+                if lagSeconds >= 0.12 {
+                    timer.cancel()
+                    return
+                }
+            }
+            guard self.isValidCallbackSession(sessionID) else {
+                timer.cancel()
+                return
+            }
+            let deliveredHostTime = mach_absolute_time()
+            self.onBeatChange?(beat, hostTime, deliveredHostTime)
+#if DEBUG
+            self.logBeatCallbackTiming(
+                beat: beat,
+                scheduledHostTime: hostTime,
+                deliveredHostTime: deliveredHostTime
+            )
+#endif
+            timer.cancel()
         }
+        timer.resume()
     }
+
+#if DEBUG
+    private enum BeatSyncThresholds {
+        static let warnMs: Double = 8.0
+        static let criticalMs: Double = 16.0
+    }
+
+    /// BeatSync 로그는 기본 OFF.
+    /// 필요할 때만 Scheme Environment에서 `METRONOME_BEATSYNC_LOG=1`로 활성화.
+    private static let beatSyncLogEnabled =
+        ProcessInfo.processInfo.environment["METRONOME_BEATSYNC_LOG"] == "1"
+
+    private func logBeatCallbackTiming(
+        beat: Int,
+        scheduledHostTime: UInt64,
+        deliveredHostTime: UInt64
+    ) {
+        let skewMs: Double
+        if deliveredHostTime >= scheduledHostTime {
+            let delta = deliveredHostTime - scheduledHostTime
+            skewMs = AVAudioTime.seconds(forHostTime: delta) * 1000.0
+        } else {
+            let delta = scheduledHostTime - deliveredHostTime
+            skewMs = -AVAudioTime.seconds(forHostTime: delta) * 1000.0
+        }
+
+        let absSkew = abs(skewMs)
+        let mark: String
+        if absSkew >= BeatSyncThresholds.criticalMs {
+            mark = " ⚠️16ms+"
+        } else if absSkew >= BeatSyncThresholds.warnMs {
+            mark = " ⚠️8ms+"
+        } else {
+            mark = ""
+        }
+
+        guard Self.beatSyncLogEnabled else { return }
+        guard !mark.isEmpty else { return }
+        print("[BeatSync] beat=\(beat) skew=\(String(format: "%.2f", skewMs))ms\(mark)")
+    }
+#endif
 
     private func currentBarIndexLocked() -> Int {
         let numerator = max(1, signature.numerator)
@@ -646,17 +922,31 @@ final class MetronomeEngine {
                 text = nil
             case .bars:
                 let total = max(1, trainingConfig.songLengthBars)
-                text = "\(min(currentBarIndexLocked(), total))/\(total) 마디"
+                text = String(
+                    format: String(localized: "metronome.training.status.bars.format"),
+                    min(currentBarIndexLocked(), total),
+                    total
+                )
             case .duration:
                 let remain = max(0, trainingConfig.songLengthDurationSeconds - Int(floor(elapsedSecondsLocked())))
                 let minPart = remain / 60
                 let secPart = remain % 60
-                text = "\(minPart):\(String(format: "%02d", secPart)) 남음"
+                text = String(
+                    format: String(localized: "metronome.training.status.remaining.format"),
+                    minPart,
+                    secPart
+                )
             }
         case .progressiveTempo:
-            text = trainingConfig.progressiveBasis == .off ? nil : "\(effectiveBPM) BPM"
+            text = nil  // BPM은 다이얼에서 직접 표시되므로 여기선 불필요
         case .mutePattern:
-            text = trainingConfig.muteBasis == .off ? nil : (isCurrentTrainingBarMutedLocked() ? "무음 구간" : "소리 구간")
+            text = trainingConfig.muteBasis == .off
+                ? nil
+                : String(
+                    localized: isCurrentTrainingBarMutedLocked()
+                        ? "metronome.training.mute.state.silent"
+                        : "metronome.training.mute.state.sound"
+                )
         }
         DispatchQueue.main.async { [weak self] in
             self?.onTrainingStatusChange?(text)

@@ -3,6 +3,10 @@ import SwiftUI
 struct TodayView: View {
     @EnvironmentObject private var dateStore: SelectedDateStore
     @EnvironmentObject private var tracksStore: PracticeTracksStore
+    @EnvironmentObject private var practiceDataStore: PracticeDataStore
+
+    @AppStorage("nickname") private var nickname = String(localized: "settings.nickname.default")
+    @AppStorage("avatar") private var avatarPath = ""
 
     @State private var isDatePickerPresented = false
     @State private var isAddSheetPresented = false
@@ -12,8 +16,9 @@ struct TodayView: View {
     @State private var pendingDeleteTrackId: Int?
     @State private var detailTrackId: Int?
     @State private var counterTrackId: Int?
-    @State private var counterDate: Date = .now
     @State private var isCounterPresented = false
+    @State private var shareCandidateRecords: [PracticeRecord] = []
+    @State private var isSharePickerPresented = false
 
     var body: some View {
         NavigationStack {
@@ -80,15 +85,30 @@ struct TodayView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        AppHaptics.tap()
-                        isDatePickerPresented = true
-                    } label: {
-                        Image(systemName: "calendar")
+                    HStack(spacing: 4) {
+                        // 공유 버튼
+                        Button {
+                            AppHaptics.tap()
+                            handleShareButtonTap()
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(hasRecordsForSelectedDate ? .primary : .tertiary)
+                        .disabled(!hasRecordsForSelectedDate)
+                        .hoverEffect(.lift)
+
+                        // 캘린더 버튼
+                        Button {
+                            AppHaptics.tap()
+                            isDatePickerPresented = true
+                        } label: {
+                            Image(systemName: "calendar")
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.primary)
+                        .hoverEffect(.lift)
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.primary)
-                    .hoverEffect(.lift)
                 }
             }
             .safeAreaInset(edge: .bottom) {
@@ -210,12 +230,10 @@ struct TodayView: View {
                 }
             }
             .navigationDestination(isPresented: $isCounterPresented) {
-                if let trackId = counterTrackId,
-                   let track = tracksStore.tracks.first(where: { $0.id == trackId }) {
-                    TrackCounterView(track: track, selectedDate: counterDate)
-                } else {
-                    Text("track.notFound")
-                }
+                TrackCounterView(trackId: counterTrackId)
+            }
+            .sheet(isPresented: $isSharePickerPresented) {
+                sharePickerSheet
             }
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
@@ -250,12 +268,109 @@ struct TodayView: View {
         }
     }
 
+    // MARK: - Share
+
+    private var selectedDateKey: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = .current
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: dateStore.selectedDate)
+    }
+
+    private var hasRecordsForSelectedDate: Bool {
+        !practiceDataStore.records(for: selectedDateKey).filter { $0.practiceTime > 0 }.isEmpty
+    }
+
+    private func handleShareButtonTap() {
+        let records = practiceDataStore.records(for: selectedDateKey).filter { $0.practiceTime > 0 }
+        guard !records.isEmpty else { return }
+        if records.count == 1 {
+            renderAndShare(record: records[0])
+        } else {
+            shareCandidateRecords = records
+            isSharePickerPresented = true
+        }
+    }
+
+    private func renderAndShare(record: PracticeRecord) {
+        guard let windowScene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }) else { return }
+
+        let image = ShareCardMaker.makeImage(
+            record: record,
+            nickname: nickname,
+            dateText: selectedDateText,
+            avatarPath: avatarPath
+        )
+        ShareCardMaker.present(image: image, from: window)
+    }
+
+    private func shareSessionTimeRange(for record: PracticeRecord) -> String {
+        let start = Date(timeIntervalSince1970: TimeInterval(record.startTime) / 1000)
+        let end = Date(timeIntervalSince1970: TimeInterval(record.endTime) / 1000)
+        return "\(start.formatted(date: .omitted, time: .shortened)) ~ \(end.formatted(date: .omitted, time: .shortened))"
+    }
+
+    private func formattedHoursMinutes(_ minutes: Int) -> String {
+        let h = minutes / 60
+        let m = minutes % 60
+        if h > 0 && m > 0 { return "\(h)시간 \(m)분" }
+        if h > 0 { return "\(h)시간" }
+        return "\(m)분"
+    }
+
+    private var sharePickerSheet: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(Array(shareCandidateRecords.enumerated()), id: \.element.id) { index, record in
+                        Button {
+                            AppHaptics.tap()
+                            isSharePickerPresented = false
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                                renderAndShare(record: record)
+                            }
+                        } label: {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("세션 \(index + 1) · \(formattedHoursMinutes(record.practiceTime))")
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.primary)
+                                Text(shareSessionTimeRange(for: record))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    }
+                } header: {
+                    Text("공유할 세션을 선택하세요")
+                }
+            }
+            .navigationTitle("공유")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("common.cancel") {
+                        AppHaptics.tap()
+                        isSharePickerPresented = false
+                    }
+                }
+            }
+        }
+        .presentationDetents([.fraction(0.4), .medium])
+    }
+
     private var deleteAlertTitle: String {
         guard let id = pendingDeleteTrackId,
               let track = tracksStore.tracks.first(where: { $0.id == id }) else {
-            return "\"이 곡\"을(를) 정말로 삭제하시겠습니까?"
+            return String(localized: "today.track.delete.confirm.default")
         }
-        return "\"\(track.title)\"을(를) 정말로 삭제하시겠습니까?"
+        return String(
+            format: String(localized: "today.track.delete.confirm.format"),
+            track.title
+        )
     }
 
     private func rowView(for track: PracticeTrack) -> some View {
@@ -286,7 +401,6 @@ struct TodayView: View {
             onOpenCounter: {
                 AppHaptics.tap()
                 counterTrackId = id
-                counterDate = dateStore.selectedDate
                 isCounterPresented = true
             },
             onIncrement: {

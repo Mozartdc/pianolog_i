@@ -9,7 +9,7 @@ struct WeeklyCalendarModule: View {
     var body: some View {
         VStack(spacing: 10) {
             HStack(spacing: 10) {
-                Button("오늘") {
+                Button(String(localized: "today.today")) {
                     AppHaptics.tap()
                     dateStore.selectedDate = .now
                 }
@@ -90,7 +90,7 @@ struct WeeklyCalendarModule: View {
         .sheet(isPresented: $isPickerPresented) {
             NavigationStack {
                 DatePicker(
-                    "날짜 선택",
+                    String(localized: "today.datePicker.title"),
                     selection: Binding(
                         get: { dateStore.selectedDate },
                         set: { dateStore.selectedDate = $0 }
@@ -99,11 +99,11 @@ struct WeeklyCalendarModule: View {
                 )
                 .datePickerStyle(.graphical)
                 .padding()
-                .navigationTitle("날짜 선택")
+                .navigationTitle("today.datePicker.title")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button("완료") {
+                        Button(String(localized: "common.done")) {
                             AppHaptics.tap()
                             isPickerPresented = false
                         }

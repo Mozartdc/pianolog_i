@@ -1,27 +1,27 @@
 import SwiftUI
 
 struct RootTabView: View {
-    private let tabIconPointSize: CGFloat = 12
+    @State private var selectedTab = 0
 
     var body: some View {
-        TabView {
+        TabView(selection: $selectedTab) {
             HomeView()
-                .tabItem {
-                    Image(systemName: "house")
-                        .font(.system(size: tabIconPointSize, weight: .regular))
-                }
+                .tabItem { Image(systemName: "house") }
+                .tag(0)
 
             TodayView()
-                .tabItem {
-                    Image(systemName: "music.note.square.stack")
-                        .font(.system(size: tabIconPointSize, weight: .regular))
-                }
+                .tabItem { Image(systemName: "music.note.square.stack") }
+                .tag(1)
+
+            NavigationStack {
+                TrackCounterView(trackId: nil)
+            }
+            .tabItem { Image(systemName: "plus.arrow.trianglehead.counterclockwise") }
+            .tag(2)
 
             MetronomeView()
-                .tabItem {
-                    Image(systemName: "metronome")
-                        .font(.system(size: tabIconPointSize, weight: .regular))
-                }
+                .tabItem { Image(systemName: "metronome") }
+                .tag(3)
         }
     }
 }

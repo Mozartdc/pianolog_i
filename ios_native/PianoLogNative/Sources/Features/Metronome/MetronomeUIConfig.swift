@@ -18,19 +18,19 @@ enum MetronomeUIConfig {
 
     static func layoutMetrics(for size: CGSize) -> LayoutMetrics {
         let reference = CGSize(width: 393, height: 852)
-        let scaleX = max(0.86, min(1.18, size.width / reference.width))
-        let scaleY = max(0.86, min(1.18, size.height / reference.height))
+        let scaleX = max(0.80, min(1.50, size.width / reference.width))
+        let scaleY = max(0.80, min(1.50, size.height / reference.height))
         let scale = min(scaleX, scaleY)
 
         return LayoutMetrics(
             topPadding: 30 * scale,
-            beatRowHeight: 54 * scale,
+            beatRowHeight: 88 * scale,
             beatToControlSpacing: 24 * scale,
             controlToInfoSpacing: 32 * scale,
             infoToDialSpacing: 46 * scale,
             trainingTextOffset: 22 * scale,
             contentHorizontalInset: 16 * scaleX,
-            dialContainerWidth: min(size.width - (24 * scaleX), 370 * scale),
+            dialContainerWidth: max(1, min(size.width - (24 * scaleX), 370 * scale)),
             dialContainerHeight: 294 * scale,
             tapTrailingInset: 18 * scaleX,
             tapBottomInset: 46 * scaleY

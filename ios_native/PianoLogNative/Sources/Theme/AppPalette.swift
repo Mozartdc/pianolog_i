@@ -30,8 +30,8 @@ enum AppPalette {
     static let metronomeTheme = Color(
         uiColor: UIColor { traits in
             traits.userInterfaceStyle == .dark
-                ? UIColor(red: 0.804, green: 0.357, blue: 0.271, alpha: 1.0) // #CD5B45
-                : UIColor(red: 0.953, green: 0.435, blue: 0.388, alpha: 1.0) // #F36F63
+                ? UIColor(red: 0.773, green: 0.875, blue: 0.043, alpha: 1.0) // #C5DF0B Sulphur Spring
+                : UIColor(red: 0.953, green: 0.435, blue: 0.388, alpha: 1.0) // #F36F63 Living Coral
         }
     )
 }

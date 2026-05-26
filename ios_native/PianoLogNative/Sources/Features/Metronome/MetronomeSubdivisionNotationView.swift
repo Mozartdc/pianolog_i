@@ -21,10 +21,11 @@ struct MetronomeSubdivisionNotationView: View {
                     maxWidth: MetronomeSubdivisionNotationView.commonMaxWidth
                 )
                 Image(uiImage: image)
-                    .renderingMode(.original)
+                    .renderingMode(.template)
                     .resizable()
                     .scaledToFit()
                     .frame(width: size.width, height: size.height)
+                    .foregroundStyle(.primary)
             } else {
                 Text(subdivision.description)
                     .font(.system(size: 12, weight: .semibold))
@@ -65,7 +66,7 @@ enum SubdivisionNotationAssetLibrary {
         }.compactMap { $0 }
 
         guard let image = candidates.lazy.compactMap({ loadPNG(at: $0) }).first else { return nil }
-        let rendered = image.withRenderingMode(.alwaysOriginal)
+        let rendered = image.withRenderingMode(.alwaysTemplate)
         lock.lock()
         cache[key] = rendered
         lock.unlock()

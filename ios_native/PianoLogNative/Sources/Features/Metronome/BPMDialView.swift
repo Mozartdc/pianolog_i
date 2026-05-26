@@ -56,10 +56,10 @@ struct BPMDialView: View {
                     .lineLimit(2)
 
                 Text("\(bpm)")
-                    .font(.system(size: 48, weight: .black, design: .rounded))
+                    .font(.system(size: 48, weight: .thin))
                     .monospacedDigit()
 
-                Text("bpm")
+                Text("metronome.dial.bpm")
                     .font(.system(size: 15, weight: .black))
                     .foregroundStyle(.secondary)
             }
@@ -241,22 +241,22 @@ struct BPMDialView: View {
 
     private func tempoMarking(for bpm: Int) -> String {
         switch bpm {
-        case ...24: return "Larghissimo"
-        case ...40: return "Grave"
-        case ...60: return "Largo"
-        case ...66: return "Larghetto"
-        case ...72: return "Adagio"
-        case ...76: return "Adagietto"
-        case ...80: return "Andante"
-        case ...92: return "Andantino"
-        case ...108: return "Andante moderato"
-        case ...112: return "Moderato"
-        case ...120: return "Allegretto"
-        case ...168: return "Allegro"
-        case ...172: return "Vivace"
-        case ...176: return "Vivacissimo"
-        case ...200: return "Presto"
-        default: return "Prestissimo"
+        case ...24: return String(localized: "metronome.dial.marking.larghissimo")
+        case ...40: return String(localized: "metronome.dial.marking.grave")
+        case ...60: return String(localized: "metronome.dial.marking.largo")
+        case ...66: return String(localized: "metronome.dial.marking.larghetto")
+        case ...72: return String(localized: "metronome.dial.marking.adagio")
+        case ...76: return String(localized: "metronome.dial.marking.adagietto")
+        case ...80: return String(localized: "metronome.dial.marking.andante")
+        case ...92: return String(localized: "metronome.dial.marking.andantino")
+        case ...108: return String(localized: "metronome.dial.marking.andanteModerato")
+        case ...112: return String(localized: "metronome.dial.marking.moderato")
+        case ...120: return String(localized: "metronome.dial.marking.allegretto")
+        case ...168: return String(localized: "metronome.dial.marking.allegro")
+        case ...172: return String(localized: "metronome.dial.marking.vivace")
+        case ...176: return String(localized: "metronome.dial.marking.vivacissimo")
+        case ...200: return String(localized: "metronome.dial.marking.presto")
+        default: return String(localized: "metronome.dial.marking.prestissimo")
         }
     }
 }

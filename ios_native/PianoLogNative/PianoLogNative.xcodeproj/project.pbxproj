@@ -16,7 +16,7 @@
 		11536A919342FB0ACCB28512 /* MetronomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1920C4F31854174FDF5410B7 /* MetronomeView.swift */; };
 		11BDC54AC44DFB3D2460F9C8 /* SelectedDateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D5D185F8549866F623F23AD /* SelectedDateStore.swift */; };
 		12DDFF47B2B928E4DB0D04A1 /* quarter_half_quarter_d2.pdf in Resources */ = {isa = PBXBuildFile; fileRef = D453283AC6B049B8D94A017C /* quarter_half_quarter_d2.pdf */; };
-		149E06EE5B26F3E9212E7453 /* LiveActivityAppIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 990851F920C860B83652694F /* LiveActivityAppIcon.png */; };
+		0E740C87EE55424F88BB9562 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A08E506B315F4335840AD3EF /* Assets.xcassets */; };
 		18952EF5B86A766C19C65BBA /* rest_plus_half_d8.png in Resources */ = {isa = PBXBuildFile; fileRef = AD3BB6AE69649564D2DC2290 /* rest_plus_half_d8.png */; };
 		198C467540C8CCF972C48F15 /* AppPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEFF9D6784C30FB99AA8A6F9 /* AppPalette.swift */; };
 		19EEE3008395C8DD252CE98C /* four_parts_B_d8.png in Resources */ = {isa = PBXBuildFile; fileRef = 1A4978B446986F9FEBC622D5 /* four_parts_B_d8.png */; };
@@ -47,6 +47,7 @@
 		3DCE02C0A74AC3A1AD87CE89 /* triplet_rest_middle_d4.png in Resources */ = {isa = PBXBuildFile; fileRef = 13701119B0B5D9E575D93E62 /* triplet_rest_middle_d4.png */; };
 		3E7E7CDD03AD0316A6A21B0F /* triplet_d4.png in Resources */ = {isa = PBXBuildFile; fileRef = ACE6DFCAB7FA6301E6BC6D4E /* triplet_d4.png */; };
 		411FFD9CDF21F6659323DDBF /* triplet_rest_middle_d2.png in Resources */ = {isa = PBXBuildFile; fileRef = EE89BEA650B96BE1BC23F0BA /* triplet_rest_middle_d2.png */; };
+		485812D5B108E407824629EB /* HomeSettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9CEA3BFF86ABCC59FB5CF7B /* HomeSettingsSheet.swift */; };
 		4A60C190421D1C90C6711420 /* one_beat_d4.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 187D03911ABB79A36007C86E /* one_beat_d4.pdf */; };
 		4DC2E7970667E5BC95E990E4 /* TrackCounterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8571AB8C9A33CF18756F8F8C /* TrackCounterView.swift */; };
 		4E4ADD9DCABD0CBAF77CC062 /* dotted_half_quarter_d1.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 6ACDAD92CE6C376E7F53BA63 /* dotted_half_quarter_d1.pdf */; };
@@ -60,6 +61,11 @@
 		54EA1D004E04D2E00958A46E /* quarter_quarter_half_d1.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 613FF3A5A05DED1091CB6D27 /* quarter_quarter_half_d1.pdf */; };
 		552AD59129E32EA3689E3480 /* quarter_quarter_half_d2.png in Resources */ = {isa = PBXBuildFile; fileRef = 2F4D16B7EE251F715A503FBC /* quarter_quarter_half_d2.png */; };
 		58B3A9341C4B2B0EE3F9A89A /* MetronomeLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B5C4F388E519F79793B76B /* MetronomeLiveActivityAttributes.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* PracticeTimerLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6071829A3B4C5D6 /* PracticeTimerLiveActivityAttributes.swift */; };
+		C3D4E5F6071829A3B4C5D6E7 /* PracticeTimerLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6071829A3B4C5D6 /* PracticeTimerLiveActivityAttributes.swift */; };
+		AA11BB22CC33DD44EE55FF66 /* PianoLogActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF6600AA /* PianoLogActivityAttributes.swift */; };
+		CC33DD44EE55FF6600AABB22 /* PianoLogActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB22CC33DD44EE55FF6600AA /* PianoLogActivityAttributes.swift */; };
+		D4E5F6071829A3B4C5D6E7F8 /* PracticeTimerLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F6071829A3B4C5D6E7F809 /* PracticeTimerLiveActivityWidget.swift */; };
 		58BFEE47FF68AEAECD83CA43 /* rest_plus_half_d4.png in Resources */ = {isa = PBXBuildFile; fileRef = E733CDC4DBD373F3D92C7914 /* rest_plus_half_d4.png */; };
 		5C509A537E85DC48574759B3 /* triplet_rest_edges_d2.png in Resources */ = {isa = PBXBuildFile; fileRef = 8DDB2309AA17D86F80425073 /* triplet_rest_edges_d2.png */; };
 		5E10762FDB12A2C8AF1462C7 /* one_beat_d8.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 17A1036EB8B70E46D6FDA497 /* one_beat_d8.pdf */; };
@@ -74,6 +80,7 @@
 		75430FC6557701F20C4ABEAB /* four_parts_A_d2.png in Resources */ = {isa = PBXBuildFile; fileRef = CD08204841F8B7BCB193E2DF /* four_parts_A_d2.png */; };
 		77C08276E60F334DF1C04DDA /* MetronomeLiveActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3B5C4F388E519F79793B76B /* MetronomeLiveActivityAttributes.swift */; };
 		78511C02CCC5984277885324 /* one_beat_d1.png in Resources */ = {isa = PBXBuildFile; fileRef = F7EDE96994612994F87D10E4 /* one_beat_d1.png */; };
+		792A00F112CA1E77585C2B21 /* StatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 348B25996504DC177A815C57 /* StatsView.swift */; };
 		7993A04283ACBA6FCDAF90C4 /* triplet_rest_last_d4.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 855A22A74D7F768F96491C9C /* triplet_rest_last_d4.pdf */; };
 		79BC1D46B67301DAD637E312 /* triplet_rest_last_d2.pdf in Resources */ = {isa = PBXBuildFile; fileRef = C601680E54D62BF8DA97F07E /* triplet_rest_last_d2.pdf */; };
 		7C40416DD7D024A721AF85FA /* MetronomeLiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87CA7B2E1024D7248B0C4C1B /* MetronomeLiveActivityWidget.swift */; };
@@ -103,6 +110,7 @@
 		957603DAD281838CC84EE8A7 /* four_parts_B_d4.pdf in Resources */ = {isa = PBXBuildFile; fileRef = C2526924EB0E1A4D08219ADF /* four_parts_B_d4.pdf */; };
 		969E2F291D5D0BB986AE9333 /* quarter_quarter_half_d8.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 11E579746585013FEB0421D0 /* quarter_quarter_half_d8.pdf */; };
 		97A9D7C74A11B89EB38C0870 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8A1CB7AB931B779C2B005481 /* Localizable.strings */; };
+		FA1B2C3D4E5F607182930001 /* Localizable.strings in Resources (LiveActivity) */ = {isa = PBXBuildFile; fileRef = 8A1CB7AB931B779C2B005481 /* Localizable.strings */; };
 		98797CB46699A22A2EDEB632 /* rest_plus_half_d8.pdf in Resources */ = {isa = PBXBuildFile; fileRef = 4C30937C954A2643E52582C4 /* rest_plus_half_d8.pdf */; };
 		9AA65CF68C8F098C1329352A /* four_parts_B_d2.png in Resources */ = {isa = PBXBuildFile; fileRef = 367C99BFB3BCDDF47A9866F8 /* four_parts_B_d2.png */; };
 		9AF5B4D065497B4189904BF2 /* triplet_rest_last_d1.png in Resources */ = {isa = PBXBuildFile; fileRef = B27CE33EA342C255122364EF /* triplet_rest_last_d1.png */; };
@@ -225,6 +233,7 @@
 		301812859F41141DFC75B6CC /* triplet_rest_edges_d4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = triplet_rest_edges_d4.png; sourceTree = "<group>"; };
 		3184C2D4F530A5707CA38869 /* triplet_rest_edges_d4.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = triplet_rest_edges_d4.pdf; sourceTree = "<group>"; };
 		342DF35B0F1D63A373ED2C03 /* quarter_dotted_half_d4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = quarter_dotted_half_d4.png; sourceTree = "<group>"; };
+		348B25996504DC177A815C57 /* StatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsView.swift; sourceTree = "<group>"; };
 		354728E8B44242CE5558FCD6 /* four_parts_A_d8.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = four_parts_A_d8.png; sourceTree = "<group>"; };
 		35C46E9AC0C53BB096FE3FAD /* half_quarter_quarter_d1.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = half_quarter_quarter_d1.pdf; sourceTree = "<group>"; };
 		35F40E4551DBD2EF8AD12337 /* one_beat_d1.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = one_beat_d1.pdf; sourceTree = "<group>"; };
@@ -294,7 +303,7 @@
 		8F7FC6DFECE6C264945A0A4D /* half_quarter_quarter_d8.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = half_quarter_quarter_d8.pdf; sourceTree = "<group>"; };
 		958B1107AE3FEAA13BC1645E /* quarter_quarter_half_d4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = quarter_quarter_half_d4.png; sourceTree = "<group>"; };
 		964ACCD29A203B6E1F1A3E41 /* triplet_rest_last_d8.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = triplet_rest_last_d8.pdf; sourceTree = "<group>"; };
-		990851F920C860B83652694F /* LiveActivityAppIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = LiveActivityAppIcon.png; sourceTree = "<group>"; };
+		A08E506B315F4335840AD3EF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Sources/App/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		9C3DF111CAFCD375CA39C658 /* two_parts_d4.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = two_parts_d4.pdf; sourceTree = "<group>"; };
 		9FCB7153A48A5AE519537E3F /* WeeklyCalendarModule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyCalendarModule.swift; sourceTree = "<group>"; };
 		A609E3D6B483CD94C224E37C /* quarter_dotted_half_d8.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = quarter_dotted_half_d8.pdf; sourceTree = "<group>"; };
@@ -342,6 +351,7 @@
 		E733CDC4DBD373F3D92C7914 /* rest_plus_half_d4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = rest_plus_half_d4.png; sourceTree = "<group>"; };
 		E90BBF1CDE10EF7B720848E0 /* triplet_rest_first_d1.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = triplet_rest_first_d1.pdf; sourceTree = "<group>"; };
 		E98E06D45B94A4E36BEF4385 /* two_parts_d4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = two_parts_d4.png; sourceTree = "<group>"; };
+		E9CEA3BFF86ABCC59FB5CF7B /* HomeSettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeSettingsSheet.swift; sourceTree = "<group>"; };
 		EA727C3BEAEC38B3D6D8529E /* quarter_quarter_half_d8.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = quarter_quarter_half_d8.png; sourceTree = "<group>"; };
 		EA865D2AAD15B0021556291F /* dotted_half_quarter_d4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dotted_half_quarter_d4.png; sourceTree = "<group>"; };
 		EABAEC5F2D27B67C66A172CC /* triplet_rest_middle_d8.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = triplet_rest_middle_d8.png; sourceTree = "<group>"; };
@@ -350,6 +360,9 @@
 		EEE0A6510F021C24DDCE755D /* triplet_rest_middle_d2.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = triplet_rest_middle_d2.pdf; sourceTree = "<group>"; };
 		F17A3713937B88A7E2E0E6B2 /* quarter_half_quarter_d4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = quarter_half_quarter_d4.png; sourceTree = "<group>"; };
 		F3B5C4F388E519F79793B76B /* MetronomeLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetronomeLiveActivityAttributes.swift; sourceTree = "<group>"; };
+		B2C3D4E5F6071829A3B4C5D6 /* PracticeTimerLiveActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeTimerLiveActivityAttributes.swift; sourceTree = "<group>"; };
+		BB22CC33DD44EE55FF6600AA /* PianoLogActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PianoLogActivityAttributes.swift; sourceTree = "<group>"; };
+		E5F6071829A3B4C5D6E7F809 /* PracticeTimerLiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeTimerLiveActivityWidget.swift; sourceTree = "<group>"; };
 		F5A8D27D5DD3EB198FA6F65D /* one_beat_d2.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = one_beat_d2.pdf; sourceTree = "<group>"; };
 		F5C6DDF4E0E60550AC21CFA2 /* half_quarter_quarter_d8.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = half_quarter_quarter_d8.png; sourceTree = "<group>"; };
 		F6182497AB2F0334EDF5F364 /* quarter_quarter_half_d2.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = quarter_quarter_half_d2.pdf; sourceTree = "<group>"; };
@@ -368,6 +381,7 @@
 				C1733F73F137892BDF5E3702 /* Calendar */,
 				5E64D4ABD9705C8887FA1CC9 /* Home */,
 				B6225011E5442325DF755D8E /* Metronome */,
+				7F5536403D6898702AB662D6 /* Stats */,
 				E83CA9122FB18953514D64EA /* Today */,
 			);
 			path = Features;
@@ -386,6 +400,7 @@
 		5E64D4ABD9705C8887FA1CC9 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				E9CEA3BFF86ABCC59FB5CF7B /* HomeSettingsSheet.swift */,
 				8BEBE18C4DBA1ABA9610D0FD /* HomeView.swift */,
 			);
 			path = Home;
@@ -402,6 +417,14 @@
 				FF0100B5BD7F89C99F6A4644 /* Theme */,
 			);
 			path = Sources;
+			sourceTree = "<group>";
+		};
+		7F5536403D6898702AB662D6 /* Stats */ = {
+			isa = PBXGroup;
+			children = (
+				348B25996504DC177A815C57 /* StatsView.swift */,
+			);
+			path = Stats;
 			sourceTree = "<group>";
 		};
 		95FC01FA12FA9AD408631ECA /* Products */ = {
@@ -584,9 +607,9 @@
 			isa = PBXGroup;
 			children = (
 				2A1989FE2AFF5903EA446763 /* Info.plist */,
-				990851F920C860B83652694F /* LiveActivityAppIcon.png */,
 				87CA7B2E1024D7248B0C4C1B /* MetronomeLiveActivityWidget.swift */,
 				3C6BD8B3ACC952772FBD4A63 /* PianoLogNativeLiveActivityBundle.swift */,
+				E5F6071829A3B4C5D6E7F809 /* PracticeTimerLiveActivityWidget.swift */,
 			);
 			name = LiveActivityExtension;
 			path = Sources/LiveActivityExtension;
@@ -598,6 +621,7 @@
 				575E50CC55261CB9299D3FA6 /* FontBootstrap.swift */,
 				6B2DC75532797D0CB13DDA68 /* PianoLogNativeApp.swift */,
 				3D9688088779BAE6660C8219 /* RootTabView.swift */,
+				A08E506B315F4335840AD3EF /* Assets.xcassets */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -607,9 +631,11 @@
 			children = (
 				67229E9B4AE10D20EFCE7E36 /* AppHaptics.swift */,
 				F3B5C4F388E519F79793B76B /* MetronomeLiveActivityAttributes.swift */,
+				BB22CC33DD44EE55FF6600AA /* PianoLogActivityAttributes.swift */,
 				B6973CE5371120DBCAFC102E /* PracticeDataStore.swift */,
 				E6160DF141394436C9C46950 /* PracticeTracksStore.swift */,
 				4D5D185F8549866F623F23AD /* SelectedDateStore.swift */,
+				B2C3D4E5F6071829A3B4C5D6 /* PracticeTimerLiveActivityAttributes.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -746,6 +772,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0E740C87EE55424F88BB9562 /* Assets.xcassets in Resources */,
 				9C995752400ADDD52BD7AE09 /* Bravura.otf in Resources */,
 				97A9D7C74A11B89EB38C0870 /* Localizable.strings in Resources */,
 				9D2AEC67AE1A5255DBAD9D0D /* METRONOME_REGRESSION_CHECKLIST.md in Resources */,
@@ -885,7 +912,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				149E06EE5B26F3E9212E7453 /* LiveActivityAppIcon.png in Resources */,
+				FA1B2C3D4E5F607182930001 /* Localizable.strings in Resources (LiveActivity) */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -901,10 +928,13 @@
 				345718D98883FF9831939DC1 /* BPMDialView.swift in Sources */,
 				CF279356232D49354E3C645E /* BeatVisualizerView.swift in Sources */,
 				676BBC8315E442FA0AA89927 /* FontBootstrap.swift in Sources */,
+				485812D5B108E407824629EB /* HomeSettingsSheet.swift in Sources */,
 				952C7A31E8E727BE6B4FF049 /* HomeView.swift in Sources */,
 				2DB6797D93D576D643665380 /* MetronomeControlRowView.swift in Sources */,
 				0AD8AECE55550BE88F9A60D5 /* MetronomeEngine.swift in Sources */,
 				77C08276E60F334DF1C04DDA /* MetronomeLiveActivityAttributes.swift in Sources */,
+				AA11BB22CC33DD44EE55FF66 /* PianoLogActivityAttributes.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* PracticeTimerLiveActivityAttributes.swift in Sources */,
 				D70D4E40CE69E1081E1F007A /* MetronomeStore.swift in Sources */,
 				9F486115478A0A5859E211F6 /* MetronomeSubdivisionNotationView.swift in Sources */,
 				810C850DBBEB16440F4709A3 /* MetronomeUIConfig.swift in Sources */,
@@ -915,6 +945,7 @@
 				520E70D68382B3C04F385CF8 /* PracticeTracksStore.swift in Sources */,
 				1A8118CC273F957A1235A0BE /* RootTabView.swift in Sources */,
 				11BDC54AC44DFB3D2460F9C8 /* SelectedDateStore.swift in Sources */,
+				792A00F112CA1E77585C2B21 /* StatsView.swift in Sources */,
 				CC14C844CE22784C8468C018 /* SystemPracticeCalendarView.swift in Sources */,
 				3BED17505FFD08C17D1872E8 /* TodayView.swift in Sources */,
 				4DC2E7970667E5BC95E990E4 /* TrackCounterView.swift in Sources */,
@@ -928,8 +959,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				58B3A9341C4B2B0EE3F9A89A /* MetronomeLiveActivityAttributes.swift in Sources */,
+				CC33DD44EE55FF6600AABB22 /* PianoLogActivityAttributes.swift in Sources */,
 				7C40416DD7D024A721AF85FA /* MetronomeLiveActivityWidget.swift in Sources */,
 				517AD2D6113237DB19B3A7BA /* PianoLogNativeLiveActivityBundle.swift in Sources */,
+				C3D4E5F6071829A3B4C5D6E7 /* PracticeTimerLiveActivityAttributes.swift in Sources */,
+				D4E5F6071829A3B4C5D6E7F8 /* PracticeTimerLiveActivityWidget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

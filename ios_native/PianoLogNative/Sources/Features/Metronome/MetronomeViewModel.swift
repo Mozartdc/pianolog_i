@@ -1,7 +1,72 @@
 import Foundation
+import SwiftUI
 import UIKit
 import Combine
-import MediaPlayer
+import AVFoundation
+
+@MainActor
+final class MetronomeBeatState: ObservableObject {
+    @Published var activeBeat: Int = 0
+    @Published var beatTick: Int = 0
+    @Published var pulseDuration: Double = 0.10
+    @Published var flashPulseOpacity: Double = 0
+
+    func reset() {
+        activeBeat = 0
+        beatTick = 0
+        pulseDuration = 0.10
+        flashPulseOpacity = 0
+    }
+}
+
+private struct ScheduledBeatEvent {
+    let beat: Int
+    let scheduledHostTime: UInt64
+    let deliveredHostTime: UInt64
+}
+
+private final class BeatEventBuffer {
+    private let lock = NSLock()
+    private var events: [ScheduledBeatEvent] = []
+
+    func append(_ event: ScheduledBeatEvent) {
+        lock.lock()
+        events.append(event)
+        lock.unlock()
+    }
+
+    func drain(through hostTime: UInt64) -> [ScheduledBeatEvent] {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !events.isEmpty else { return [] }
+        var consumed = 0
+        while consumed < events.count, events[consumed].scheduledHostTime <= hostTime {
+            consumed += 1
+        }
+        guard consumed > 0 else { return [] }
+        let drained = Array(events.prefix(consumed))
+        events.removeFirst(consumed)
+        return drained
+    }
+
+    func clear() {
+        lock.lock()
+        events.removeAll(keepingCapacity: true)
+        lock.unlock()
+    }
+}
+
+private final class DisplayLinkProxy: NSObject {
+    let onTick: () -> Void
+
+    init(onTick: @escaping () -> Void) {
+        self.onTick = onTick
+    }
+
+    @objc func tick(_ sender: CADisplayLink) {
+        onTick()
+    }
+}
 
 @MainActor
 final class MetronomeViewModel: ObservableObject {
@@ -38,7 +103,7 @@ final class MetronomeViewModel: ObservableObject {
     struct ActiveSession: Equatable {
         var source: SessionSource = .none
         var id: String?
-        var title: String = "Practice Session"
+        var title: String = String(localized: "metronome.session.defaultTitle")
         var hasStoredConfig: Bool = false
         var baseline: SessionBaseline?
     }
@@ -65,11 +130,11 @@ final class MetronomeViewModel: ObservableObject {
     @Published var store = MetronomeStore()
     @Published var activeSession = ActiveSession()
     @Published var trainingStatusText: String?
-    @Published var flashPulseOpacity: Double = 0
     @Published var savedSessions: [MetronomeSession] = []
     @Published var trackSettings: [String: TrackMetronomeSetting] = [:]
     @Published var libraryItems: [LibraryItem] = []
     @Published var hasUnsavedSessionChange: Bool = true
+    let beatState = MetronomeBeatState()
 
     private var engine: MetronomeEngine?
     private var taps: [Date] = []
@@ -77,17 +142,48 @@ final class MetronomeViewModel: ObservableObject {
     private let savedSessionsKey = "metronome.saved.sessions.v2"
     private let trackSettingsKey = "metronome.track.settings.v2"
     private let lastViewedKey = "metronome.last.viewed.session.v2"
+    private let userPreferencesKey = "metronome.user.preferences.v1"
     private var didResolveLastViewed = false
     private var foregroundObserver: NSObjectProtocol?
     private var backgroundObserver: NSObjectProtocol?
+    private var activeObserver: NSObjectProtocol?
+    private var inactiveObserver: NSObjectProtocol?
     private var storeChangeCancellable: AnyCancellable?
+    private var preferencesSaveCancellable: AnyCancellable?
     private let nowPlaying = MetronomeNowPlayingController()
+    private let beatEventBuffer = BeatEventBuffer()
+    private var beatDisplayLink: CADisplayLink?
+    private var beatDisplayLinkProxy: DisplayLinkProxy?
+    private var lastVisualizedScheduledHostTime: UInt64 = 0
 
     init() {
+        // 사용자 환경설정 복원 (동기 로드 — 경량 UserDefaults 읽기)
+        let prefs = Self.loadUserPreferences(key: userPreferencesKey)
+        store.soundPreset = prefs.soundPreset
+        store.soundEnabled = prefs.soundEnabled
+        store.soundVolume = prefs.soundVolume
+        store.accentGain = prefs.accentGain
+        store.flashEnabled = prefs.flashEnabled
+
         storeChangeCancellable = store.objectWillChange
+            .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.objectWillChange.send()
             }
+
+        // 환경설정 관련 속성 변경 시 debounce 후 저장.
+        // 불필요한 쓰기를 줄이기 위해 300ms 디바운스를 사용한다.
+        preferencesSaveCancellable = Publishers.MergeMany([
+            store.$flashEnabled.map { _ in }.eraseToAnyPublisher(),
+            store.$soundPreset.map { _ in }.eraseToAnyPublisher(),
+            store.$soundEnabled.map { _ in }.eraseToAnyPublisher(),
+            store.$soundVolume.map { _ in }.eraseToAnyPublisher(),
+            store.$accentGain.map { _ in }.eraseToAnyPublisher()
+        ])
+        .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
+        .sink { [weak self] in
+            self?.saveUserPreferences()
+        }
 
         nowPlaying.onPlayRequested = { [weak self] in
             Task { @MainActor in
@@ -107,13 +203,13 @@ final class MetronomeViewModel: ObservableObject {
             }
         }
 
-
         backgroundObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didEnterBackgroundNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
+                self?.engine?.setUIUpdatesEnabled(false)
                 self?.engine?.setApplicationBackgroundState(true)
             }
         }
@@ -125,7 +221,31 @@ final class MetronomeViewModel: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor in
                 self?.engine?.setApplicationBackgroundState(false)
-                self?.engine?.recoverAfterInterruption()
+                // recoverAfterInterruption은 여기서 호출하지 않는다.
+                // 실제 인터럽션(전화, Siri 등)은 MetronomeEngine.interruptionObserver가 처리한다.
+                // 포그라운드 복귀마다 무조건 호출하면 재생 중인 스케줄을 리셋해
+                // 소리 겹침·깜빡임 불일치를 유발한다.
+                self?.engine?.setUIUpdatesEnabled(true)
+            }
+        }
+
+        activeObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.engine?.setUIUpdatesEnabled(true)
+            }
+        }
+
+        inactiveObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.engine?.setUIUpdatesEnabled(false)
             }
         }
 
@@ -147,11 +267,20 @@ final class MetronomeViewModel: ObservableObject {
     }
 
     deinit {
+        beatDisplayLink?.invalidate()
+        beatDisplayLink = nil
+        beatDisplayLinkProxy = nil
         if let backgroundObserver {
             NotificationCenter.default.removeObserver(backgroundObserver)
         }
         if let foregroundObserver {
             NotificationCenter.default.removeObserver(foregroundObserver)
+        }
+        if let activeObserver {
+            NotificationCenter.default.removeObserver(activeObserver)
+        }
+        if let inactiveObserver {
+            NotificationCenter.default.removeObserver(inactiveObserver)
         }
         nowPlaying.clear()
     }
@@ -192,9 +321,15 @@ final class MetronomeViewModel: ObservableObject {
             // UI 상태를 즉시 내리고 엔진 중지는 비동기로 수행한다.
             store.isPlaying = false
             engine.stop()
-            store.currentBeat = -1
+            stopBeatDisplayLink()
+            beatEventBuffer.clear()
+            lastVisualizedScheduledHostTime = 0
+            beatState.reset()
         } else {
-            store.currentBeat = -1
+            beatState.reset()
+            beatEventBuffer.clear()
+            lastVisualizedScheduledHostTime = 0
+            startBeatDisplayLinkIfNeeded()
             // UI 상태를 즉시 올려 아이콘 상태 레이스를 제거한다.
             store.isPlaying = true
             engine.start(
@@ -207,6 +342,19 @@ final class MetronomeViewModel: ObservableObject {
             )
         }
         syncNowPlaying()
+        postMetronomeStateChange()
+    }
+
+    func onViewAppear() {
+        guard store.isPlaying else { return }
+        beatEventBuffer.clear()
+        lastVisualizedScheduledHostTime = 0
+        startBeatDisplayLinkIfNeeded()
+    }
+
+    func onViewDisappear() {
+        stopBeatDisplayLink()
+        beatEventBuffer.clear()
     }
 
     func onConfigChanged() {
@@ -214,6 +362,13 @@ final class MetronomeViewModel: ObservableObject {
             evaluateUnsavedChange()
             syncNowPlaying()
             return
+        }
+        // Subdivision/signature/pattern 변경 시 이전 beat 이벤트를 모두 버린다.
+        // 버퍼에 남은 구 패턴 인덱스가 새 패턴과 섞이면 시각/음향이 따로 논다.
+        if store.isPlaying {
+            beatEventBuffer.clear()
+            lastVisualizedScheduledHostTime = 0
+            beatState.reset()
         }
         engine.updateConfig(
             bpm: store.bpm,
@@ -225,6 +380,7 @@ final class MetronomeViewModel: ObservableObject {
         )
         evaluateUnsavedChange()
         syncNowPlaying()
+        if store.isPlaying { postMetronomeStateChange() }
     }
 
     func setTimeSignature(_ signature: TimeSignature) {
@@ -246,11 +402,11 @@ final class MetronomeViewModel: ObservableObject {
         let now = Date()
         taps.append(now)
         taps = taps.filter { now.timeIntervalSince($0) <= 3.0 }
-        if taps.count < 2 { return "계속 탭하십시오" }
+        if taps.count < 2 { return String(localized: "metronome.taptempo.keepTapping") }
 
         let intervals = zip(taps.dropFirst(), taps).map { $0.timeIntervalSince($1) }
         let average = intervals.reduce(0, +) / Double(intervals.count)
-        guard average > 0 else { return "계속 탭하십시오" }
+        guard average > 0 else { return String(localized: "metronome.taptempo.keepTapping") }
         let bpm = Int(round(60.0 / average))
         store.setBpm(bpm)
         onConfigChanged()
@@ -347,7 +503,12 @@ final class MetronomeViewModel: ObservableObject {
             activeSession.hasStoredConfig = true
             persistLastViewed(.saved, id: uuid.uuidString)
         } else {
-            let fallback = trimmed.isEmpty ? "세션 \(DateFormatter.localizedString(from: now, dateStyle: .short, timeStyle: .short))" : trimmed
+            let fallback = trimmed.isEmpty
+                ? String(
+                    format: String(localized: "metronome.session.fallback.format"),
+                    DateFormatter.localizedString(from: now, dateStyle: .short, timeStyle: .short)
+                )
+                : trimmed
             let newSaved = MetronomeSession(
                 id: UUID(),
                 title: fallback,
@@ -517,9 +678,11 @@ final class MetronomeViewModel: ObservableObject {
         )
     }
 
-    private func triggerFlash(for beat: Int) {
+    private func triggerFlash(for beat: Int, durationHint: Double? = nil) {
         guard store.flashEnabled else {
-            flashPulseOpacity = 0
+            if beatState.flashPulseOpacity != 0 {
+                beatState.flashPulseOpacity = 0
+            }
             return
         }
 
@@ -529,12 +692,19 @@ final class MetronomeViewModel: ObservableObject {
         case .accent: peak = 0.32
         case .strong: peak = 0.24
         case .weak: peak = 0.15
-        case .silent: peak = 0.0
+        case .silent: return  // silent beat → flash 없음
         }
 
-        flashPulseOpacity = peak
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.08) { [weak self] in
-            self?.flashPulseOpacity = 0
+        let fadeDuration = max(0.03, min(0.12, durationHint ?? 0.08))
+        // peak를 현재 run loop에서 즉시 렌더한 뒤,
+        // 다음 run loop에서 0으로 fade out한다.
+        // withAnimation과 같은 run loop에서 peak를 설정하면 SwiftUI가 두 변경을
+        // 합쳐 peak를 렌더링하지 않으므로 반드시 비동기로 분리해야 한다.
+        beatState.flashPulseOpacity = peak
+        DispatchQueue.main.async { [weak self] in
+            withAnimation(.easeOut(duration: fadeDuration)) {
+                self?.beatState.flashPulseOpacity = 0
+            }
         }
     }
 
@@ -543,18 +713,24 @@ final class MetronomeViewModel: ObservableObject {
             return engine
         }
         let engine = MetronomeEngine()
-        engine.onBeatChange = { [weak self] beat in
-            guard let self else { return }
-            // Update active beat first so the pulse consumer reads the correct beat
-            // in the same callback turn.
-            self.store.currentBeat = beat
-            self.store.beatTick &+= 1
-            self.triggerFlash(for: beat)
+        let beatBuffer = beatEventBuffer
+        engine.onBeatChange = { beat, scheduledHostTime, deliveredHostTime in
+            beatBuffer.append(
+                ScheduledBeatEvent(
+                    beat: beat,
+                    scheduledHostTime: scheduledHostTime,
+                    deliveredHostTime: deliveredHostTime
+                )
+            )
         }
         engine.onStop = { [weak self, weak engine] in
             guard let self, let engine else { return }
             if !engine.isPlayingNow {
                 self.store.isPlaying = false
+                self.stopBeatDisplayLink()
+                self.beatEventBuffer.clear()
+                self.lastVisualizedScheduledHostTime = 0
+                self.beatState.reset()
                 self.syncNowPlaying()
             }
         }
@@ -563,6 +739,100 @@ final class MetronomeViewModel: ObservableObject {
         }
         self.engine = engine
         return engine
+    }
+
+    private func startBeatDisplayLinkIfNeeded() {
+        guard beatDisplayLink == nil else { return }
+        let proxy = DisplayLinkProxy { [weak self] in
+            // CADisplayLink는 main thread에서 호출되므로 MainActor.assumeIsolated로
+            // Task 없이 동기 실행한다. Task { @MainActor in }은 최소 1 run loop 지연이
+            // 발생해 flash가 한 프레임 늦어지고 소리와 시각적 타이밍이 어긋난다.
+            MainActor.assumeIsolated {
+                self?.drainBeatEventsForCurrentFrame()
+            }
+        }
+        let link = CADisplayLink(target: proxy, selector: #selector(DisplayLinkProxy.tick(_:)))
+        link.add(to: .main, forMode: .common)
+        beatDisplayLinkProxy = proxy
+        beatDisplayLink = link
+    }
+
+    private func stopBeatDisplayLink() {
+        beatDisplayLink?.invalidate()
+        beatDisplayLink = nil
+        beatDisplayLinkProxy = nil
+    }
+
+    private func drainBeatEventsForCurrentFrame() {
+        guard store.isPlaying else { return }
+        let nowHost = mach_absolute_time()
+        let dueEvents = beatEventBuffer.drain(through: nowHost)
+        guard !dueEvents.isEmpty else { return }
+        for event in dueEvents {
+            processDueBeatEvent(event, nowHost: nowHost)
+        }
+    }
+
+    private func processDueBeatEvent(_ event: ScheduledBeatEvent, nowHost: UInt64) {
+        if event.scheduledHostTime <= lastVisualizedScheduledHostTime {
+            return
+        }
+        lastVisualizedScheduledHostTime = event.scheduledHostTime
+
+        let beatCount = max(1, store.beatPattern.count)
+        let beatDuration = (60.0 / Double(max(1, store.bpm)))
+            * (4.0 / Double(max(1, store.timeSignature.denominator)))
+
+        let baseDisplayBeat = ((event.beat % beatCount) + beatCount) % beatCount
+        var displayBeat = baseDisplayBeat
+        var phaseDelaySeconds = 0.0
+        if nowHost > event.scheduledHostTime, beatDuration > 0 {
+            let lagHost = nowHost - event.scheduledHostTime
+            let lagSeconds = AVAudioTime.seconds(forHostTime: lagHost)
+            let wholeBeatLag = Int(floor(lagSeconds / beatDuration))
+            if wholeBeatLag > 0 {
+                displayBeat = (displayBeat + wholeBeatLag) % beatCount
+            }
+            let staleVisualCutoff = 0.12
+            if lagSeconds >= staleVisualCutoff {
+                return
+            }
+            phaseDelaySeconds = lagSeconds.truncatingRemainder(dividingBy: beatDuration)
+        } else if event.deliveredHostTime > event.scheduledHostTime, beatDuration > 0 {
+            let lagHost = event.deliveredHostTime - event.scheduledHostTime
+            phaseDelaySeconds = AVAudioTime.seconds(forHostTime: lagHost).truncatingRemainder(dividingBy: beatDuration)
+        }
+
+        let remainingBeatSeconds = max(0.01, beatDuration - phaseDelaySeconds)
+        let pulseDuration = max(0.04, min(0.16, remainingBeatSeconds * 0.35))
+        if abs(beatState.pulseDuration - pulseDuration) > 0.002 {
+            beatState.pulseDuration = pulseDuration
+        }
+
+        if beatState.activeBeat != displayBeat {
+            beatState.activeBeat = displayBeat
+        }
+        beatState.beatTick &+= 1
+        triggerFlash(for: displayBeat, durationHint: pulseDuration)
+    }
+
+    private func saveUserPreferences() {
+        let prefs = MetronomeUserPreferences(
+            soundPreset: store.soundPreset,
+            soundEnabled: store.soundEnabled,
+            soundVolume: store.soundVolume,
+            accentGain: store.accentGain,
+            flashEnabled: store.flashEnabled
+        )
+        guard let data = try? JSONEncoder().encode(prefs) else { return }
+        UserDefaults.standard.set(data, forKey: userPreferencesKey)
+    }
+
+    private static func loadUserPreferences(key: String) -> MetronomeUserPreferences {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let prefs = try? JSONDecoder().decode(MetronomeUserPreferences.self, from: data)
+        else { return .default }
+        return prefs
     }
 
     private static func loadPersistedState(
@@ -591,97 +861,36 @@ final class MetronomeViewModel: ObservableObject {
     }
 
     private func syncNowPlaying() {
-        nowPlaying.update(
-            isPlaying: store.isPlaying,
-            bpm: store.bpm,
-            signature: store.timeSignature
+        nowPlaying.update(isPlaying: store.isPlaying, bpm: store.bpm, signature: store.timeSignature)
+    }
+
+    /// 메트로놈 상태 변경 시 PracticeDataStore에 알린다 (Live Activity 상태 동기화용).
+    private func postMetronomeStateChange() {
+        NotificationCenter.default.post(
+            name: .metronomeStateDidChange,
+            object: nil,
+            userInfo: ["isRunning": store.isPlaying, "bpm": store.bpm]
         )
     }
+
 }
 
 private final class MetronomeNowPlayingController {
+    // MPNowPlayingInfoCenter / MPRemoteCommandCenter 비활성화.
+    // Dynamic Island는 PianoLogLiveActivityWidget(PracticeDataStore)이 담당한다.
+    // NowPlaying으로 노출하면 iOS가 Dynamic Island에 회색 스피커 pill을 추가로 표시하므로
+    // 메트로놈은 Live Activity 상태 업데이트만 사용하고 NowPlaying은 쓰지 않는다.
+
+    // init에서 설정된 콜백 — 현재는 호출되지 않으나 API 호환성을 위해 유지
     var onPlayRequested: (() -> Void)?
     var onPauseRequested: (() -> Void)?
     var onToggleRequested: (() -> Void)?
 
-    private var remoteCommandsConfigured = false
-    private lazy var appArtwork: MPMediaItemArtwork? = {
-        guard let image = Self.resolveAppIconImage() else { return nil }
-        return MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-    }()
-
     func update(isPlaying: Bool, bpm: Int, signature: TimeSignature) {
-        configureRemoteCommandsIfNeeded()
-
-        let title = "메트로놈"
-        let subtitle = "\(bpm) BPM · \(signature.numerator)/\(signature.denominator)"
-        var info: [String: Any] = [
-            MPMediaItemPropertyTitle: title,
-            MPMediaItemPropertyArtist: subtitle,
-            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
-            MPNowPlayingInfoPropertyPlaybackRate: isPlaying ? 1.0 : 0.0,
-            MPNowPlayingInfoPropertyIsLiveStream: true
-        ]
-        if let appArtwork {
-            info[MPMediaItemPropertyArtwork] = appArtwork
-        }
-        if #available(iOS 10.0, *) {
-            info[MPNowPlayingInfoPropertyDefaultPlaybackRate] = 1.0
-        }
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        // NowPlaying 미사용 — Live Activity만으로 상태 표시
     }
 
     func clear() {
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
-    }
-
-    private func configureRemoteCommandsIfNeeded() {
-        guard !remoteCommandsConfigured else { return }
-        remoteCommandsConfigured = true
-
-        let commandCenter = MPRemoteCommandCenter.shared()
-
-        commandCenter.playCommand.isEnabled = true
-        commandCenter.pauseCommand.isEnabled = true
-        commandCenter.togglePlayPauseCommand.isEnabled = true
-
-        commandCenter.nextTrackCommand.isEnabled = false
-        commandCenter.previousTrackCommand.isEnabled = false
-        commandCenter.skipForwardCommand.isEnabled = false
-        commandCenter.skipBackwardCommand.isEnabled = false
-        commandCenter.changePlaybackPositionCommand.isEnabled = false
-        commandCenter.seekForwardCommand.isEnabled = false
-        commandCenter.seekBackwardCommand.isEnabled = false
-        commandCenter.changeRepeatModeCommand.isEnabled = false
-        commandCenter.changeShuffleModeCommand.isEnabled = false
-        commandCenter.likeCommand.isEnabled = false
-        commandCenter.dislikeCommand.isEnabled = false
-        commandCenter.bookmarkCommand.isEnabled = false
-        commandCenter.ratingCommand.isEnabled = false
-
-        commandCenter.playCommand.addTarget { [weak self] _ in
-            self?.onPlayRequested?()
-            return .success
-        }
-        commandCenter.pauseCommand.addTarget { [weak self] _ in
-            self?.onPauseRequested?()
-            return .success
-        }
-        commandCenter.togglePlayPauseCommand.addTarget { [weak self] _ in
-            self?.onToggleRequested?()
-            return .success
-        }
-    }
-
-    private static func resolveAppIconImage() -> UIImage? {
-        guard
-            let icons = Bundle.main.infoDictionary?["CFBundleIcons"] as? [String: Any],
-            let primary = icons["CFBundlePrimaryIcon"] as? [String: Any],
-            let files = primary["CFBundleIconFiles"] as? [String],
-            let iconName = files.last
-        else { return nil }
-        return UIImage(named: iconName)
-            ?? UIImage(named: "\(iconName)60x60")
-            ?? UIImage(named: "\(iconName)40x40")
+        // NowPlaying 미사용 — 정리할 것 없음
     }
 }

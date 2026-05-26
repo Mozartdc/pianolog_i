@@ -41,71 +41,71 @@ struct RhythmSubdivision: Identifiable, Codable, Equatable, Hashable {
 
     static let oneBeat = RhythmSubdivision(
         id: "one_beat",
-        title: "한 박",
-        description: "한 박 채우기",
+        title: String(localized: "metronome.subdivision.one_beat.title"),
+        description: String(localized: "metronome.subdivision.one_beat.description"),
         values: [1.0],
         tickPattern: [1]
     )
     static let twoParts = RhythmSubdivision(
         id: "two_parts",
-        title: "두 분할",
-        description: "한 박을 두 개로 나누기",
+        title: String(localized: "metronome.subdivision.two_parts.title"),
+        description: String(localized: "metronome.subdivision.two_parts.description"),
         values: [0.5, 0.5],
         tickPattern: [1, 1]
     )
     static let restPlusHalf = RhythmSubdivision(
         id: "rest_plus_half",
-        title: "쉼표+반박",
-        description: "쉼표 + 반박",
+        title: String(localized: "metronome.subdivision.rest_plus_half.title"),
+        description: String(localized: "metronome.subdivision.rest_plus_half.description"),
         values: [0.5, 0.5],
         tickPattern: [0, 1]
     )
     static let triplet = RhythmSubdivision(
         id: "triplet",
-        title: "3연음",
-        description: "한 박을 세 개로 나누기",
+        title: String(localized: "metronome.subdivision.triplet.title"),
+        description: String(localized: "metronome.subdivision.triplet.description"),
         values: [0.333, 0.333, 0.333],
         tickPattern: [1, 1, 1]
     )
     static let tripletRestFirst = RhythmSubdivision(
         id: "triplet_rest_first",
-        title: "3연음(첫쉼)",
-        description: "3연음 첫 박 쉼표",
+        title: String(localized: "metronome.subdivision.triplet_rest_first.title"),
+        description: String(localized: "metronome.subdivision.triplet_rest_first.description"),
         values: [0.333, 0.333, 0.333],
         tickPattern: [0, 1, 1]
     )
     static let tripletRestMiddle = RhythmSubdivision(
         id: "triplet_rest_middle",
-        title: "3연음(중쉼)",
-        description: "3연음 가운데 쉼표",
+        title: String(localized: "metronome.subdivision.triplet_rest_middle.title"),
+        description: String(localized: "metronome.subdivision.triplet_rest_middle.description"),
         values: [0.333, 0.333, 0.333],
         tickPattern: [1, 0, 1]
     )
     static let tripletRestLast = RhythmSubdivision(
         id: "triplet_rest_last",
-        title: "3연음(끝쉼)",
-        description: "3연음 마지막 쉼표",
+        title: String(localized: "metronome.subdivision.triplet_rest_last.title"),
+        description: String(localized: "metronome.subdivision.triplet_rest_last.description"),
         values: [0.333, 0.333, 0.333],
         tickPattern: [1, 1, 0]
     )
     static let tripletRestEdges = RhythmSubdivision(
         id: "triplet_rest_edges",
-        title: "3연음(앞뒤쉼)",
-        description: "3연음 앞뒤 쉼표",
+        title: String(localized: "metronome.subdivision.triplet_rest_edges.title"),
+        description: String(localized: "metronome.subdivision.triplet_rest_edges.description"),
         values: [0.333, 0.333, 0.333],
         tickPattern: [0, 1, 0]
     )
     static let fourPartsA = RhythmSubdivision(
         id: "four_parts_A",
-        title: "16분형 A",
-        description: "네 개 분할",
+        title: String(localized: "metronome.subdivision.four_parts_A.title"),
+        description: String(localized: "metronome.subdivision.four_parts_A.description"),
         values: [0.25, 0.25, 0.25, 0.25],
         tickPattern: [1, 1, 1, 1]
     )
     static let fourPartsB = RhythmSubdivision(
         id: "four_parts_B",
-        title: "16분형 B",
-        description: "네 개 분할 변형",
+        title: String(localized: "metronome.subdivision.four_parts_B.title"),
+        description: String(localized: "metronome.subdivision.four_parts_B.description"),
         values: [0.25, 0.25, 0.25, 0.25],
         tickPattern: [1, 0, 1, 0]
     )
@@ -174,10 +174,10 @@ enum RhythmTrainingMode: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .none: return "없음"
-        case .phraseLength: return "곡 길이"
-        case .progressiveTempo: return "점진적 템포"
-        case .mutePattern: return "뮤트 패턴"
+        case .none: return String(localized: "metronome.training.mode.none")
+        case .phraseLength: return String(localized: "metronome.training.mode.phrase")
+        case .progressiveTempo: return String(localized: "metronome.training.mode.progressive")
+        case .mutePattern: return String(localized: "metronome.training.mode.mute")
         }
     }
 }
@@ -191,9 +191,9 @@ enum TrainingBasis: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
-        case .off: return "OFF"
-        case .bars: return "마디 기준"
-        case .duration: return "시간 기준"
+        case .off: return String(localized: "metronome.training.basis.off")
+        case .bars: return String(localized: "metronome.training.basis.bars")
+        case .duration: return String(localized: "metronome.training.basis.duration")
         }
     }
 }
@@ -222,7 +222,7 @@ struct MutePatternTrainingSettings: Codable, Equatable {
     var durationMuteLength: Int
 }
 
-enum MetronomeSoundPreset: String, CaseIterable, Identifiable {
+enum MetronomeSoundPreset: String, CaseIterable, Identifiable, Codable {
     case mechanical
     case mechanicalAccent
     case mechanicalWeak
@@ -255,35 +255,35 @@ enum MetronomeSoundPreset: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .mechanical: return "기계식"
-        case .mechanicalAccent: return "기계식 강박"
-        case .mechanicalWeak: return "기계식 약박"
-        case .pendulum: return "진자"
-        case .woodBlock: return "우드 블럭"
-        case .woodClap: return "클랩스틱"
-        case .marimba: return "마림바"
-        case .xylophone: return "실로폰"
-        case .beep: return "디지털"
-        case .click: return "클릭"
-        case .shaker: return "퍼커션"
-        case .tambourine: return "탬버린"
+        case .mechanical: return String(localized: "metronome.sound.preset.mechanical.title")
+        case .mechanicalAccent: return String(localized: "metronome.sound.preset.mechanicalAccent.title")
+        case .mechanicalWeak: return String(localized: "metronome.sound.preset.mechanicalWeak.title")
+        case .pendulum: return String(localized: "metronome.sound.preset.pendulum.title")
+        case .woodBlock: return String(localized: "metronome.sound.preset.woodBlock.title")
+        case .woodClap: return String(localized: "metronome.sound.preset.woodClap.title")
+        case .marimba: return String(localized: "metronome.sound.preset.marimba.title")
+        case .xylophone: return String(localized: "metronome.sound.preset.xylophone.title")
+        case .beep: return String(localized: "metronome.sound.preset.beep.title")
+        case .click: return String(localized: "metronome.sound.preset.click.title")
+        case .shaker: return String(localized: "metronome.sound.preset.shaker.title")
+        case .tambourine: return String(localized: "metronome.sound.preset.tambourine.title")
         }
     }
 
     var pwaDescription: String {
         switch self {
-        case .woodBlock: return "클래식 우드 사운드"
-        case .woodClap: return "드럼스틱 타격음"
-        case .shaker: return "부드러운 리듬감"
-        case .tambourine: return "밝은 금속 사운드"
-        case .beep: return "전자 신호음"
-        case .click: return "디지털 클릭 사운드"
-        case .mechanical: return "전통 메트로놈"
-        case .mechanicalAccent: return "기계식 강박 샘플"
-        case .mechanicalWeak: return "기계식 약박 샘플"
-        case .pendulum: return "진자 소리"
-        case .marimba: return "따뜻한 목관 타악기"
-        case .xylophone: return "밝은 금속 타악기"
+        case .woodBlock: return String(localized: "metronome.sound.preset.woodBlock.description")
+        case .woodClap: return String(localized: "metronome.sound.preset.woodClap.description")
+        case .shaker: return String(localized: "metronome.sound.preset.shaker.description")
+        case .tambourine: return String(localized: "metronome.sound.preset.tambourine.description")
+        case .beep: return String(localized: "metronome.sound.preset.beep.description")
+        case .click: return String(localized: "metronome.sound.preset.click.description")
+        case .mechanical: return String(localized: "metronome.sound.preset.mechanical.description")
+        case .mechanicalAccent: return String(localized: "metronome.sound.preset.mechanicalAccent.description")
+        case .mechanicalWeak: return String(localized: "metronome.sound.preset.mechanicalWeak.description")
+        case .pendulum: return String(localized: "metronome.sound.preset.pendulum.description")
+        case .marimba: return String(localized: "metronome.sound.preset.marimba.description")
+        case .xylophone: return String(localized: "metronome.sound.preset.xylophone.description")
         }
     }
 
@@ -324,21 +324,42 @@ enum MetronomeSoundCategory: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .mechanical: return "기계식"
-        case .wood: return "우드 블럭"
-        case .percussion: return "퍼커션"
-        case .digital: return "디지털"
-        case .marimba: return "마림바"
+        case .mechanical: return String(localized: "metronome.sound.category.mechanical")
+        case .wood: return String(localized: "metronome.sound.category.wood")
+        case .percussion: return String(localized: "metronome.sound.category.percussion")
+        case .digital: return String(localized: "metronome.sound.category.digital")
+        case .marimba: return String(localized: "metronome.sound.category.marimba")
         }
     }
 }
 
 @MainActor
+// 앱 재시작 후에도 유지되는 사용자 환경설정.
+// BPM·박자처럼 곡마다 달라지는 값은 포함하지 않는다.
+// 스코어 뷰어 연동 시 이 구조체를 참조해 '전역 기본값'과 '곡별 오버라이드'를 구분한다.
+struct MetronomeUserPreferences: Codable {
+    var soundPreset: MetronomeSoundPreset
+    var soundEnabled: Bool
+    var soundVolume: Double
+    var accentGain: Double
+    var flashEnabled: Bool
+
+    static let `default` = MetronomeUserPreferences(
+        soundPreset: .mechanical,
+        soundEnabled: true,
+        soundVolume: 0.7,
+        accentGain: 1.5,
+        flashEnabled: false
+    )
+}
+
 final class MetronomeStore: ObservableObject {
     @Published var bpm: Int = 120
     @Published var isPlaying: Bool = false
     @Published var currentBeat: Int = 0
     @Published var beatTick: Int = 0
+    // Visual pulse duration derived from audio callback timing compensation.
+    @Published var beatPulseDuration: Double = 0.10
     @Published var timeSignature: TimeSignature = .init(numerator: 4, denominator: 4)
     @Published var subdivision: RhythmSubdivision = .oneBeat
     @Published var beatPattern: [BeatStrength] = [.accent, .strong, .strong, .strong]

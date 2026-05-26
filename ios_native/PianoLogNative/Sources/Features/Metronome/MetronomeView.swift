@@ -24,25 +24,17 @@ struct MetronomeView: View {
                 let layout = MetronomeUIConfig.layoutMetrics(for: geo.size)
                 let beatWidth = max(1, min(safeWidth - (layout.contentHorizontalInset * 2), 760))
                 let controlsWidth = max(1, min(safeWidth - (layout.contentHorizontalInset * 2), 620))
-                let beatDuration = (60.0 / Double(max(1, viewModel.store.bpm)))
-                    * (4.0 / Double(max(1, viewModel.store.timeSignature.denominator)))
 
                 ZStack {
-                    AppPalette.metronomeTheme
-                        .opacity(viewModel.flashPulseOpacity)
-                        .ignoresSafeArea()
-                        .allowsHitTesting(false)
-                        .animation(.easeOut(duration: 0.12), value: viewModel.flashPulseOpacity)
+                    MetronomeBeatFlashOverlay(beatState: viewModel.beatState)
 
                     VStack(spacing: 0) {
                         Spacer()
                             .frame(height: layout.topPadding)
 
-                        BeatVisualizerView(
+                        MetronomeBeatRow(
+                            beatState: viewModel.beatState,
                             beatPattern: viewModel.store.beatPattern,
-                            activeBeat: viewModel.store.currentBeat,
-                            beatTick: viewModel.store.beatTick,
-                            beatDuration: beatDuration,
                             onTapBeat: { idx in
                                 viewModel.cycleBeatStrength(at: idx)
                             }
@@ -68,7 +60,12 @@ struct MetronomeView: View {
                             },
                             onTapTraining: {
                                 closeAllPanels()
-                                showTrainingModeDialog = true
+                                if viewModel.store.trainingMode != .none {
+                                    AppHaptics.tap()
+                                    viewModel.setTrainingMode(.none)
+                                } else {
+                                    showTrainingModeDialog = true
+                                }
                             }
                         )
                         .frame(width: controlsWidth)
@@ -135,7 +132,7 @@ struct MetronomeView: View {
                             }
                             .buttonStyle(TapTempoButtonStyle())
                             .contentShape(Circle())
-                            .accessibilityLabel("Tap Tempo")
+                            .accessibilityLabel("metronome.taptempo.accessibility")
                             .offset(x: -layout.tapTrailingInset, y: layout.tapBottomInset)
                         }
                         .frame(width: layout.dialContainerWidth, height: layout.dialContainerHeight)
@@ -147,7 +144,7 @@ struct MetronomeView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .tint(.primary)
-            .navigationTitle("메트로놈")
+            .navigationTitle("metronome.title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -156,14 +153,7 @@ struct MetronomeView: View {
                         handleLibraryTap()
                     } label: {
                         Image(systemName: "list.bullet")
-                            .font(.system(size: 22, weight: .regular))
-                            .foregroundStyle(.primary)
-                            .frame(width: 58, height: 58, alignment: .center)
-                            .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
-                    .hoverEffect(.lift)
-                    .contentShape(Rectangle())
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -171,14 +161,7 @@ struct MetronomeView: View {
                         presentSoundSheet()
                     } label: {
                         Image(systemName: "ellipsis")
-                            .font(.system(size: 22, weight: .regular))
-                            .foregroundStyle(.primary)
-                            .frame(width: 58, height: 58, alignment: .center)
-                            .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
-                    .hoverEffect(.lift)
-                    .contentShape(Rectangle())
                 }
             }
             .sheet(isPresented: $showSignatureSheet) {
@@ -199,26 +182,16 @@ struct MetronomeView: View {
                 )
             }
             .alert("", isPresented: $showTrainingModeDialog) {
-                Button("연습 길이 설정") {
-                    AppHaptics.tap()
-                    selectedTrainingMode = .phraseLength
-                    showTrainingSettingSheet = true
+                Button("metronome.training.mode.phrase") {
+                    presentTrainingSettings(for: .phraseLength)
                 }
-                Button("증분 템포 변경") {
-                    AppHaptics.tap()
-                    selectedTrainingMode = .progressiveTempo
-                    showTrainingSettingSheet = true
+                Button("metronome.training.mode.progressive") {
+                    presentTrainingSettings(for: .progressiveTempo)
                 }
-                Button("음소거 구간 설정") {
-                    AppHaptics.tap()
-                    selectedTrainingMode = .mutePattern
-                    showTrainingSettingSheet = true
+                Button("metronome.training.mode.mute") {
+                    presentTrainingSettings(for: .mutePattern)
                 }
-                Button("트레이닝 모드 비활성화") {
-                    AppHaptics.tap()
-                    viewModel.setTrainingMode(.none)
-                }
-                Button("취소", role: .cancel) {}
+                Button("common.cancel", role: .cancel) {}
             }
             .sheet(isPresented: $showTrainingSettingSheet) {
                 TrainingSettingSheet(
@@ -231,7 +204,15 @@ struct MetronomeView: View {
                         viewModel.store.songLength = songLength
                         viewModel.store.incrementalTempo = incrementalTempo
                         viewModel.store.mutePattern = mutePattern
-                        viewModel.setTrainingMode(mode)
+                        // 시트에서 토글을 OFF한 경우(basis == .off) 트레이닝 모드를 비활성화
+                        let disabled: Bool
+                        switch mode {
+                        case .phraseLength:     disabled = songLength.basis == .off
+                        case .progressiveTempo: disabled = incrementalTempo.basis == .off
+                        case .mutePattern:      disabled = mutePattern.basis == .off
+                        case .none:             disabled = true
+                        }
+                        viewModel.setTrainingMode(disabled ? .none : mode)
                     }
                 )
             }
@@ -285,8 +266,12 @@ struct MetronomeView: View {
             }
             .onAppear {
                 viewModel.syncTodayTracks(tracksStore.tracks(for: .now))
+                viewModel.onViewAppear()
             }
-            .onChange(of: tracksStore.tracks) { _ in
+            .onDisappear {
+                viewModel.onViewDisappear()
+            }
+            .onChangeSafe(of: tracksStore.tracks) { _ in
                 viewModel.syncTodayTracks(tracksStore.tracks(for: .now))
             }
         }
@@ -294,7 +279,8 @@ struct MetronomeView: View {
 
     private func handleLibraryTap() {
         if viewModel.hasUnsavedSessionChange {
-            sessionSaveName = viewModel.activeSession.title == "Practice Session" ? "" : viewModel.activeSession.title
+            let defaultTitle = String(localized: "metronome.session.defaultTitle")
+            sessionSaveName = viewModel.activeSession.title == defaultTitle ? "" : viewModel.activeSession.title
             pendingOpenLibraryAfterSave = true
             presentSessionSaveSheet()
             return
@@ -343,12 +329,49 @@ struct MetronomeView: View {
         presentPanel { showLibrarySheet = true }
     }
 
+    private func presentTrainingSettings(for mode: RhythmTrainingMode) {
+        AppHaptics.tap()
+        selectedTrainingMode = mode
+        // Alert dismissal and sheet presentation in the same update cycle
+        // can create AttributeGraph cycles under load; defer one runloop.
+        DispatchQueue.main.async {
+            showTrainingSettingSheet = true
+        }
+    }
+
     private func presentSoundSheet() {
         presentPanel { showSoundSheet = true }
     }
 
     private func presentSessionSaveSheet() {
         presentPanel { showSessionSaveSheet = true }
+    }
+}
+
+private struct MetronomeBeatFlashOverlay: View {
+    @ObservedObject var beatState: MetronomeBeatState
+
+    var body: some View {
+        AppPalette.metronomeTheme
+            .opacity(beatState.flashPulseOpacity)
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
+    }
+}
+
+private struct MetronomeBeatRow: View {
+    @ObservedObject var beatState: MetronomeBeatState
+    let beatPattern: [BeatStrength]
+    let onTapBeat: (Int) -> Void
+
+    var body: some View {
+        BeatVisualizerView(
+            beatPattern: beatPattern,
+            activeBeat: beatState.activeBeat,
+            beatTick: beatState.beatTick,
+            pulseDuration: beatState.pulseDuration,
+            onTapBeat: onTapBeat
+        )
     }
 }
 
@@ -374,14 +397,14 @@ private struct SessionLibrarySheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("투데이 (현재 연습목록)") {
+                Section("metronome.library.section.today") {
                     if items.isEmpty {
-                        Text("저장된 세션이 없습니다")
+                        Text("metronome.library.empty.saved")
                             .foregroundStyle(.secondary)
                     } else {
                         let todayItems = items.filter { $0.source == .today }
                         if todayItems.isEmpty {
-                            Text("표시할 항목이 없습니다")
+                            Text("metronome.library.empty.visible")
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(todayItems) { item in
@@ -391,10 +414,10 @@ private struct SessionLibrarySheet: View {
                     }
                 }
 
-                Section("저장된 세션") {
+                Section("metronome.library.section.saved") {
                     let savedItems = items.filter { $0.source == .saved }
                     if savedItems.isEmpty {
-                        Text("저장된 세션이 없습니다")
+                        Text("metronome.library.empty.saved")
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(savedItems) { item in
@@ -403,10 +426,9 @@ private struct SessionLibrarySheet: View {
                     }
                 }
             }
-            .navigationTitle("세션 라이브러리")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("닫기") {
+                    Button("common.close") {
                         AppHaptics.tap()
                         dismiss()
                     }
@@ -418,30 +440,37 @@ private struct SessionLibrarySheet: View {
 
     @ViewBuilder
     private func itemRow(_ item: MetronomeViewModel.LibraryItem) -> some View {
-        HStack {
+        Button {
+            AppHaptics.tap()
+            onLoad(item)
+            dismiss()
+        } label: {
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.title)
-                    .font(.body.weight(.semibold))
-                Text("\(item.bpm.map(String.init) ?? "미설정") BPM • \(item.numerator.map(String.init) ?? "미설정")/\(item.denominator.map(String.init) ?? "미설정")")
+                Text(itemMetaText(item))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Spacer()
-            Button("불러오기") {
-                AppHaptics.tap()
-                onLoad(item)
-                dismiss()
-            }
-            .buttonStyle(.bordered)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .foregroundStyle(.primary)
         .swipeActions {
             Button(role: .destructive) {
                 AppHaptics.tap()
                 onDelete(item)
             } label: {
-                Text("삭제")
+                Text("common.delete")
             }
         }
+    }
+
+    private func itemMetaText(_ item: MetronomeViewModel.LibraryItem) -> String {
+        let unset = String(localized: "metronome.common.unset")
+        let bpmText = item.bpm.map(String.init) ?? unset
+        let numeratorText = item.numerator.map(String.init) ?? unset
+        let denominatorText = item.denominator.map(String.init) ?? unset
+        let format = String(localized: "metronome.library.item.meta.format")
+        return String(format: format, bpmText, numeratorText, denominatorText)
     }
 }
 
@@ -459,19 +488,19 @@ private struct SessionSaveSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                TextField("세션 이름", text: $name)
+                TextField("metronome.session.name.placeholder", text: $name)
             }
-            .navigationTitle("세션 저장")
+            .navigationTitle("metronome.session.save.title")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("건너뛰기") {
+                    Button("metronome.session.skip") {
                         AppHaptics.tap()
                         onSkip()
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("저장") {
+                    Button("common.save") {
                         AppHaptics.tap()
                         onSave(name)
                     }
@@ -521,34 +550,24 @@ private struct SoundSettingsSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                Section("사운드") {
-                    Toggle("사운드 켜기", isOn: $selectedSoundEnabled)
+                Section {
+                    Toggle("metronome.sound.enabled", isOn: $selectedSoundEnabled)
                 }
 
-                Section("사운드 종류") {
-                    ForEach(MetronomeSoundPreset.pwaTopLevelOptions) { item in
-                        Button {
-                            AppHaptics.selectionChanged()
-                            selectedPreset = item
-                        } label: {
-                            HStack(alignment: .top, spacing: 10) {
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(item.title)
-                                    Text(item.pwaDescription)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                if selectedPreset == item {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
+                Section("metronome.sound.section.type") {
+                    Picker("", selection: $selectedPreset) {
+                        ForEach(MetronomeSoundPreset.pwaTopLevelOptions) { item in
+                            Text(item.title).tag(item)
                         }
-                        .foregroundStyle(.primary)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.inline)
+                    .onChangeSafe(of: selectedPreset) { _ in
+                        AppHaptics.selectionChanged()
                     }
                 }
 
-                Section("볼륨") {
+                Section("metronome.sound.section.volume") {
                     HStack {
                         Image(systemName: "speaker.fill")
                         Slider(value: $selectedVolume, in: 0...1, step: 0.01)
@@ -559,7 +578,7 @@ private struct SoundSettingsSheet: View {
                     }
                 }
 
-                Section("악센트 볼륨") {
+                Section("metronome.sound.section.accent") {
                     HStack {
                         Text("1.0x")
                             .font(.caption)
@@ -572,14 +591,13 @@ private struct SoundSettingsSheet: View {
                     }
                 }
 
-                Section("시각 효과") {
-                    Toggle("전체화면 플래시", isOn: $selectedFlashEnabled)
+                Section("metronome.sound.section.visual") {
+                    Toggle("metronome.sound.flash", isOn: $selectedFlashEnabled)
                 }
             }
-            .navigationTitle("사운드 설정")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("적용") {
+                    Button("metronome.sound.apply") {
                         AppHaptics.tap()
                         onApply(
                             selectedPreset,
@@ -616,7 +634,7 @@ private struct TimeSignatureSheet: View {
         NavigationStack {
             VStack(spacing: 16) {
                 HStack(spacing: 12) {
-                    Picker("분자", selection: $numerator) {
+                    Picker("metronome.signature.numerator", selection: $numerator) {
                         ForEach(1...16, id: \.self) { value in
                             Text("\(value)").tag(value)
                         }
@@ -628,7 +646,7 @@ private struct TimeSignatureSheet: View {
                         .font(.system(size: 28, weight: .semibold, design: .rounded))
                         .foregroundStyle(.primary)
 
-                    Picker("분모", selection: $denominator) {
+                    Picker("metronome.signature.denominator", selection: $denominator) {
                         ForEach([1, 2, 4, 8], id: \.self) { value in
                             Text("\(value)").tag(value)
                         }
@@ -636,9 +654,8 @@ private struct TimeSignatureSheet: View {
                     .pickerStyle(.wheel)
                     .frame(maxWidth: .infinity, maxHeight: 190)
                 }
-                .font(.system(size: 21, weight: .semibold, design: .rounded))
 
-                Button("확인") {
+                Button("common.done") {
                     AppHaptics.tap()
                     onSelect(.init(numerator: numerator, denominator: denominator))
                     dismiss()
@@ -667,126 +684,58 @@ private struct SubdivisionSheet: View {
         _selected = State(initialValue: current)
     }
 
+    private let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
+
     var body: some View {
         NavigationStack {
-            VStack(spacing: 18) {
-                SubdivisionWheelPicker(
-                    items: RhythmSubdivision.allPatterns,
-                    selected: $selected,
-                    denominator: denominator
-                )
-                .frame(maxWidth: .infinity, minHeight: 320, maxHeight: 320)
+            ScrollView {
+                LazyVGrid(columns: columns, spacing: 10) {
+                    ForEach(RhythmSubdivision.allPatterns) { pattern in
+                        Button {
+                            AppHaptics.selectionChanged()
+                            selected = pattern
+                        } label: {
+                            ZStack(alignment: .topTrailing) {
+                                MetronomeSubdivisionNotationView(
+                                    subdivision: pattern,
+                                    denominator: denominator
+                                )
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 64)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color(uiColor: .secondarySystemGroupedBackground))
+                                )
 
-                Button("확인") {
-                    AppHaptics.tap()
-                    onSelect(selected)
-                    dismiss()
+                                if selected == pattern {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundStyle(.white, Color.accentColor)
+                                        .font(.system(size: 16))
+                                        .padding(5)
+                                }
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .buttonStyle(.borderedProminent)
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 14)
-        }
-        .presentationDetents([.fraction(0.62), .large])
-    }
-
-}
-
-private struct SubdivisionWheelPicker: UIViewRepresentable {
-    let items: [RhythmSubdivision]
-    @Binding var selected: RhythmSubdivision
-    let denominator: Int
-
-    func makeUIView(context: Context) -> UIPickerView {
-        let picker = UIPickerView()
-        picker.delegate = context.coordinator
-        picker.dataSource = context.coordinator
-        picker.translatesAutoresizingMaskIntoConstraints = false
-        if let idx = items.firstIndex(of: selected) {
-            picker.selectRow(idx, inComponent: 0, animated: false)
-        }
-        return picker
-    }
-
-    func updateUIView(_ uiView: UIPickerView, context: Context) {
-        context.coordinator.parent = self
-        if let idx = items.firstIndex(of: selected), uiView.selectedRow(inComponent: 0) != idx {
-            uiView.selectRow(idx, inComponent: 0, animated: true)
-        }
-        uiView.reloadAllComponents()
-    }
-
-    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
-
-    final class Coordinator: NSObject, UIPickerViewDataSource, UIPickerViewDelegate {
-        var parent: SubdivisionWheelPicker
-        init(parent: SubdivisionWheelPicker) { self.parent = parent }
-
-        func numberOfComponents(in pickerView: UIPickerView) -> Int { 1 }
-        func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-            parent.items.count
-        }
-
-        func pickerView(_ pickerView: UIPickerView, rowHeightForComponent component: Int) -> CGFloat {
-            96
-        }
-
-        func pickerView(_ pickerView: UIPickerView, widthForComponent component: Int) -> CGFloat {
-            pickerView.bounds.width
-        }
-
-        func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-            guard parent.items.indices.contains(row) else { return }
-            AppHaptics.selectionChanged()
-            parent.selected = parent.items[row]
-        }
-
-        func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-            let container = UIView(frame: CGRect(x: 0, y: 0, width: pickerView.bounds.width, height: 96))
-            container.backgroundColor = .clear
-
-            guard parent.items.indices.contains(row) else { return container }
-            let item = parent.items[row]
-            let key = "\(item.id)_d\(parent.denominator)"
-            if let image = SubdivisionNotationAssetLibrary.image(for: key) {
-                let size = SubdivisionNotationAssetLibrary.displaySize(
-                    for: image,
-                    subdivisionID: item.id,
-                    targetHeight: MetronomeSubdivisionNotationView.commonTargetHeight,
-                    minWidth: MetronomeSubdivisionNotationView.commonMinWidth,
-                    maxWidth: MetronomeSubdivisionNotationView.commonMaxWidth
-                )
-
-                let imageView = UIImageView(image: image)
-                imageView.translatesAutoresizingMaskIntoConstraints = false
-                imageView.contentMode = .scaleAspectFit
-                imageView.tintColor = .label
-                container.addSubview(imageView)
-
-                NSLayoutConstraint.activate([
-                    imageView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-                    imageView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-                    imageView.widthAnchor.constraint(equalToConstant: size.width),
-                    imageView.heightAnchor.constraint(equalToConstant: size.height)
-                ])
-            } else {
-                let label = UILabel()
-                label.translatesAutoresizingMaskIntoConstraints = false
-                label.text = item.title
-                label.textAlignment = .center
-                label.font = .systemFont(ofSize: 13, weight: .semibold)
-                label.textColor = .secondaryLabel
-                container.addSubview(label)
-
-                NSLayoutConstraint.activate([
-                    label.centerXAnchor.constraint(equalTo: container.centerXAnchor),
-                    label.centerYAnchor.constraint(equalTo: container.centerYAnchor)
-                ])
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("common.done") {
+                        AppHaptics.tap()
+                        onSelect(selected)
+                        dismiss()
+                    }
+                }
             }
-
-            return container
         }
+        .presentationDetents([.medium, .large])
     }
 }
 
@@ -825,26 +774,39 @@ private struct TrainingSettingSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                if mode == .phraseLength {
-                    PhraseLengthSettingsSection(settings: $songLengthValue)
+                Section {
+                    Toggle(mode.title, isOn: isEnabledBinding)
                 }
 
-                if mode == .progressiveTempo {
-                    ProgressiveTempoSettingsSection(
-                        settings: $incrementalTempoValue,
-                        currentBPM: currentBPM
-                    )
-                }
+                if isEnabled {
+                    Section {
+                        Picker("", selection: basisBinding) {
+                            ForEach(TrainingBasis.allCases.filter { $0 != .off }) { basis in
+                                Text(basis.title).tag(basis)
+                            }
+                        }
+                        .pickerStyle(.inline)
+                        .labelsHidden()
+                    }
 
-                if mode == .mutePattern {
-                    MutePatternSettingsSection(settings: $mutePatternValue)
+                    if mode == .phraseLength {
+                        PhraseLengthSettingsSection(settings: $songLengthValue)
+                    }
+                    if mode == .progressiveTempo {
+                        ProgressiveTempoSettingsSection(
+                            settings: $incrementalTempoValue,
+                            currentBPM: currentBPM
+                        )
+                    }
+                    if mode == .mutePattern {
+                        MutePatternSettingsSection(settings: $mutePatternValue)
+                    }
                 }
             }
-            .navigationTitle("리듬 설정")
-            .navigationBarTitleDisplayMode(.inline)
+            .animation(.default, value: isEnabled)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("확인") {
+                    Button("common.done") {
                         AppHaptics.tap()
                         onApply(mode, songLengthValue, incrementalTempoValue, mutePatternValue)
                         dismiss()
@@ -854,22 +816,43 @@ private struct TrainingSettingSheet: View {
         }
         .presentationDetents([.medium, .large])
     }
+
+    private var isEnabled: Bool {
+        basisBinding.wrappedValue != .off
+    }
+
+    private var isEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { basisBinding.wrappedValue != .off },
+            set: { on in
+                if on {
+                    if basisBinding.wrappedValue == .off {
+                        basisBinding.wrappedValue = .bars
+                    }
+                } else {
+                    basisBinding.wrappedValue = .off
+                }
+            }
+        )
+    }
+
+    private var basisBinding: Binding<TrainingBasis> {
+        switch mode {
+        case .phraseLength:     return $songLengthValue.basis
+        case .progressiveTempo: return $incrementalTempoValue.basis
+        case .mutePattern:      return $mutePatternValue.basis
+        case .none:             return .constant(.off)
+        }
+    }
 }
 
 private struct PhraseLengthSettingsSection: View {
     @Binding var settings: SongLengthTrainingSettings
 
     var body: some View {
-        Section("연습 길이 설정") {
-            Picker("기준", selection: $settings.basis) {
-                ForEach(TrainingBasis.allCases) { basis in
-                    Text(basis.title).tag(basis)
-                }
-            }
-            .pickerStyle(.segmented)
-
+        Section("metronome.training.section.length") {
             if settings.basis == .bars {
-                Picker("마디 수", selection: $settings.bars) {
+                Picker("metronome.training.bars.count", selection: $settings.bars) {
                     ForEach(1...100, id: \.self) { Text("\($0)") }
                 }
             }
@@ -902,26 +885,53 @@ private struct ProgressiveTempoSettingsSection: View {
     let currentBPM: Int
 
     var body: some View {
-        Section("증분 템포 변경") {
-            Picker("기준", selection: $settings.basis) {
-                ForEach(TrainingBasis.allCases) { basis in
-                    Text(basis.title).tag(basis)
-                }
-            }
-            .pickerStyle(.segmented)
-
+        Section("metronome.training.section.progressive") {
             if settings.basis == .bars {
-                Stepper("증가량: \(settings.barsStep >= 0 ? "+" : "")\(settings.barsStep) BPM", value: $settings.barsStep, in: -40...40)
-                Stepper("증가 주기: \(settings.barsInterval) 마디", value: $settings.barsInterval, in: 1...99)
-                Stepper("한계 BPM: \(settings.barsLimit)", value: $settings.barsLimit, in: 20...max(currentBPM * 2, 400))
+                Stepper(progressiveStepBarsLabel, value: $settings.barsStep, in: -40...40)
+                    .padding(.vertical, 4)
+                Stepper(progressiveIntervalBarsLabel, value: $settings.barsInterval, in: 1...99)
+                    .padding(.vertical, 4)
+                Stepper(progressiveLimitBarsLabel, value: $settings.barsLimit, in: 20...max(currentBPM * 2, 400))
+                    .padding(.vertical, 4)
             }
 
             if settings.basis == .duration {
-                Stepper("증가량: \(settings.durationStep >= 0 ? "+" : "")\(settings.durationStep) BPM", value: $settings.durationStep, in: -40...40)
-                Stepper("증가 주기: \(settings.durationInterval) 초", value: $settings.durationInterval, in: 5...200, step: 5)
-                Stepper("한계 BPM: \(settings.durationLimit)", value: $settings.durationLimit, in: 20...max(currentBPM * 2, 400))
+                Stepper(progressiveStepDurationLabel, value: $settings.durationStep, in: -40...40)
+                    .padding(.vertical, 4)
+                Stepper(progressiveIntervalDurationLabel, value: $settings.durationInterval, in: 5...200, step: 5)
+                    .padding(.vertical, 4)
+                Stepper(progressiveLimitDurationLabel, value: $settings.durationLimit, in: 20...max(currentBPM * 2, 400))
+                    .padding(.vertical, 4)
             }
         }
+    }
+
+    private var progressiveStepBarsLabel: String {
+        "\(String(localized: "metronome.training.progressive.step.label")): \(signedStep(settings.barsStep)) BPM"
+    }
+
+    private var progressiveIntervalBarsLabel: String {
+        "\(String(localized: "metronome.training.progressive.interval.label")): \(settings.barsInterval)\(String(localized: "metronome.unit.bars"))"
+    }
+
+    private var progressiveLimitBarsLabel: String {
+        "\(String(localized: "metronome.training.progressive.limit.label")): \(settings.barsLimit)"
+    }
+
+    private var progressiveStepDurationLabel: String {
+        "\(String(localized: "metronome.training.progressive.step.label")): \(signedStep(settings.durationStep)) BPM"
+    }
+
+    private var progressiveIntervalDurationLabel: String {
+        "\(String(localized: "metronome.training.progressive.interval.label")): \(settings.durationInterval)\(String(localized: "metronome.unit.seconds"))"
+    }
+
+    private var progressiveLimitDurationLabel: String {
+        "\(String(localized: "metronome.training.progressive.limit.label")): \(settings.durationLimit)"
+    }
+
+    private func signedStep(_ value: Int) -> String {
+        value >= 0 ? "+\(value)" : "\(value)"
     }
 }
 
@@ -929,23 +939,36 @@ private struct MutePatternSettingsSection: View {
     @Binding var settings: MutePatternTrainingSettings
 
     var body: some View {
-        Section("음소거 구간 설정") {
-            Picker("기준", selection: $settings.basis) {
-                ForEach(TrainingBasis.allCases) { basis in
-                    Text(basis.title).tag(basis)
-                }
-            }
-            .pickerStyle(.segmented)
-
+        Section("metronome.training.section.mute") {
             if settings.basis == .bars {
-                Stepper("소리 구간: \(settings.barsSoundLength) 마디", value: $settings.barsSoundLength, in: 1...99)
-                Stepper("무음 구간: \(settings.barsMuteLength) 마디", value: $settings.barsMuteLength, in: 1...99)
+                Stepper(soundBarsLabel, value: $settings.barsSoundLength, in: 1...99)
+                    .padding(.vertical, 4)
+                Stepper(muteBarsLabel, value: $settings.barsMuteLength, in: 1...99)
+                    .padding(.vertical, 4)
             }
 
             if settings.basis == .duration {
-                Stepper("소리 구간: \(settings.durationSoundLength) 초", value: $settings.durationSoundLength, in: 1...99)
-                Stepper("무음 구간: \(settings.durationMuteLength) 초", value: $settings.durationMuteLength, in: 1...99)
+                Stepper(soundSecondsLabel, value: $settings.durationSoundLength, in: 1...99)
+                    .padding(.vertical, 4)
+                Stepper(muteSecondsLabel, value: $settings.durationMuteLength, in: 1...99)
+                    .padding(.vertical, 4)
             }
         }
+    }
+
+    private var soundBarsLabel: String {
+        "\(String(localized: "metronome.training.mute.sound.label")): \(settings.barsSoundLength)\(String(localized: "metronome.unit.bars"))"
+    }
+
+    private var muteBarsLabel: String {
+        "\(String(localized: "metronome.training.mute.silent.label")): \(settings.barsMuteLength)\(String(localized: "metronome.unit.bars"))"
+    }
+
+    private var soundSecondsLabel: String {
+        "\(String(localized: "metronome.training.mute.sound.label")): \(settings.durationSoundLength)\(String(localized: "metronome.unit.seconds"))"
+    }
+
+    private var muteSecondsLabel: String {
+        "\(String(localized: "metronome.training.mute.silent.label")): \(settings.durationMuteLength)\(String(localized: "metronome.unit.seconds"))"
     }
 }

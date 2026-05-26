@@ -7,7 +7,6 @@ struct MetronomeControlRowView: View {
     let onTapSignature: () -> Void
     let onTapSubdivision: () -> Void
     let onTapTraining: () -> Void
-    @State private var signatureAnimated = false
 
     var body: some View {
         ZStack(alignment: .center) {
@@ -33,20 +32,11 @@ struct MetronomeControlRowView: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
-                        .scaleEffect(signatureAnimated ? 0.88 : 1.0)
-                        .opacity(signatureAnimated ? 0.7 : 1.0)
-                        .animation(.easeInOut(duration: 0.2), value: signatureAnimated)
                         .padding(.horizontal, 6)
                         .frame(minWidth: 66)
                         .frame(height: 50)
                 }
                 .buttonStyle(.plain)
-                .onChange(of: signatureText) { _ in
-                    signatureAnimated = true
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                        signatureAnimated = false
-                    }
-                }
 
                 Spacer(minLength: 10)
 
@@ -68,10 +58,17 @@ struct MetronomeControlRowView: View {
     }
 
     private func subdivisionButtonWidth(_ value: RhythmSubdivision) -> CGFloat {
-        if value.id.contains("triplet") { return 102 }
-        if value.id.contains("four_parts") { return 108 }
-        if value.id.contains("rest") { return 96 }
-        return 90
+        switch value.id {
+        case "triplet", "triplet_rest_first", "triplet_rest_middle",
+             "triplet_rest_last", "triplet_rest_edges":
+            return 102
+        case "four_parts_A", "four_parts_B":
+            return 108
+        case "rest_plus_half":
+            return 96
+        default:
+            return 90
+        }
     }
 
 }

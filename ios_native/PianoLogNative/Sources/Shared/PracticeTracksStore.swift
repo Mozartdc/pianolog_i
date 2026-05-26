@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 
 struct PracticeTrack: Identifiable, Hashable, Codable {
     let id: Int
@@ -12,10 +13,12 @@ final class PracticeTracksStore: ObservableObject {
     @Published private(set) var tracks: [PracticeTrack] = []
     @Published private(set) var practiceChecks: [String: [Int: Bool]] = [:]
     @Published private(set) var partialCounts: [String: [Int: Int]] = [:]
+    @Published private(set) var generalPracticeCounts: [String: Int] = [:]
 
     private let tracksKey = "tracks"
     private let checksKey = "practiceChecks"
     private let partialCountsKey = "partialCounts"
+    private let generalPracticeCountsKey = "generalPracticeCounts"
     private let defaults = UserDefaults.standard
 
     private let dayFormatter: DateFormatter = {
@@ -109,28 +112,74 @@ final class PracticeTracksStore: ObservableObject {
 
     func incrementPartial(date: Date, trackId: Int) {
         let key = dateKey(for: date)
-        var dayCounts = partialCounts[key] ?? [:]
+        var allCounts = partialCounts
+        var dayCounts = allCounts[key] ?? [:]
         dayCounts[trackId] = (dayCounts[trackId] ?? 0) + 1
-        partialCounts[key] = dayCounts
+        allCounts[key] = dayCounts
+        partialCounts = allCounts
         savePartialCounts()
     }
 
     func decrementPartial(date: Date, trackId: Int) {
         let key = dateKey(for: date)
-        var dayCounts = partialCounts[key] ?? [:]
+        var allCounts = partialCounts
+        var dayCounts = allCounts[key] ?? [:]
         dayCounts[trackId] = max((dayCounts[trackId] ?? 0) - 1, 0)
-        partialCounts[key] = dayCounts
+        allCounts[key] = dayCounts
+        partialCounts = allCounts
         savePartialCounts()
+    }
+
+    func resetPartial(date: Date, trackId: Int) {
+        let key = dateKey(for: date)
+        var allCounts = partialCounts
+        var dayCounts = allCounts[key] ?? [:]
+        dayCounts[trackId] = 0
+        allCounts[key] = dayCounts
+        partialCounts = allCounts
+        savePartialCounts()
+    }
+
+    func generalPracticeCount(date: Date) -> Int {
+        let key = dateKey(for: date)
+        return generalPracticeCounts[key] ?? 0
+    }
+
+    func incrementGeneralPractice(date: Date) {
+        let key = dateKey(for: date)
+        var allCounts = generalPracticeCounts
+        allCounts[key] = (allCounts[key] ?? 0) + 1
+        generalPracticeCounts = allCounts
+        saveGeneralPracticeCounts()
+    }
+
+    func decrementGeneralPractice(date: Date) {
+        let key = dateKey(for: date)
+        var allCounts = generalPracticeCounts
+        allCounts[key] = max((allCounts[key] ?? 0) - 1, 0)
+        generalPracticeCounts = allCounts
+        saveGeneralPracticeCounts()
+    }
+
+    func resetGeneralPractice(date: Date) {
+        let key = dateKey(for: date)
+        var allCounts = generalPracticeCounts
+        allCounts[key] = 0
+        generalPracticeCounts = allCounts
+        saveGeneralPracticeCounts()
     }
 
     func subtitle(for track: PracticeTrack, selectedDate: Date) -> String {
         let selectedDay = dateKey(for: selectedDate)
         guard let added = dayFormatter.date(from: track.addedDate),
               let selected = dayFormatter.date(from: selectedDay) else {
-            return "연습 기록"
+            return String(localized: "track.practice.record.fallback")
         }
         let days = Calendar(identifier: .gregorian).dateComponents([.day], from: added, to: selected).day ?? 0
-        return "오늘로 \(max(days + 1, 1))일째"
+        return String(
+            format: String(localized: "track.days.since.today.format"),
+            max(days + 1, 1)
+        )
     }
 
     func totalPracticeDays(trackId: Int) -> Int {
@@ -156,6 +205,26 @@ final class PracticeTracksStore: ObservableObject {
 
     func hasChecked(trackId: Int, on dateKey: String) -> Bool {
         practiceChecks[dateKey]?[trackId] ?? false
+    }
+
+    func exportSnapshot() -> PracticeTracksSnapshot {
+        PracticeTracksSnapshot(
+            tracks: tracks,
+            practiceChecks: practiceChecks,
+            partialCounts: partialCounts,
+            generalPracticeCounts: generalPracticeCounts
+        )
+    }
+
+    func importSnapshot(_ snapshot: PracticeTracksSnapshot) {
+        tracks = snapshot.tracks
+        practiceChecks = snapshot.practiceChecks
+        partialCounts = snapshot.partialCounts
+        generalPracticeCounts = snapshot.generalPracticeCounts
+        saveTracks()
+        saveChecks()
+        savePartialCounts()
+        saveGeneralPracticeCounts()
     }
 
     func toggleCheck(dateKey: String, trackId: Int) {
@@ -193,6 +262,10 @@ final class PracticeTracksStore: ObservableObject {
            let decoded = try? JSONDecoder().decode([String: [Int: Int]].self, from: countsData) {
             partialCounts = decoded
         }
+        if let countsData = defaults.data(forKey: generalPracticeCountsKey),
+           let decoded = try? JSONDecoder().decode([String: Int].self, from: countsData) {
+            generalPracticeCounts = decoded
+        }
     }
 
     private func saveTracks() {
@@ -212,4 +285,17 @@ final class PracticeTracksStore: ObservableObject {
             defaults.set(encoded, forKey: partialCountsKey)
         }
     }
+
+    private func saveGeneralPracticeCounts() {
+        if let encoded = try? JSONEncoder().encode(generalPracticeCounts) {
+            defaults.set(encoded, forKey: generalPracticeCountsKey)
+        }
+    }
+}
+
+struct PracticeTracksSnapshot: Codable {
+    let tracks: [PracticeTrack]
+    let practiceChecks: [String: [Int: Bool]]
+    let partialCounts: [String: [Int: Int]]
+    let generalPracticeCounts: [String: Int]
 }
